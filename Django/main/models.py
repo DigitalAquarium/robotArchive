@@ -25,6 +25,8 @@ COUNTRY_CHOICES.extend([
 class Person(models.Model):
     name = models.CharField(max_length = 255)
     email = models.EmailField()
+    def __str__(self):
+    	return self.name
 
 class Team(models.Model):
     name = models.CharField(max_length = 255)
@@ -32,10 +34,14 @@ class Team(models.Model):
     website = models.URLField()
     country = models.CharField(max_length = 2,choices = COUNTRY_CHOICES)
     members = models.ManyToManyField(Person,through="Person_Team")
+    def __str__(self):
+    	return self.name
     
 class Weight_Class(models.Model):
     name = models.CharField(max_length = 30)
     weight_grams = models.IntegerField()
+    def __str__(self):
+    	return self.name
 
 class Robot(models.Model):
     name = models.CharField(max_length = 255)
@@ -44,6 +50,8 @@ class Robot(models.Model):
     losses = models.IntegerField()
     ranking = models.FloatField()
     opt_out = models.BooleanField() # for opting out of rankings
+    def __str__(self):
+    	return self.name
 
 class Version(models.Model):
     robot_name = models.CharField(max_length = 255)
@@ -54,6 +62,8 @@ class Version(models.Model):
     robot = models.ForeignKey(Robot, on_delete = models.CASCADE)
     team = models.ForeignKey(Team, on_delete = models.CASCADE)
     weight_class = models.ForeignKey(Weight_Class, on_delete = models.CASCADE)
+    def __str__(self):
+    	return self.robot_name + " " + self.version_name
 
 class Franchise(models.Model):
     name = models.CharField(max_length=50)
@@ -61,9 +71,12 @@ class Franchise(models.Model):
     website = models.URLField()
     description = models.TextField()
     members = models.ManyToManyField(Person,through="Person_Franchise")
+    def __str__(self):
+    	return self.name
 
 class Event(models.Model):
     name = models.CharField(max_length=50)
+    #description = models.TextField()
     logo = models.ImageField(upload_to='event_logos/%Y/')
     ruleset = models.FileField(upload_to='event_rulesets')
     start_date = models.DateField()
@@ -73,6 +86,8 @@ class Event(models.Model):
     registration_close = models.DateTimeField()
     franchise = models.ForeignKey(Franchise,on_delete = models.CASCADE)
     #Location!!!!!!!!!
+    def __str__(self):
+        return self.name
 
 class Contest(models.Model):
     fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
@@ -104,12 +119,16 @@ class Fight(models.Model):
     event = models.ForeignKey(Event,on_delete = models.CASCADE)
     contest = models.ForeignKey(Contest,on_delete = models.CASCADE)
     competitors = models.ManyToManyField(Version,through="Fight_Version")
+    def __str__(self):
+    	return self.name
 
 class Award(models.Model):
     name = models.CharField(max_length = 255)
     award_type = models.PositiveSmallIntegerField()#0 other, 1 first place, 2 second place, 3 thrid place
     contest = models.ForeignKey(Contest,on_delete = models.CASCADE)
     version = models.ForeignKey(Version,on_delete = models.CASCADE)
+    def __str__(self):
+    	return self.name
 
 class Person_Team(models.Model):
     permissions = models.PositiveSmallIntegerField()

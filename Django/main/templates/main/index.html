@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+{%if upcoming_event_list%}
+	<ul>
+	{%for event in upcoming_event_list%}
+		<li><a href = "{%url 'main:eventdetail' event.id %}">{{event.name}}</a></li>
+		{%endfor%}
+	</ul>
+{% else %}
+    <p>There are no upcoming events.</p>
+{% endif %}
+</body>
+</html>
