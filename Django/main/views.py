@@ -17,12 +17,10 @@ class IndexView(generic.ListView):
 class EventDetailView(generic.DetailView):
     model = Event
     template_name = "main/eventdetail.html"
-    pass
 
 class ContestSignupView(generic.DetailView):
     model = Contest
     template_name = "main/contestsignup.html"
-    pass
 
 
 #class LoginView()

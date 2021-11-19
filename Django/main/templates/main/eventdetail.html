@@ -4,9 +4,11 @@
 <img src={{event.logo.url}} alt=logo><h1>{{event.name}}</h1>
 <p>{{event.description}}</p>
 <h2>Contests</h2>
-{%if event.registration_close < datetime.date.now %}
+{%if event%}
 {%for contest in event.contest_set.all%}
-    <li>{{contest.name}} <a href = "{%url 'main.contestsignup' contest.id %}" >Sign up.</a></li>
+    <ul>
+    <li>{{contest.weight_class.name}} <a href = "{%url 'main:contestsignup' contest.id %}" >Sign up.</a></li>
+    <ul>
 {%endfor%}
 {%else%}
 cheese

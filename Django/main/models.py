@@ -76,7 +76,7 @@ class Franchise(models.Model):
 
 class Event(models.Model):
     name = models.CharField(max_length=50)
-    #description = models.TextField()
+    description = models.TextField()
     logo = models.ImageField(upload_to='event_logos/%Y/')
     ruleset = models.FileField(upload_to='event_rulesets')
     start_date = models.DateField()
@@ -84,8 +84,10 @@ class Event(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     registration_close = models.DateTimeField()
+    country = models.CharField(max_length = 2,choices = COUNTRY_CHOICES)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
     franchise = models.ForeignKey(Franchise,on_delete = models.CASCADE)
-    #Location!!!!!!!!!
     def __str__(self):
         return self.name
 
@@ -131,12 +133,10 @@ class Award(models.Model):
     	return self.name
 
 class Person_Team(models.Model):
-    permissions = models.PositiveSmallIntegerField()
     person = models.ForeignKey(Person,on_delete = models.CASCADE)
     team = models.ForeignKey(Team,on_delete = models.CASCADE)
 
 class Person_Franchise(models.Model):
-    permissions = models.PositiveSmallIntegerField()
     person = models.ForeignKey(Person,on_delete = models.CASCADE)
     franchise = models.ForeignKey(Franchise,on_delete = models.CASCADE)
 

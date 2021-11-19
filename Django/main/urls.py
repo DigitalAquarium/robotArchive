@@ -9,5 +9,5 @@ urlpatterns = [
 	path('',views.IndexView.as_view(),name='index'),
 	path('events',views.IndexView.as_view(),name='eventview'),
 	path('events/<int:pk>',views.EventDetailView.as_view(),name='eventdetail'),
-	path('events/<int:pk>/signup',views.ContestSignupView.as_view(),name='contestsignup'),
+	path('contests/<int:pk>/signup',views.ContestSignupView.as_view(),name='contestsignup'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
