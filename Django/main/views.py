@@ -5,6 +5,8 @@ from .models import *
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.views import generic
+from django.template import RequestContext
+
 import datetime
 
 class IndexView(generic.ListView):
@@ -12,7 +14,7 @@ class IndexView(generic.ListView):
     context_object_name = "upcoming_event_list"
 
     def get_queryset(self):
-        return Event.objects.filter(start_date__gte=datetime.date.today()).order_by('start_date')[:5]
+        return Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
 
 class EventDetailView(generic.DetailView):
     model = Event
@@ -20,7 +22,9 @@ class EventDetailView(generic.DetailView):
 
 class ContestSignupView(generic.DetailView):
     model = Contest
-    template_name = "main/contestsignup.html"
+    template_name = "main/contestsignupform.html"
 
+def contestSignup(request,contest_id):
+    return HttpResponseRedirect(reverse('main:contestsignupform',args=(Contest.id,)))
 
 #class LoginView()
