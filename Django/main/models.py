@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 import pycountry
 
 FULL_COMBAT = 'FC'
@@ -23,6 +24,7 @@ COUNTRY_CHOICES.extend([
     ])
 
 class Person(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL,blank=True,null=True,on_delete=models.CASCADE)
     name = models.CharField(max_length = 255)
     email = models.EmailField()
     def __str__(self):
@@ -106,14 +108,17 @@ class Registration(models.Model):
     contest = models.ForeignKey(Contest,on_delete = models.CASCADE)
 
 class Fight(models.Model):
-    '''METHOD_CHOICES = [
+    METHOD_CHOICES = [
         ("KO","Knockout"),
         ("JD","Judge's Decision"),
         ("TO","Tap Out"),
         ("OA","Out of the Arena"),
-        ("PT","Pit")
+        ("PT","Pit"),
+        ("DR","Draw"),
+        ("WU","Winner Unknown"),
+        ("NW","No Winner Declared"),
         ]
-    method = models.CharField(max_length = 2, choices = METHOD_CHOICES)'''
+    method = models.CharField(max_length = 2, choices = METHOD_CHOICES)
     name = models.CharField(max_length=100)
     fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
     media_internal = models.FileField(upload_to='fight_media/%Y/')

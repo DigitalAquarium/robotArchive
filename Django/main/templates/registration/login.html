@@ -1,1 +1,32 @@
-hi
+<!DOCTYPE html>
+<body>
+{%if form.errors%}
+	oops
+{%endif%}
+{%if next%}
+	{%if user.is_authenticated%}
+	your account is cringe, try another
+	{%else%}
+	Pls login
+	{%endif%}
+{%endif%}
+
+<form method="post" action="{%url 'login'%}">
+{%csrf_token%}
+<table>
+<tr>
+	<td>{{form.username.label_tag}}</td>
+	<td>{{form.username}}</td>
+</tr>
+<tr>
+	<td>{{form.password.label_tag}}</td>
+	<td>{{form.password}}</td>
+</tr>
+</table>
+
+<input type="submit" value="Register">
+<input type="hidden" name="next" value="{{next}}">
+</form>
+
+<p><a href="{%url 'password_reset'%}">Is u r password le bad</a></p>
+</body>
