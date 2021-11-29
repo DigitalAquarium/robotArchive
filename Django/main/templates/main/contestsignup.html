@@ -4,13 +4,12 @@
 <form method="post" action="{%url 'main:contestsignup' contest.id%}">
 {%csrf_token%}
 <fieldset>
-	<legend><h1>{{contest.weight_class.name}}</h1></legend>
+	<legend><h1>{{contest.event}} : {{contest}}</h1></legend>
 	{%if error_message %}<p><strong>{{error_message}}</strong></p>{%endif%}
 	{%if user.is_authenticated%}
 	hi
 	{%else%}
-	gaming
-	{{form|crispy}}
+	{{anon_form|crispy}}
 	{%endif%}
 </fieldset>
 </form>

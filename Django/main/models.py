@@ -32,8 +32,8 @@ class Person(models.Model):
 
 class Team(models.Model):
     name = models.CharField(max_length = 255)
-    logo = models.ImageField(upload_to='team_logos/%Y/')
-    website = models.URLField()
+    logo = models.ImageField(upload_to='team_logos/%Y/',blank=True)
+    website = models.URLField(blank=True)
     country = models.CharField(max_length = 2,choices = COUNTRY_CHOICES)
     members = models.ManyToManyField(Person,through="Person_Team")
     def __str__(self):
@@ -47,19 +47,19 @@ class Weight_Class(models.Model):
 
 class Robot(models.Model):
     name = models.CharField(max_length = 255)
-    description = models.TextField()
-    wins = models.IntegerField()
-    losses = models.IntegerField()
+    description = models.TextField(blank=True)
+    wins = models.IntegerField(default=0)
+    losses = models.IntegerField(default=0)
     ranking = models.FloatField()
-    opt_out = models.BooleanField() # for opting out of rankings
+    opt_out = models.BooleanField(default=False) # for opting out of rankings
     def __str__(self):
     	return self.name
 
 class Version(models.Model):
     robot_name = models.CharField(max_length = 255)
     version_name = models.CharField(max_length = 255)
-    description = models.TextField()
-    image = models.ImageField(upload_to='robot_images/%Y/')
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='robot_images/%Y/',blank=True)
     weapon_type = models.CharField(max_length = 20)
     robot = models.ForeignKey(Robot, on_delete = models.CASCADE)
     team = models.ForeignKey(Team, on_delete = models.CASCADE)
@@ -69,17 +69,17 @@ class Version(models.Model):
 
 class Franchise(models.Model):
     name = models.CharField(max_length=50)
-    logo = models.ImageField(upload_to='franchise_logos/%Y/')
-    website = models.URLField()
-    description = models.TextField()
+    logo = models.ImageField(upload_to='franchise_logos/%Y/',blank=True)
+    website = models.URLField(blank=True)
+    description = models.TextField(blank=True)
     members = models.ManyToManyField(Person,through="Person_Franchise")
     def __str__(self):
     	return self.name
 
 class Event(models.Model):
     name = models.CharField(max_length=50)
-    description = models.TextField()
-    logo = models.ImageField(upload_to='event_logos/%Y/')
+    description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to='event_logos/%Y/',blank=True)
     ruleset = models.FileField(upload_to='event_rulesets')
     start_date = models.DateField()
     end_date = models.DateField()
@@ -94,17 +94,23 @@ class Event(models.Model):
         return self.name
 
 class Contest(models.Model):
-    fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
-    auto_awards = models.BooleanField()
-    event = models.ForeignKey(Event,on_delete = models.CASCADE)
-    weight_class = models.ForeignKey(Weight_Class,on_delete = models.CASCADE)
+	name = models.CharField(max_length=50,blank=True)
+	fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
+	auto_awards = models.BooleanField()
+	event = models.ForeignKey(Event,on_delete = models.CASCADE)
+	weight_class = models.ForeignKey(Weight_Class,on_delete = models.CASCADE)
+	def __str__(self):
+		if self.name != None and self.name != "":
+			return self.name
+		else:
+			return self.weight_class.name
 
 class Registration(models.Model):
-    approved = models.BooleanField()
-    reserve = models.BooleanField()
+    signup_time = models.DateTimeField(auto_now_add=True)
+    approved = models.BooleanField(default=False)
+    reserve = models.BooleanField(default=False)
     version = models.ForeignKey(Version,on_delete = models.CASCADE)
     signee = models.ForeignKey(Person,on_delete = models.CASCADE)
-    event = models.ForeignKey(Event,on_delete = models.CASCADE)
     contest = models.ForeignKey(Contest,on_delete = models.CASCADE)
 
 class Fight(models.Model):
@@ -117,14 +123,15 @@ class Fight(models.Model):
         ("DR","Draw"),
         ("WU","Winner Unknown"),
         ("NW","No Winner Declared"),
+        ("NM","No Method Declared"),
         ]
-    method = models.CharField(max_length = 2, choices = METHOD_CHOICES)
+    method = models.CharField(max_length = 2, choices = METHOD_CHOICES,default="NM")
     name = models.CharField(max_length=100)
     fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
-    media_internal = models.FileField(upload_to='fight_media/%Y/')
-    media_external = models.URLField();
+    media_internal = models.FileField(upload_to='fight_media/%Y/',blank=True)
+    media_external = models.URLField(blank=True);
     event = models.ForeignKey(Event,on_delete = models.CASCADE)
-    contest = models.ForeignKey(Contest,on_delete = models.CASCADE)
+    contest = models.ForeignKey(Contest,on_delete = models.CASCADE,blank=True)
     competitors = models.ManyToManyField(Version,through="Fight_Version")
     def __str__(self):
     	return self.name
@@ -147,6 +154,6 @@ class Person_Franchise(models.Model):
 
 class Fight_Version(models.Model):
     won = models.BooleanField()
-    tag_team = models.PositiveSmallIntegerField() # matching number, matching side on a tag team match, null for free for all fights
+    tag_team = models.PositiveSmallIntegerField() # matching number, matching side on a tag team match, 0 for free for all fights
     fight = models.ForeignKey(Fight,on_delete = models.CASCADE)
     version = models.ForeignKey(Version,on_delete = models.CASCADE)

@@ -4,5 +4,7 @@
     <form method="POST" class="form-group">
 	{% csrf_token %}
 	{{ form|crispy }}
+	<label for="name" class="form-group">Full Name*</label><br>
+	<input id="name" name="name" type=text class="nameinput form-control"><br>
 	<button type="submit" class="btn btn-success">Register</button>
     </form>

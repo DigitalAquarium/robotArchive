@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from .models import *
@@ -25,15 +25,24 @@ class ContestSignupView(generic.DetailView):
     model = Contest
     template_name = "main/contestsignupform.html"
 
-def contestSignup(request,contest_id):
-    return HttpResponseRedirect(reverse('main:contestsignupform',args=(Contest.id,)))
+def contestSignup(response,contest_id):
+    contest = Contest.objects.get(pk=contest_id)
+    anon_form = AnonSignupForm()
+    return render(response,"main/contestsignup.html",{"anon_form":anon_form,"contest":contest})
 
 def register(response):
     if response.method == "POST":
         form = RegistrationForm(response.POST)
+        name = response.POST["name"]
+        email = response.POST["email"]
         if form.is_valid():
-            form.save
-        return redirect("main:index")
+            user = form.save()
+            p = Person()
+            p.name = name
+            p.email = email
+            p.user_id = user.id
+            p.save()
+            return redirect("main:index")
     else:
         form = RegistrationForm()
     return render(response,"main/register.html",{"form":form})
