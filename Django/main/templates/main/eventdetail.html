@@ -7,7 +7,7 @@
 {%if event%}
 {%for contest in event.contest_set.all%}
     <ul>
-    <li>{{contest.weight_class.name}} <a href = "{%url 'main:contestsignupform' contest.id %}" >Sign up.</a></li>
+    <li>{{contest.weight_class.name}} <a href = "{%url 'main:contestsignup' contest.id %}" >Sign up.</a></li>
     <ul>
 {%endfor%}
 {%else%}

@@ -20,7 +20,8 @@ COUNTRY_CHOICES.extend([
     ('XE',"England"),
     ('XS',"Scotland"),
     ('XW',"Wales"),
-    ('XI',"Northern Ireland")
+    ('XI',"Northern Ireland"),
+    ('XX',"Unspecified")
     ])
 
 class Person(models.Model):
@@ -50,13 +51,13 @@ class Robot(models.Model):
     description = models.TextField(blank=True)
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
-    ranking = models.FloatField()
+    ranking = models.FloatField(default=1000)
     opt_out = models.BooleanField(default=False) # for opting out of rankings
     def __str__(self):
     	return self.name
 
 class Version(models.Model):
-    robot_name = models.CharField(max_length = 255)
+    robot_name = models.CharField(max_length = 255,blank=True)
     version_name = models.CharField(max_length = 255)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='robot_images/%Y/',blank=True)
@@ -65,7 +66,10 @@ class Version(models.Model):
     team = models.ForeignKey(Team, on_delete = models.CASCADE)
     weight_class = models.ForeignKey(Weight_Class, on_delete = models.CASCADE)
     def __str__(self):
-    	return self.robot_name + " " + self.version_name
+        if self.robot_name != "":
+        	return self.robot_name + " " + self.version_name
+        else:
+            return self.robot.name + " " + self.version_name
 
 class Franchise(models.Model):
     name = models.CharField(max_length=50)
@@ -94,16 +98,16 @@ class Event(models.Model):
         return self.name
 
 class Contest(models.Model):
-	name = models.CharField(max_length=50,blank=True)
-	fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
-	auto_awards = models.BooleanField()
-	event = models.ForeignKey(Event,on_delete = models.CASCADE)
-	weight_class = models.ForeignKey(Weight_Class,on_delete = models.CASCADE)
-	def __str__(self):
-		if self.name != None and self.name != "":
-			return self.name
-		else:
-			return self.weight_class.name
+    name = models.CharField(max_length=50,blank=True)
+    fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
+    auto_awards = models.BooleanField()
+    event = models.ForeignKey(Event,on_delete = models.CASCADE)
+    weight_class = models.ForeignKey(Weight_Class,on_delete = models.CASCADE)
+    def __str__(self):
+        if self.name != None and self.name != "":
+            return self.name
+        else:
+            return self.weight_class.name
 
 class Registration(models.Model):
     signup_time = models.DateTimeField(auto_now_add=True)
@@ -112,6 +116,21 @@ class Registration(models.Model):
     version = models.ForeignKey(Version,on_delete = models.CASCADE)
     signee = models.ForeignKey(Person,on_delete = models.CASCADE)
     contest = models.ForeignKey(Contest,on_delete = models.CASCADE)
+
+class Media(models.Model):
+    TYPE_CHOICES = [
+        ("LI","Local Image"),
+        ("EI","External Image"),
+        ("LV","Local Video"),
+        ("FB","Facebook"),
+        ("IF","IFrame Embed"), #Such as Youtube or Vimeo
+        ("IG","Instagram"),
+        ("TW","Twitter"),
+        ("TT","TikTok"),
+        ]
+    media_type = models.CharField(max_length = 2,choices = TYPE_CHOICES)
+    internal = models.FileField(upload_to='fight_media/%Y/',blank=True)
+    external = models.URLField(blank=True)
 
 class Fight(models.Model):
     METHOD_CHOICES = [
@@ -128,13 +147,13 @@ class Fight(models.Model):
     method = models.CharField(max_length = 2, choices = METHOD_CHOICES,default="NM")
     name = models.CharField(max_length=100)
     fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
-    media_internal = models.FileField(upload_to='fight_media/%Y/',blank=True)
-    media_external = models.URLField(blank=True);
     event = models.ForeignKey(Event,on_delete = models.CASCADE)
     contest = models.ForeignKey(Contest,on_delete = models.CASCADE,blank=True)
     competitors = models.ManyToManyField(Version,through="Fight_Version")
+    media = models.ForeignKey(Media,blank=True,on_delete = models.CASCADE)
     def __str__(self):
     	return self.name
+    
 
 class Award(models.Model):
     name = models.CharField(max_length = 255)

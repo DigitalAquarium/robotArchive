@@ -9,7 +9,6 @@ urlpatterns = [
 	path('',views.IndexView.as_view(),name='index'),
 	path('events',views.IndexView.as_view(),name='eventview'),
 	path('events/<int:pk>',views.EventDetailView.as_view(),name='eventdetail'),
-	path('contests/<int:pk>/signupform',views.ContestSignupView.as_view(),name='contestsignupform'),
 	path('contests/<int:contest_id>/signup',views.contestSignup,name='contestsignup'),
 	path('accounts/register',views.register,name='register'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

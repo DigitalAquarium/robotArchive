@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.views import generic
 from django.template import RequestContext
-
+from django.utils import timezone
 import datetime
 
 class IndexView(generic.ListView):
@@ -21,13 +21,17 @@ class EventDetailView(generic.DetailView):
     model = Event
     template_name = "main/eventdetail.html"
 
-class ContestSignupView(generic.DetailView):
-    model = Contest
-    template_name = "main/contestsignupform.html"
-
 def contestSignup(response,contest_id):
     contest = Contest.objects.get(pk=contest_id)
-    anon_form = AnonSignupForm()
+    if timezone.now() > contest.event.registration_close:
+        return redirect("main:index")
+    if response.method == "POST":
+        anon_form = AnonSignupForm(response.POST)
+        if anon_form.is_valid():
+            anon_form.save(contest.weight_class)
+            return redirect("main:index")
+    else:
+        anon_form = AnonSignupForm()
     return render(response,"main/contestsignup.html",{"anon_form":anon_form,"contest":contest})
 
 def register(response):
