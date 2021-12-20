@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<body>
+{%extends "base.html"%}
+{%block content%}
 {% load crispy_forms_tags %}
 <form method="post" action="{%url 'main:contestsignup' contest.id%}">
 {%csrf_token%}
@@ -14,4 +14,4 @@
 	<input type="submit" value="Sign Up">
 </fieldset>
 </form>
-</body>
+{%endblock%}

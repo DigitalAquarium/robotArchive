@@ -1,13 +1,13 @@
-<!DOCTYPE html>
-<body>
+{%extends "base.html"%}
+{%block content%}
 {%if form.errors%}
-	oops
+	Something has gone wrong.
 {%endif%}
 {%if next%}
 	{%if user.is_authenticated%}
-	your account is cringe, try another
+	You're already logged in, would you like to login to a different account? 
 	{%else%}
-	Pls login
+	Log In.
 	{%endif%}
 {%endif%}
 
@@ -28,5 +28,7 @@
 <input type="hidden" name="next" value="{{next}}">
 </form>
 
-<p><a href="{%url 'password_reset'%}">Is u r password le bad</a></p>
-</body>
+<p><a href="{%url 'password_reset'%}">Reset password.</a></p>
+
+<p><a href="{%url 'main:register'%}">Don't have an account? Register here.</a></p>
+{%endblock%}

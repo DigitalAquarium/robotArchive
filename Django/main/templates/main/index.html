@@ -1,6 +1,6 @@
-<!DOCTYPE html>
-<html>
-<body>
+{%extends "base.html"%}
+
+{%block content%}
 {%if upcoming_event_list%}
 	<ul>
 	{%for event in upcoming_event_list%}
@@ -10,5 +10,4 @@
 {% else %}
     <p>There are no upcoming events.</p>
 {% endif %}
-</body>
-</html>
+{%endblock%}
