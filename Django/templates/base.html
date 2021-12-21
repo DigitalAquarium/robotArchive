@@ -1,12 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-gb">
+<head>
+{%load static%}
+<link rel="stylesheet" href="{%static 'base.css' %}">
+<meta charset="UTF-8">
+<title> Event Manager </title>
+</head>
 <body>
-<div id="top_bar">
-	{%block top_bar%}
-	<p>Roboteer's Tavern	Events	Robots		Searchbar	Login</p>	
+<img src="{%static 'temp/Help.png' %}"alt="cringe">
+<div class="navbar">
+	{%block navbar%}
+	<p>Roboteer's Tavern</p>
+	<a href="{%url 'main:index'%}">Events</a>
+	<a href="googe.com">Robots</a>
+	<p>Searchbar</p>
+	<a href="{%url 'login'%}">Login</a>
 	{%endblock%}
 </div>
-<div id="content">
+<div class="content">
 	{%block content%}{%endblock%}
 </div>
 </body>

@@ -1,0 +1,12 @@
+.navbar{
+	top:0;
+	position:fixed;
+	width:100%;
+}
+.navbar a{
+	color:red;
+	display:block;
+}
+body{
+	background-color:purple;
+}

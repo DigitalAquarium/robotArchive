@@ -11,4 +11,4 @@ urlpatterns = [
 	path('events/<int:pk>',views.EventDetailView.as_view(),name='eventdetail'),
 	path('contests/<int:contest_id>/signup',views.contestSignup,name='contestsignup'),
 	path('accounts/register',views.register,name='register'),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
