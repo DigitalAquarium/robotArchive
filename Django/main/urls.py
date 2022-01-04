@@ -6,9 +6,11 @@ from django.conf.urls.static import static
 
 app_name = 'main'
 urlpatterns = [
-	path('',views.IndexView.as_view(),name='index'),
-	path('events',views.IndexView.as_view(),name='eventview'),
-	path('events/<int:pk>',views.EventDetailView.as_view(),name='eventdetail'),
-	path('contests/<int:contest_id>/signup',views.contestSignup,name='contestsignup'),
-	path('accounts/register',views.register,name='register'),
+    path('',views.IndexView.as_view(),name='index'),
+    path('robots',views.RobotIndex.as_view(),name='robotindex'),
+    path('robot/<int:pk>',views.RobotDetailView.as_view(),name='robotdetail'),
+    path('events',views.IndexView.as_view(),name='eventview'),
+    path('events/<int:pk>',views.EventDetailView.as_view(),name='eventdetail'),
+    path('contests/<int:contest_id>/signup',views.contestSignup,name='contestsignup'),
+    path('accounts/register',views.register,name='register'),
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

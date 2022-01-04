@@ -147,13 +147,13 @@ class Fight(models.Model):
     method = models.CharField(max_length = 2, choices = METHOD_CHOICES,default="NM")
     name = models.CharField(max_length=100)
     fight_type = models.CharField(max_length = 2, choices = FIGHT_TYPE_CHOICES)
+    number = models.IntegerField()
     event = models.ForeignKey(Event,on_delete = models.CASCADE)
     contest = models.ForeignKey(Contest,on_delete = models.CASCADE,blank=True)
     competitors = models.ManyToManyField(Version,through="Fight_Version")
     media = models.ForeignKey(Media,blank=True,on_delete = models.CASCADE)
     def __str__(self):
     	return self.name
-    
 
 class Award(models.Model):
     name = models.CharField(max_length = 255)

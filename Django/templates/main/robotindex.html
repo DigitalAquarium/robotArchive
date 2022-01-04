@@ -1,0 +1,9 @@
+{%extends "base.html"%}
+
+{%block content%}
+	<ul>
+	{%for robot in robot_list%}
+		<li><a href = "{%url 'main:robotdetail' robot.id %}">{{robot.name}}</a></li>
+		{%endfor%}
+	</ul>
+{%endblock%}

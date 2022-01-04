@@ -1,12 +1,36 @@
+*{
+	font-family:arial,sans-serif;
+}
+
 .navbar{
 	top:0;
 	position:fixed;
 	width:100%;
+	background-color:lightgrey;
+	overflow:hidden;
+	display:inline-block;
 }
 .navbar a{
-	color:red;
-	display:block;
+	display:inline-block;
+	background-color:darkgrey;
+	height:100%;
+	padding:10px;
 }
-body{
-	background-color:purple;
+.navlinks{
+	display:inline-block;
+	float:right
+}
+.navlinks button{
+	border:none;
+}
+.navtitle{
+	float:left;
+}
+
+.content{
+	margin-top:50px;
+}
+
+.content fieldset{
+	text-align:center;
 }

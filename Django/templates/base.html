@@ -7,14 +7,18 @@
 <title> Event Manager </title>
 </head>
 <body>
-<img src="{%static 'temp/Help.png' %}"alt="cringe">
 <div class="navbar">
 	{%block navbar%}
-	<p>Roboteer's Tavern</p>
-	<a href="{%url 'main:index'%}">Events</a>
-	<a href="googe.com">Robots</a>
-	<p>Searchbar</p>
-	<a href="{%url 'login'%}">Login</a>
+	<div class="navtitle">
+		<span>Roboteer's Tavern</span>
+	</div>
+	<div class="navlinks">
+		<a href="{%url 'main:index'%}">Events</a>
+		<a href="{%url 'main:robotindex'%}"> Robots</a>
+		<input type=text/>
+		<button type=submit>Search</button>
+		<a href="{%url 'login'%}">Login</a>
+	</div>
 	{%endblock%}
 </div>
 <div class="content">

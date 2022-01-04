@@ -13,7 +13,7 @@ import datetime
 class IndexView(generic.ListView):
     template_name = "main/index.html"
     context_object_name = "upcoming_event_list"
-
+    print("cringe")
     def get_queryset(self):
         return Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
 
@@ -51,4 +51,13 @@ def register(response):
         form = RegistrationForm()
     return render(response,"main/register.html",{"form":form})
 
-#class LoginView()
+class RobotIndex(generic.ListView):
+    template_name = "main/robotindex.html"
+    print("poop")
+    context_object_name = "robot_list"
+    def get_queryset(self):
+        return Robot.objects.order_by("name")[:5]
+
+class RobotDetailView(generic.DetailView):
+    model = Robot
+    template_name = "main/robotdetail.html"
