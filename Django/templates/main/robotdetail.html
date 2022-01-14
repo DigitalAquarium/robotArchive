@@ -4,11 +4,11 @@
 <p>{{robot.description}}</p>
 <h2>Versions!</h2>
 {%if robot%}
-{%for v in robot.version_set.all%}
     <ul>
-    <li>{{v}}<img src={{v.image.url}} alt=picture></li>
-    <ul>
-{%endfor%}
+    {%for v in robot.version_set.all%}
+        <li>{{v}}<img src="{{MEDIA_URL}}{{v.image.url}}" alt=picture></li>
+    {%endfor%}
+    </ul>
 {%else%}
 Something appears to have gone wrong
 {%endif%}
