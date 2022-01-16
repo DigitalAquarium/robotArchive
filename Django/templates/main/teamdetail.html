@@ -1,0 +1,20 @@
+{%extends "base.html"%}
+{% load static %}
+{%block content%}
+{%if team %}
+    <img src=
+             {% if team.logo %} {{team.logo.url}}
+             {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
+             {% endif %} alt=logo>
+    <h1><img src='{%get_static_prefix%}flags/4x3/{{ team.country | lower }}.svg' width="30" height="40">{{team}}</h1>
+    <p>{{team.website}}</p>
+    <h2>Robots</h2>
+    <ul>
+    {%for robot in team.version_set.all%}
+        <li>{{robot}} <a href = "{%url 'main:robotdetail' robot.robot.id %}" >View</a></li>
+    {%endfor%}
+    </ul>
+{%else%}
+    Something has gone wrong.
+{%endif%}
+{%endblock%}

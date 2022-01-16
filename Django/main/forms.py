@@ -46,7 +46,8 @@ class AnonSignupForm(forms.Form):
         v.robot = r
         p.save()
         t.save()
-        t.members.add(p.id)
+        pt = Person_Team.objects.create(person=p, team=t)
+        pt.save()
         t.save()
         r.save()
         v.save()

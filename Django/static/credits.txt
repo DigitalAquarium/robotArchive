@@ -1,0 +1,2 @@
+Question Mark Icon: <a href="https://www.flaticon.com/free-icons/question" title="question icons">Question icons created by Dave Gandy - Flaticon</a>
+Flags: https://github.com/lipis/flag-icons

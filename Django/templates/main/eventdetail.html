@@ -1,15 +1,15 @@
 {%extends "base.html"%}
 {%block content%}
-<img src={{event.logo.url}} alt=logo><h1>{{event.name}}</h1>
+{%if event%}
+<img src="{{event.logo.url}}" alt=logo><h1>{{event.name}}</h1>
 <p>{{event.description}}</p>
 <h2>Contests</h2>
-{%if event%}
-{%for contest in event.contest_set.all%}
     <ul>
-    <li>{{contest.weight_class.name}} <a href = "{%url 'main:contestsignup' contest.id %}" >Sign up.</a></li>
+    {%for contest in event.contest_set.all%}
+        <li>{{contest.weight_class.name}} <a href = "{%url 'main:contestsignup' contest.id %}" >Sign up.</a></li>
+    {%endfor%}
     </ul>
-{%endfor%}
 {%else%}
-cheese
+There is no event with this ID.
 {%endif%}
 {%endblock%}

@@ -1,5 +1,6 @@
 import datetime
 
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils import timezone
@@ -11,7 +12,6 @@ from .forms import *
 class IndexView(generic.ListView):
     template_name = "main/index.html"
     context_object_name = "upcoming_event_list"
-    print("cringe")
 
     def get_queryset(self):
         return Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
@@ -56,7 +56,6 @@ def register(response):
 
 class RobotIndex(generic.ListView):
     template_name = "main/robotindex.html"
-    print("poop")
     context_object_name = "robot_list"
 
     def get_queryset(self):
@@ -66,3 +65,18 @@ class RobotIndex(generic.ListView):
 class RobotDetailView(generic.DetailView):
     model = Robot
     template_name = "main/robotdetail.html"
+
+
+@login_required(login_url='/accounts/login/')
+def myteamsview(request):
+    me = Person.objects.get(user=request.user)
+    p_t = Person_Team.objects.filter(person=me)
+    teams = []
+    for value in p_t:
+        teams.append(value.team)
+    return render(request, "main/myteams.html", {"teams": teams})
+
+
+class TeamDetailView(generic.DetailView):
+    model = Team
+    template_name = "main/teamdetail.html"
