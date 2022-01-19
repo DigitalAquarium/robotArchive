@@ -77,6 +77,19 @@ def myteamsview(request):
     return render(request, "main/myteams.html", {"teams": teams})
 
 
-class TeamDetailView(generic.DetailView):
-    model = Team
-    template_name = "main/teamdetail.html"
+def TeamDetailView(request, team_id):
+    me = Person.objects.get(user=request.user)
+    team = Team.objects.get(pk=team_id)
+    member = len(Person_Team.objects.filter(person=me, team=team)) > 0 #TODO: Potentially a bad check for if you can edit and such, should probably use a better system in future
+    return render(request, "main/teamdetail.html", {"team": team, "member": member})
+
+def newrobot(response, team_id):
+    team = Team.objects.get(pk=team_id)
+    if response.method == "POST":
+        form = NewRobotForm(response.POST)
+        if form.is_valid():
+            form.save(team)
+            return redirect("main:index")
+    else:
+        form = NewRobotForm()
+    return render(response, "main/newrobot.html", {"form": form, "team": team})

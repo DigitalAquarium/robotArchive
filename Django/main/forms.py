@@ -51,3 +51,25 @@ class AnonSignupForm(forms.Form):
         t.save()
         r.save()
         v.save()
+
+class NewRobotForm(forms.Form):
+    name = forms.CharField(max_length=255, required=True)
+    description = forms.CharField(widget=forms.Textarea, required=False)
+    image = forms.ImageField(required=False)
+    weapon_type = forms.CharField(max_length=20, required=True)
+    weight_class = forms.ModelChoiceField(queryset=Weight_Class.objects.all(), required=True)
+    opt_out = forms.BooleanField(required=False)
+
+    def save(self, team):
+        r = Robot()
+        v = Version()
+        r.name = self.cleaned_data['name']
+        r.description = self.cleaned_data['description']
+        r.opt_out = self.cleaned_data['opt_out']
+        v.robot = r
+        v.image = self.cleaned_data['image']
+        v.weapon_type = self.cleaned_data['weapon_type']
+        v.weight_class = self.cleaned_data['weight_class']
+        v.team = team
+        r.save()
+        v.save()
