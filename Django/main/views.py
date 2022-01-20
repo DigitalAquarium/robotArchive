@@ -17,6 +17,14 @@ class IndexView(generic.ListView):
         return Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
 
 
+class EventIndexView(generic.ListView):
+    template_name = "main/event_index.html"
+    context_object_name = "event_list"
+
+    def get_queryset(self):
+        return Event.objects.all
+
+
 class EventDetailView(generic.DetailView):
     model = Event
     template_name = "main/event_detail.html"
@@ -85,8 +93,9 @@ def team_detail_view(request, team_id):
     return render(request, "main/team_detail.html", {"team": team, "member": member})
 
 
+@login_required(login_url='/accounts/login/')
 def new_robot_view(request, team_id):
-    team = Team.objects.get(pk=team_id)
+    team = Team.objects.get(pk=team_id)  ##TODO: Add verification
     if request.method == "POST":
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
@@ -95,3 +104,44 @@ def new_robot_view(request, team_id):
     else:
         form = NewRobotForm()
     return render(request, "main/new_robot.html", {"form": form, "team": team})
+
+
+def team_edit_view(request, team_id=None):
+    if request.method == "POST":
+        form = TeamForm(request.POST)
+        if form.is_valid():
+            new = form.save()
+            if team_id is None:
+                person = Person.objects.get(user=request.user)
+                Person_Team.objects.create(team=new, person=person)
+            return redirect("main:index")
+    else:
+        if team_id is None:
+            form = TeamForm()
+        else:
+            team = Team.objects.get(pk=team_id)
+            form = TeamForm(instance=team)
+    if team_id is None:
+        return render(request, "main/edit_team.html", {"form": form, "team_id": team_id})
+    else:
+        return render(request, "main/edit_team.html", {"form": form, "team_id": team_id})
+
+def franchise_modify_view(request, franchise_id=None):
+    if request.method == "POST":
+        form = FranchiseForm(request.POST)
+        if form.is_valid():
+            new = form.save()
+            if franchise_id is None:
+                person = Person.objects.get(user=request.user)
+                Person_Franchise.objects.create(franchise=new, person=person)
+            return redirect("main:index")
+    else:
+        if franchise_id is None:
+            form = TeamForm()
+        else:
+            franchise = Franchise.objects.get(pk=franchise_id)
+            form = FranchiseForm(instance=Franchise)
+    if franchise_id is None:
+        return render(request, "main/modify_franchise.html", {"form": form, "franchise_id": franchise_id})
+    else:
+        return render(request, "main/modify_franchise.html", {"form": form, "franchise_id": franchise_id})

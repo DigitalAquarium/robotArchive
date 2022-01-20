@@ -1,12 +1,19 @@
 {%extends "base.html"%}
 {%block content%}
 {%if event%}
-<img src="{{event.logo.url}}" alt=logo><h1>{{event.name}}</h1>
+    <img src=
+             {% if event.logo %} {{event.logo.url}}
+             {% else %}
+                {% if event.franchise.logo %} {{event.franchise.logo.url}}
+                {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
+                {% endif %}
+             {% endif %} alt=logo>
+    <h1>{{event.name}}</h1>
 <p>{{event.description}}</p>
 <h2>Contests</h2>
     <ul>
     {%for contest in event.contest_set.all%}
-        <li>{{contest.weight_class.name}} <a href = "{%url 'main:contestsignup' contest.id %}" >Sign up.</a></li>
+        <li>{{contest.weight_class.name}} <a href = "{%url 'contestSignup' contest.id %}" >Sign up.</a></li>
     {%endfor%}
     </ul>
 {%else%}

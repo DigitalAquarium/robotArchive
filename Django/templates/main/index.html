@@ -1,13 +1,13 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 
-{%block content%}
-{%if upcoming_event_list%}
-	<ul>
-	{%for event in upcoming_event_list%}
-		<li><a href = "{%url 'main:eventdetail' event.id %}">{{event.name}}</a></li>
-		{%endfor%}
-	</ul>
-{% else %}
-    <p>There are no upcoming events.</p>
-{% endif %}
-{%endblock%}
+{% block content %}
+    {% if upcoming_event_list %}
+        <ul>
+            {% for event in upcoming_event_list %}
+                <li><a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>There are no upcoming events.</p>
+    {% endif %}
+{% endblock %}

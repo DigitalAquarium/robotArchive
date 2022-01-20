@@ -1,18 +1,18 @@
-{%extends "base.html"%}
-{%block content%}
-<h1>{{robot.name}}</h1>
-<p>{{robot.description}}</p>
-<h2>Versions!</h2>
-{%if robot%}
-    <ul>
-    {%for v in robot.version_set.all%}
-        <li>{{v}}<img src=
-             {% if v.image %} {{v.image.url}}
-             {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
-             {% endif %} alt=image></li>
-    {%endfor%}
-    </ul>
-{%else%}
-Something appears to have gone wrong
-{%endif%}
-{%endblock%}
+{% extends "base.html" %}
+{% block content %}
+    <h1>{{ robot.name }}</h1>
+    <p>{{ robot.description }}</p>
+    <h2>Versions!</h2>
+    {% if robot %}
+        <ul>
+            {% for v in robot.version_set.all %}
+                <li>{{ v }}<img src=
+                                        {% if v.image %} {{ v.image.url }}
+                                        {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
+                                        {% endif %} alt=image></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        Something appears to have gone wrong
+    {% endif %}
+{% endblock %}

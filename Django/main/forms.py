@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import *
-from django.core.files.uploadedfile import SimpleUploadedFile
+
 
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -74,3 +74,17 @@ class NewRobotForm(forms.Form):
         v.team = team
         r.save()
         v.save()
+
+
+class TeamForm(forms.ModelForm):
+
+    class Meta:
+        model = Team
+        fields = ['name', 'logo', 'country', 'website']
+
+
+class FranchiseForm(forms.ModelForm):
+
+    class Meta:
+        model = Franchise
+        fields = ['name', 'description', 'logo', 'website']

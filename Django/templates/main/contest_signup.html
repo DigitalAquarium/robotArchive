@@ -1,18 +1,18 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags %}
-{%block content%}
-<form method="post" action="{%url 'main:contestsignup' contest.id%}">
-{%csrf_token%}
-<fieldset>
-	<legend><h1>{{contest.event}} : {{contest}}</h1></legend>
-	{%if error_message %}<p><strong>{{error_message}}</strong></p>{%endif%}
-	{%if user.is_authenticated%}
-	hi
-	{%else%}
-	{{anon_form|crispy}}
-	{%endif%}
-	<input type="submit" value="Sign Up">
-</fieldset>
-</form>
-{%endblock%}
+{% block content %}
+    <form method="post" action="{% url 'main:contestSignup' contest.id %}">
+        {% csrf_token %}
+        <fieldset>
+            <legend><h1>{{ contest.event }} : {{ contest }}</h1></legend>
+            {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            {% if user.is_authenticated %}
+                hi
+            {% else %}
+                {{ anon_form|crispy }}
+            {% endif %}
+            <input type="submit" value="Sign Up">
+        </fieldset>
+    </form>
+{% endblock %}

@@ -1,14 +1,14 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 {% load crispy_forms_filters %}
-{%block content%}
-<h1>Register an Account</h1>
-{% load crispy_forms_tags %}
+{% block content %}
+    <h1>Register an Account</h1>
+    {% load crispy_forms_tags %}
 
     <form method="POST" class="form-group">
-	{% csrf_token %}
-	{{ form|crispy }}
-	<label for="name" class="form-group">Full Name*</label><br>
-	<input id="name" name="name" type=text class="nameinput form-control"><br>
-	<button type="submit" class="btn btn-success">Register</button>
+        {% csrf_token %}
+        {{ form|crispy }}
+        <label for="name" class="form-group">Full Name*</label><br>
+        <input id="name" name="name" type=text class="nameinput form-control"><br>
+        <button type="submit" class="btn btn-success">Register</button>
     </form>
-{%endblock%}
+{% endblock %}
