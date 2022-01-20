@@ -19,10 +19,10 @@ class IndexView(generic.ListView):
 
 class EventDetailView(generic.DetailView):
     model = Event
-    template_name = "main/eventdetail.html"
+    template_name = "main/event_detail.html"
 
 
-def contestSignup(response, contest_id):
+def contest_signup_view(response, contest_id):
     contest = Contest.objects.get(pk=contest_id)
     if timezone.now() > contest.event.registration_close:
         return redirect("main:index")
@@ -33,7 +33,7 @@ def contestSignup(response, contest_id):
             return redirect("main:index")
     else:
         anon_form = AnonSignupForm()
-    return render(response, "main/contestsignup.html", {"anon_form": anon_form, "contest": contest})
+    return render(response, "main/contest_signup.html", {"anon_form": anon_form, "contest": contest})
 
 
 def register(response):
@@ -54,8 +54,8 @@ def register(response):
     return render(response, "main/register.html", {"form": form})
 
 
-class RobotIndex(generic.ListView):
-    template_name = "main/robotindex.html"
+class RobotIndexView(generic.ListView):
+    template_name = "main/robot_index.html"
     context_object_name = "robot_list"
 
     def get_queryset(self):
@@ -64,32 +64,34 @@ class RobotIndex(generic.ListView):
 
 class RobotDetailView(generic.DetailView):
     model = Robot
-    template_name = "main/robotdetail.html"
+    template_name = "main/robot_detail.html"
 
 
 @login_required(login_url='/accounts/login/')
-def myteamsview(request):
+def my_teams_view(request):
     me = Person.objects.get(user=request.user)
     p_t = Person_Team.objects.filter(person=me)
     teams = []
     for value in p_t:
         teams.append(value.team)
-    return render(request, "main/myteams.html", {"teams": teams})
+    return render(request, "main/my_teams.html", {"teams": teams})
 
 
-def TeamDetailView(request, team_id):
+def team_detail_view(request, team_id):
     me = Person.objects.get(user=request.user)
     team = Team.objects.get(pk=team_id)
-    member = len(Person_Team.objects.filter(person=me, team=team)) > 0 #TODO: Potentially a bad check for if you can edit and such, should probably use a better system in future
-    return render(request, "main/teamdetail.html", {"team": team, "member": member})
+    member = len(Person_Team.objects.filter(person=me, team=team)) > 0  # TODO: Potentially a bad check
+    # for if you can edit and such, should probably use a better system in future
+    return render(request, "main/team_detail.html", {"team": team, "member": member})
 
-def newrobot(response, team_id):
+
+def new_robot_view(request, team_id):
     team = Team.objects.get(pk=team_id)
-    if response.method == "POST":
-        form = NewRobotForm(response.POST)
+    if request.method == "POST":
+        form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
             form.save(team)
             return redirect("main:index")
     else:
         form = NewRobotForm()
-    return render(response, "main/newrobot.html", {"form": form, "team": team})
+    return render(request, "main/new_robot.html", {"form": form, "team": team})

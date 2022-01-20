@@ -6,7 +6,10 @@
 {%if robot%}
     <ul>
     {%for v in robot.version_set.all%}
-        <li>{{v}}<img src="{{MEDIA_URL}}{{v.image.url}}" alt=picture></li>
+        <li>{{v}}<img src=
+             {% if v.image %} {{v.image.url}}
+             {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
+             {% endif %} alt=image></li>
     {%endfor%}
     </ul>
 {%else%}

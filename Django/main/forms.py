@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import *
-
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -52,10 +52,11 @@ class AnonSignupForm(forms.Form):
         r.save()
         v.save()
 
+
 class NewRobotForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
     description = forms.CharField(widget=forms.Textarea, required=False)
-    image = forms.ImageField(required=False)
+    img = forms.ImageField(required=False)
     weapon_type = forms.CharField(max_length=20, required=True)
     weight_class = forms.ModelChoiceField(queryset=Weight_Class.objects.all(), required=True)
     opt_out = forms.BooleanField(required=False)
@@ -67,7 +68,7 @@ class NewRobotForm(forms.Form):
         r.description = self.cleaned_data['description']
         r.opt_out = self.cleaned_data['opt_out']
         v.robot = r
-        v.image = self.cleaned_data['image']
+        v.image = self.cleaned_data['img']
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']
         v.team = team
