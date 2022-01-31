@@ -97,11 +97,11 @@ class Event(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     logo = models.ImageField(upload_to='event_logos/%Y/', blank=True)
-    ruleset = models.FileField(upload_to='event_rulesets')
     start_date = models.DateField()
     end_date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
+    registration_open = models.DateTimeField()
     registration_close = models.DateTimeField()
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES)
     latitude = models.FloatField()
@@ -178,7 +178,7 @@ class Fight(models.Model):
 
 class Award(models.Model):
     name = models.CharField(max_length=255)
-    award_type = models.PositiveSmallIntegerField()  # 0 other, 1 first place, 2 second place, 3 thrid place
+    award_type = models.PositiveSmallIntegerField()  # 0 other, 1 first place, 2 second place, 3 third place
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
 

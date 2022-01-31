@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from EventManager import stuff
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^jzlbulq(+vr*i+y0t-_-f3(2a3!xb$^xnl97eh+by&j(bbhss'
+SECRET_KEY = stuff.django
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -78,8 +79,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'robot_event_manager',
-        'USER': 'root',
-        'PASSWORD': '3Xep7rR!qPU3',
+        'USER': stuff.sqlu,
+        'PASSWORD': stuff.sqlp,
         'HOST': 'localhost',
         'PORT': '3306',
     }

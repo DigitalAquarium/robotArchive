@@ -8,7 +8,7 @@
             <legend><h1>{{ contest.event }} : {{ contest }}</h1></legend>
             {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
             {% if user.is_authenticated %}
-                hi
+                {{ form | crispy }}
             {% else %}
                 {{ anon_form|crispy }}
             {% endif %}

@@ -1,22 +1,25 @@
-{%extends "base.html"%}
-{%block content%}
-{%if event%}
-    <img src=
-             {% if event.logo %} {{event.logo.url}}
-             {% else %}
-                {% if event.franchise.logo %} {{event.franchise.logo.url}}
-                {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
-                {% endif %}
-             {% endif %} alt=logo>
-    <h1>{{event.name}}</h1>
-<p>{{event.description}}</p>
-<h2>Contests</h2>
-    <ul>
-    {%for contest in event.contest_set.all%}
-        <li>{{contest.weight_class.name}} <a href = "{%url 'contestSignup' contest.id %}" >Sign up.</a></li>
-    {%endfor%}
-    </ul>
-{%else%}
-There is no event with this ID.
-{%endif%}
-{%endblock%}
+{% extends "base.html" %}
+{% block content %}
+    {% if event %}
+        <img src=
+                     {% if event.logo %} {{ event.logo.url }}
+                     {% else %}
+                         {% if event.franchise.logo %} {{ event.franchise.logo.url }}
+                         {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
+                         {% endif %}
+                     {% endif %} alt=logo>
+        <h1>{{ event.name }}</h1>
+        <p>{{ event.description }}</p>
+        <iframe width="600" height="450" style="border:0" loading="lazy" allowfullscreen
+                src="https://www.google.com/maps/embed/v1/view?key={{ map }}&zoom=14&center={{ event.latitude }},{{ event.longitude }}"></iframe>
+        <h2>Contests</h2>
+        <ul>
+            {% for contest in event.contest_set.all %}
+                <li>{{ contest }} <a href="{% url 'main:contestSignup' contest.id %}">Sign up.</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        There is no event with this ID.
+    {% endif %}
+{% endblock %}

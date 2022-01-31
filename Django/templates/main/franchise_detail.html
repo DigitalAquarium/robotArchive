@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    {% if fran %}
+        <img src=
+                     {% if fran.logo %} {{ fran.logo.url }}
+                     {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
+                     {% endif %} alt=logo>
+        <img src='{% get_static_prefix %}flags/4x3/{{ fran.country | lower }}.svg' width="30" height="40" alt="flag">
+        <h1>{{ fran }}</h1>
+        <p>{{ fran.website }}</p>
+        <h2>Events</h2>
+        <ul>
+            {% for event in fran.event_set.all %}
+                <li>{{ event }} <a href="{% url 'main:eventDetail' event.id %}">View</a></li>
+            {% endfor %}
+        </ul>
+        {% if member %}
+            <a href="{% url 'main:newEvent' franchise.id %} ">New Robot</a>
+        {% endif %}
+    {% else %}
+        Something has gone wrong.
+    {% endif %}
+{% endblock %}

@@ -19,6 +19,17 @@ class RegistrationForm(UserCreationForm):
         return user
 
 
+class SignupForm(forms.Form):
+    version = forms.ModelChoiceField(queryset=Version.objects.none(), required=True)
+
+    def save(self, contest, person):
+        reg = Registration()
+        reg.version = self.cleaned_data['version']
+        reg.signee = person
+        reg.contest = contest
+        reg.save()
+
+
 class AnonSignupForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
     email = forms.EmailField(required=True)
@@ -26,7 +37,8 @@ class AnonSignupForm(forms.Form):
     robot_name = forms.CharField(max_length=255, required=True)
     weapon_type = forms.CharField(max_length=20, required=True)
 
-    def save(self, weight):
+    def save(self, contest):
+        weight = contest.weight_class
         p = Person()
         p.name = self.cleaned_data['name']
         p.email = self.cleaned_data['email']
@@ -47,10 +59,16 @@ class AnonSignupForm(forms.Form):
         p.save()
         t.save()
         pt = Person_Team.objects.create(person=p, team=t)
+        reg = Registration()
+        reg.version = v
+        reg.signee = p
+        reg.contest = contest
+
         pt.save()
         t.save()
         r.save()
         v.save()
+        reg.save()
 
 
 class NewRobotForm(forms.Form):
@@ -77,14 +95,12 @@ class NewRobotForm(forms.Form):
 
 
 class TeamForm(forms.ModelForm):
-
     class Meta:
         model = Team
         fields = ['name', 'logo', 'country', 'website']
 
 
 class FranchiseForm(forms.ModelForm):
-
     class Meta:
         model = Franchise
         fields = ['name', 'description', 'logo', 'website']
