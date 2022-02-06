@@ -16,7 +16,7 @@
             {% endfor %}
         </ul>
         {% if member %}
-            <a href="{% url 'main:newEvent' franchise.id %} ">New Robot</a>
+            <a href="{% url 'main:newEvent' fran.id %} ">New Event</a>
         {% endif %}
     {% else %}
         Something has gone wrong.

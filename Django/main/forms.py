@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.forms.utils import ErrorList
+
 from .models import *
 
 
@@ -76,7 +78,8 @@ class NewRobotForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea, required=False)
     img = forms.ImageField(required=False)
     weapon_type = forms.CharField(max_length=20, required=True)
-    weight_class = forms.ModelChoiceField(queryset=Weight_Class.objects.all(), required=True)
+    weight_class = forms.ModelChoiceField(queryset=Weight_Class.objects.all().order_by("-recommended", "weight_grams"),
+                                          required=True)
     opt_out = forms.BooleanField(required=False)
 
     def save(self, team):
@@ -104,3 +107,22 @@ class FranchiseForm(forms.ModelForm):
     class Meta:
         model = Franchise
         fields = ['name', 'description', 'logo', 'website']
+
+
+class EventForm(forms.ModelForm):
+    class Meta:
+        model = Event
+        fields = ['name', 'description', 'logo', 'country', 'start_date', 'end_date', 'start_time', 'end_time',
+                  'registration_open', 'registration_close', 'latitude', 'longitude']
+        widgets = {
+            'start_date': forms.SelectDateWidget(),
+            'end_date': forms.SelectDateWidget(),
+            'start_time': forms.TimeInput(attrs={'supports_microseconds': False}),
+            'end_time': forms.TimeInput(attrs={'supports_microseconds': False}),
+        }
+
+
+class ContestForm(forms.ModelForm):
+    class Meta:
+        model = Contest
+        fields = ["name", "fight_type", "auto_awards", "entries", "reserves", "weight_class"]

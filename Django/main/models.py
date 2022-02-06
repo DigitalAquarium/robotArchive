@@ -10,7 +10,7 @@ FIGHT_TYPE_CHOICES = [
     (FULL_COMBAT, "Full Combat"),
     (SPORTSMAN, "Sportsman"),
     (PLASTIC, "Restricted Material"),
-    (NON_COMBAT, "Non-Combat")
+    (NON_COMBAT, "Non-Combat"),
 ]
 
 COUNTRY_CHOICES = []
@@ -48,9 +48,52 @@ class Team(models.Model):
 class Weight_Class(models.Model):
     name = models.CharField(max_length=30)
     weight_grams = models.IntegerField()
+    recommended = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        return self.name + ": " + self.weight_string()
+
+    def weight_string(self):
+        if self.weight_grams < 400:
+            return str(self.weight_grams) + "g"
+        elif self.weight_grams < 1000:
+            if self.weight_grams == 454:
+                return "1lb"
+            else:
+                return str(self.weight_grams) + "g"
+        elif self.weight_grams < 20000:
+            if self.weight_grams % 1000 == 0:
+                return str(self.weight_grams // 1000) + "kg"
+            elif self.weight_grams % 10 == 0:
+                return str(round(self.weight_grams / 1000, 1)) + "kg"
+            else:
+                return str(self.to_lbs()) + "lbs"
+        else:
+            if self.weight_grams % 1000 == 0:
+                return str(self.weight_grams // 1000) + "kg"
+            else:
+                return str(self.to_lbs()) + "lbs"
+
+    def metric_string(self):
+        if self.weight_grams < 1000:
+            return str(self.weight_grams) + "g"
+        elif self.weight_grams < 10000:
+            return str(round(self.weight_grams / 1000, 2)) + "kg"
+        elif self.weight_grams < 20000:
+            return str(round(self.weight_grams / 1000, 1)) + "kg"
+        else:
+            return str(round(self.weight_grams / 1000)) + "kg"
+
+    def imperial_string(self):
+        if self.weight_grams < 454:
+            return str(self.weight_grams) + "g"
+        elif self.weight_grams == 454:
+            return "1lb"
+        else:
+            return str(self.to_lbs()) + "lbs"
+
+    def to_lbs(self):
+        return round(self.weight_grams / 453.59237)
 
 
 class Robot(models.Model):
@@ -89,6 +132,9 @@ class Franchise(models.Model):
     description = models.TextField(blank=True)
     members = models.ManyToManyField(Person, through="Person_Franchise")
 
+    def is_member(self, person):
+        return len(Person_Franchise.objects.filter(person=person, franchise=self)) > 0
+
     def __str__(self):
         return self.name
 
@@ -114,8 +160,10 @@ class Event(models.Model):
 
 class Contest(models.Model):
     name = models.CharField(max_length=50, blank=True)
-    fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES)
+    fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES + [("MU", "Multiple Types")])
     auto_awards = models.BooleanField()
+    entries = models.PositiveSmallIntegerField()
+    reserves = models.PositiveSmallIntegerField(blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.CASCADE)
 

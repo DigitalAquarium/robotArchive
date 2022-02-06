@@ -16,9 +16,16 @@
         <ul>
             {% for contest in event.contest_set.all %}
                 <li>{{ contest }} <a href="{% url 'main:contestSignup' contest.id %}">Sign up.</a>
+                {% if can_change %}
+                    <a href="{% url 'main:editContest' contest.id %}"> Edit Contest </a>
+                {% endif %}
                 </li>
             {% endfor %}
         </ul>
+        {% if can_change %}
+            <a href="{% url 'main:newContest' event.id %}">Add Contest.</a>
+            <a href="{% url 'main:editEvent' event.id %}">Edit Event.</a>
+        {% endif %}
     {% else %}
         There is no event with this ID.
     {% endif %}

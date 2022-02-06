@@ -27,8 +27,37 @@ class EventIndexView(generic.ListView):
 
 
 def event_detail_view(request, event_id):
+    me = Person.objects.get(user=request.user)
     event = Event.objects.get(pk=event_id)
-    return render(request, "main/event_detail.html", {"event": event, "map": stuff.map})
+    fran = event.franchise
+    can_change = fran.is_member(me)
+    return render(request, "main/event_detail.html", {"event": event, "map": stuff.map, "can_change": can_change})
+
+
+def new_event_view(request, franchise_id):
+    fran = Franchise.objects.get(pk=franchise_id)  # TODO: Add verification
+    if request.method == "POST":
+        form = EventForm(request.POST)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.franchise = fran
+            event.save()
+            return redirect("main:eventDetail", event.id)
+    else:
+        form = EventForm()
+    return render(request, "main/new_event.html", {"form": form, "fran": fran})
+
+
+def modify_event_view(request, event_id):
+    event = Event.objects.get(pk=event_id)
+    if request.method == "POST":
+        form = EventForm(request.POST, instance=event)
+        if form.is_valid():
+            new = form.save()
+            return redirect("main:eventDetail", new.id)
+    else:
+        form = EventForm(instance=event)
+    return render(request, "main/edit_event.html", {"form": form, "event_id": event_id})
 
 
 def contest_signup_view(response, contest_id):
@@ -41,12 +70,17 @@ def contest_signup_view(response, contest_id):
         me = Person.objects.get(user=user)
         if response.method == "POST":
             form = SignupForm(response.POST)
+            t = Person_Team.objects.filter(person=me)
+            teams = []
+            for result in t:
+                teams.append(result.team)
+            form.fields['version'].queryset = Version.objects.filter(team__in=teams)
             if form.is_valid():
                 form.save(contest, me)
                 return redirect("main:index")
         else:
             form = SignupForm()
-            t = Person_Team.objects.filter(me)
+            t = Person_Team.objects.filter(person=me)
             teams = []
             for result in t:
                 teams.append(result.team)
@@ -62,6 +96,32 @@ def contest_signup_view(response, contest_id):
         else:
             anon_form = AnonSignupForm()
         return render(response, "main/contest_signup.html", {"anon_form": anon_form, "contest": contest})
+
+
+def new_contest_view(request, event_id):
+    event = Event.objects.get(pk=event_id)  # TODO: Add verification
+    if request.method == "POST":
+        form = ContestForm(request.POST)
+        if form.is_valid():
+            contest = form.save(commit=False)
+            contest.event = event
+            contest.save()
+            return redirect("main:eventDetail", event.id)
+    else:
+        form = ContestForm()
+    return render(request, "main/new_contest.html", {"form": form, "event": event})
+
+
+def edit_contest_view(request, contest_id):
+    contest = Contest.objects.get(pk=contest_id)
+    if request.method == "POST":
+        form = ContestForm(request.POST, instance=contest)
+        if form.is_valid():
+            form.save()
+            return redirect("main:eventDetail", contest.event.id)
+    else:
+        form = ContestForm(instance=contest)
+    return render(request, "main/edit_contest.html", {"form": form, "contest_id": contest_id})
 
 
 def register(response):
@@ -128,7 +188,11 @@ def new_robot_view(request, team_id):
 
 def team_edit_view(request, team_id=None):
     if request.method == "POST":
-        form = TeamForm(request.POST)
+        if team_id is None:
+            form = TeamForm(request.POST)
+        else:
+            team = Team.objects.get(pk=team_id)
+            form = TeamForm(request.POST, instance=team)
         if form.is_valid():
             new = form.save()
             if team_id is None:
@@ -149,7 +213,11 @@ def team_edit_view(request, team_id=None):
 
 def franchise_modify_view(request, franchise_id=None):
     if request.method == "POST":
-        form = FranchiseForm(request.POST)
+        if franchise_id is None:
+            form = FranchiseForm(request.POST)
+        else:
+            franchise = Franchise.objects.get(franchise_id)
+            form = FranchiseForm(request.POST, instance=franchise)
         if form.is_valid():
             new = form.save()
             if franchise_id is None:
@@ -161,7 +229,7 @@ def franchise_modify_view(request, franchise_id=None):
             form = TeamForm()
         else:
             franchise = Franchise.objects.get(pk=franchise_id)
-            form = FranchiseForm(instance=Franchise)
+            form = FranchiseForm(instance=franchise)
     if franchise_id is None:
         return render(request, "main/modify_franchise.html", {"form": form, "franchise_id": franchise_id})
     else:
@@ -181,6 +249,6 @@ def my_franchises_view(request):
 def franchise_detail_view(request, fran_id):
     me = Person.objects.get(user=request.user)
     fran = Franchise.objects.get(pk=fran_id)
-    member = len(Person_Franchise.objects.filter(person=me, franchise=fran)) > 0  # TODO: Potentially a bad check
+    member = fran.is_member(me)  # TODO: Potentially a bad check
     # for if you can edit and such, should probably use a better system in future
     return render(request, "main/franchise_detail.html", {"fran": fran, "member": member})
