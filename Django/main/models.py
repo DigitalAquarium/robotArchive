@@ -182,6 +182,9 @@ class Registration(models.Model):
     signee = models.ForeignKey(Person, on_delete=models.CASCADE)
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return str(self.version) + " @ " + str(self.contest)
+
 
 class Media(models.Model):
     TYPE_CHOICES = [

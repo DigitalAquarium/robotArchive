@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+    {% if contest %}
+        <h1>{{ contest }}</h1>
+        {% if future %}
+            <h2>Registrations for this contest open {{ contest.event.registration_open }}</h2>
+        {% else %}
+        {% if applications %}
+            <h2>Applicants</h2>
+            <ul>
+            {% for app in applications %}
+                <li>{{ app }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        {% endif %}
+    {% endif %}
+{% endblock %}

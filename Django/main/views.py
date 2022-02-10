@@ -1,4 +1,7 @@
 import datetime
+
+from django.urls import reverse
+
 from EventManager import stuff
 
 from django.contrib.auth.decorators import login_required
@@ -31,7 +34,11 @@ def event_detail_view(request, event_id):
     event = Event.objects.get(pk=event_id)
     fran = event.franchise
     can_change = fran.is_member(me)
-    return render(request, "main/event_detail.html", {"event": event, "map": stuff.map, "can_change": can_change})
+    return render(request, "main/event_detail.html",
+                  {"event": event,
+                   "map": stuff.map,
+                   "can_change": can_change,
+                   "reg_open": event.registration_open < timezone.now() < event.registration_close})
 
 
 def new_event_view(request, franchise_id):
@@ -62,8 +69,14 @@ def modify_event_view(request, event_id):
 
 def contest_signup_view(response, contest_id):
     contest = Contest.objects.get(pk=contest_id)
+
     if timezone.now() > contest.event.registration_close:
-        return redirect("main:index")
+        return redirect("%s?m=%s" % (reverse("main:message"), "Registration for this contest has closed."))
+    elif timezone.now() < contest.event.registration_open:
+        return redirect("%s?m=%s" % (reverse("main:message"), "Registration for this contest has not yet opened."))
+
+    if contest.entries != 0 and (contest.registration_set.count() >= contest.entries + contest.reserves):
+        return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
 
     if response.user.is_authenticated:
         user = response.user
@@ -76,6 +89,10 @@ def contest_signup_view(response, contest_id):
                 teams.append(result.team)
             form.fields['version'].queryset = Version.objects.filter(team__in=teams)
             if form.is_valid():
+                if contest.entries != 0 and (contest.registration_set.count() >= contest.entries + contest.reserves):
+                    # A Second Check in case slots filled up between the time the page was loaded and the time the
+                    # form was completed
+                    return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
                 form.save(contest, me)
                 return redirect("main:index")
         else:
@@ -84,18 +101,32 @@ def contest_signup_view(response, contest_id):
             teams = []
             for result in t:
                 teams.append(result.team)
-            form.fields['version'].queryset = Version.objects.filter(team__in=teams)
+            form.fields['version'].queryset = Version.objects.filter(team__in=teams,
+                                                                     weight_class__in=contest.weight_class)
         return render(response, "main/contest_signup.html", {"form": form, "contest": contest})
 
     else:
         if response.method == "POST":
             anon_form = AnonSignupForm(response.POST)
             if anon_form.is_valid():
+                if contest.entries != 0 and (contest.registration_set.count() >= contest.entries + contest.reserves):
+                    # A Second Check in case slots filled up between the time the page was loaded and the time the
+                    # form was completed
+                    return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
                 anon_form.save(contest)
                 return redirect("main:index")
         else:
             anon_form = AnonSignupForm()
         return render(response, "main/contest_signup.html", {"anon_form": anon_form, "contest": contest})
+
+
+def contest_detail_view(request, contest_id):
+    contest = Contest.objects.get(pk=contest_id)
+    fights = Fight.objects.filter(contest=contest)
+    registrations = Registration.objects.filter(contest=contest)
+    return render(request, "main/contest_detail.html",
+                  {"contest": contest, "fights": fights, "applications": registrations,
+                   "future": contest.event.registration_open > timezone.now()})
 
 
 def new_contest_view(request, event_id):
@@ -252,3 +283,15 @@ def franchise_detail_view(request, fran_id):
     member = fran.is_member(me)  # TODO: Potentially a bad check
     # for if you can edit and such, should probably use a better system in future
     return render(request, "main/franchise_detail.html", {"fran": fran, "member": member})
+
+
+def new_fight_view(request):
+    return None
+
+
+def message_view(request):
+    if request.method == "GET":
+        message = request.GET.get("m")
+        return render(request, "main/message.html", {"text": message})
+    else:
+        return redirect("main:index")
