@@ -1,0 +1,22 @@
+{%extends "base.html"%}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+{% block content %}
+    {% if fight_id %}
+        {% if fight_version_id %}
+            <form method="post" action="{% url 'main:editFightVersion' fight_version_id %}">
+        {% else %}
+            <form method="post" action="{% url 'newFightVersion' fight_id %}">
+        {% endif %}
+        {% csrf_token %}
+        <fieldset>
+            <legend><h1>Edit Robot</h1></legend>
+            {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            {{ form|crispy }}
+            <input type="submit" value="Submit">
+        </fieldset>
+        </form>
+    {% else %}
+        Something has gone wrong
+    {% endif %}
+{% endblock %}

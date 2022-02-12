@@ -285,8 +285,55 @@ def franchise_detail_view(request, fran_id):
     return render(request, "main/franchise_detail.html", {"fran": fran, "member": member})
 
 
-def new_fight_view(request):
-    return None
+def new_fight_view(request, contest_id):
+    contest = Contest.objects.get(pk=contest_id)
+    f = Fight()
+    f.contest = contest
+    f.number = 1
+    for prevFight in contest.fight_set:  # Should Probably find a more efficient way of doing this but it'll work for now
+        if prevFight.number >= f.number:
+            f.number = prevFight.number + 1
+    f.number = contest.fight_set + 1
+    if contest.fight_type == "MU":
+        f.fight_type = contest.fight_type
+        f.save()
+        return redirect("main:editJustFight", f.id)
+    else:
+        f.save()
+        return redirect("main:editWholeFight", f.id)
+
+
+def fight_editj_view(request, fight_id):  # Just the Fight
+    fight = Fight.objects.get(pk=fight_id)
+    form = FightForm(request.POST or None, instance=fight)
+    if form.is_valid():
+        form.save()
+        return redirect("main:editWholeFight", fight_id)
+    else:
+        return render(request, "main/modify_fight.html", {"form": form, "fight_id": fight_id})
+
+
+def fight_edith_view(request, fight_id):  # The fight and the robots and media etc
+    fight = Fight.objects.get(pk=fight_id)
+    return render(request, "main/edit_whole_fight.html", {"fight": fight})
+
+
+def modify_robot_version_view(request, fight_id, vf_id=None):
+    fight = Fight.objects.get(pk=fight_id)
+    registered = Version.objects.filter(registration__contest=fight.contest.id)
+    if vf_id is not None:
+        vf = Fight_Version.objects.get(pk=vf_id)
+    else:
+        vf = Fight_Version()
+        vf.fight = fight
+    form = RobotFightForm(request.POST or None, instance=vf)
+    if form.is_valid():
+        form.save()
+        return redirect("main:editWholeFight", fight_id)
+    form.fields['version'].queryset = registered
+    return render(request, "main/modify_robot_version.html",
+                  {"form": form, "fight_id": fight_id, "fight_version_id": vf_id})
+    # TODO: This is basically identical to modify_fight
 
 
 def message_view(request):

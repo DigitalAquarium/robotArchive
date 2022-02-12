@@ -218,13 +218,20 @@ class Fight(models.Model):
     name = models.CharField(max_length=100)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES)
     number = models.IntegerField()
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    contest = models.ForeignKey(Contest, on_delete=models.CASCADE, blank=True)
+    contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
     competitors = models.ManyToManyField(Version, through="Fight_Version")
-    media = models.ForeignKey(Media, blank=True, on_delete=models.CASCADE)
+    media = models.ForeignKey(Media, blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        if self.name is not None and self.name != "":
+            return self.name
+        elif self.competitors.count() >= 2:#TODO: Fix this for team stuff
+            ret = ""
+            for robot in self.competitors.get():
+                ret += " vs " + robot.name
+            return ret[4:]
+        else:
+            return "Unnamed Fight"
 
 
 class Award(models.Model):
@@ -249,6 +256,7 @@ class Person_Franchise(models.Model):
 
 class Fight_Version(models.Model):
     won = models.BooleanField()
-    tag_team = models.PositiveSmallIntegerField()  # matching number, matching side on a tag team match, 0 for free for all fights
+    tag_team = models.PositiveSmallIntegerField(default=0)  # matching number, matching side on a tag team match, 0 for free for all fights
+    ranking_change = models.SmallIntegerField(default=0)
     fight = models.ForeignKey(Fight, on_delete=models.CASCADE)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)

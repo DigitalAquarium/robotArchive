@@ -1,0 +1,37 @@
+{% comment %}{%extends "base.html"%}{% endcomment %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+{% block content %}
+    {% if fight %}
+        <h1>{{ fight }} </h1>
+        <ul>
+            <li>Fight #{{ fight.number }}</li>
+            <li>Fight Type: {{ fight.get_fight_type_display }} {% if fight.contest.fight_type != "MU" and fight.fight_type != fight.contest.fight_type %}
+                <strong>Warn: The type of this fight conflicts with the type of the contest.</strong>{% endif %}</li>
+            <li>Win Method: {{ fight.get_method_display }}</li>
+        </ul>
+        <a href= "{% url "main:editJustFight" fight.id %}"> Edit details.</a>
+        {% if fight.competitors.count > 0 %}
+           <h2>Competitors</h2>
+            <ul>
+            {% for fv in fight.fight_version_set.all %}
+                <li>{{ fv.version }}  <a href="{% url "main:editFightVersion" fight.id fv.id %}">Edit Competitor</a></li>
+            {% endfor %}
+            </ul>
+            <a href="{% url "main:newFightVersion" fight.id %}" >Add Robot</a>
+        {% else %}
+            <h2> This fight has no participants please add some. <br>
+            <a href = "{% url "newFightVersion" fight.id%}">Add Robot.</a>
+            </h2>
+        {% endif %}
+        {% if media %}
+            Media does indeed exist
+            {% else %}
+            <h2>This Fight has no media, please add some if available.<br>
+            </h2>
+            {% endif %}
+        <P>TODO: Add save button here or something.</P>
+    {% else %}
+        Something has gone wrong
+    {% endif %}
+{% endblock %}
