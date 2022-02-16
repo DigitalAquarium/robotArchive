@@ -196,10 +196,20 @@ class Media(models.Model):
         ("IG", "Instagram"),
         ("TW", "Twitter"),
         ("TT", "TikTok"),
+        ("UN", "Unknown"),
     ]
     media_type = models.CharField(max_length=2, choices=TYPE_CHOICES)
     internal = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external = models.URLField(blank=True)
+
+    def get_tt_id(self):
+        # https: // www.tiktok.com / @ battlebots / video / 7060864801462963502 - Example video
+        output = ""
+        for i in range(len(self.external) - 1, 0, -1):
+            if self.external[i] not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+                break
+            output = self.external[i] + output
+        return output
 
 
 class Fight(models.Model):
@@ -225,10 +235,10 @@ class Fight(models.Model):
     def __str__(self):
         if self.name is not None and self.name != "":
             return self.name
-        elif self.competitors.count() >= 2:#TODO: Fix this for team stuff
+        elif self.competitors.count() >= 2:  # TODO: Fix this for team stuff
             ret = ""
-            for robot in self.competitors.get():
-                ret += " vs " + robot.name
+            for robot in self.competitors.all():
+                ret += " vs " + robot.__str__()
             return ret[4:]
         else:
             return "Unnamed Fight"
@@ -256,7 +266,8 @@ class Person_Franchise(models.Model):
 
 class Fight_Version(models.Model):
     won = models.BooleanField()
-    tag_team = models.PositiveSmallIntegerField(default=0)  # matching number, matching side on a tag team match, 0 for free for all fights
+    tag_team = models.PositiveSmallIntegerField(
+        default=0)  # matching number, matching side on a tag team match, 0 for free for all fights
     ranking_change = models.SmallIntegerField(default=0)
     fight = models.ForeignKey(Fight, on_delete=models.CASCADE)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)

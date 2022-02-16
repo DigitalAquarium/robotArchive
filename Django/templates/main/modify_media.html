@@ -3,10 +3,10 @@
 {% load crispy_forms_tags %}
 {% block content %}
     {% if fight_id %}
-        {% if fight_version_id %}
-            <form method="post" action="{% url 'main:editFightVersion' fight_id fight_version_id %}">
+        {% if media_id %}
+            <form method="post" action="{% url 'main:editMedia' fight_id media_id %}" enctype="multipart/form-data">
         {% else %}
-            <form method="post" action="{% url 'main:newFightVersion' fight_id %}">
+            <form method="post" action="{% url 'main:newMedia' fight_id %}" enctype="multipart/form-data">
         {% endif %}
         {% csrf_token %}
         <fieldset>

@@ -29,6 +29,8 @@ urlpatterns = [
     path('fights/<int:fight_id>/modify', views.fight_editj_view, name='editJustFight'),
     path('fights/<int:fight_id>/addRobot', views.modify_robot_version_view, name='newFightVersion'),
     path('fights/<int:fight_id>/editRobot/<int:vf_id>', views.modify_robot_version_view, name='editFightVersion'),
+    path('fights/<int:fight_id>/addMedia', views.modify_media_view, name='newMedia'),
+    path('fights/<int:fight_id>/editMedia/<int:media_id>', views.modify_media_view, name='editMedia'),
     path('accounts/register', views.register, name='register'),
     path('message', views.message_view, name='message'),
 ]

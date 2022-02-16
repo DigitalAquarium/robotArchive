@@ -138,3 +138,9 @@ class RobotFightForm(forms.ModelForm):
     class Meta:
         model = Fight_Version
         fields = ["version", "won", "tag_team"]
+
+
+class MediaForm(forms.ModelForm):
+    class Meta:
+        model = Media
+        fields = ['media_type', "internal", "external"]

@@ -1,6 +1,7 @@
 {% comment %}{%extends "base.html"%}{% endcomment %}
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags %}
+{% load static %}
 {% block content %}
     {% if fight %}
         <h1>{{ fight }} </h1>
@@ -15,21 +16,68 @@
            <h2>Competitors</h2>
             <ul>
             {% for fv in fight.fight_version_set.all %}
-                <li>{{ fv.version }}  <a href="{% url "main:editFightVersion" fight.id fv.id %}">Edit Competitor</a></li>
+                <li>{{ fv.version }} {% if fv.won %}Won {% else %} Lost {% endif %}  <a href="{% url "main:editFightVersion" fight.id fv.id %}">Edit Competitor</a></li>
             {% endfor %}
             </ul>
             <a href="{% url "main:newFightVersion" fight.id %}" >Add Robot</a>
         {% else %}
             <h2> This fight has no participants please add some. <br>
-            <a href = "{% url "newFightVersion" fight.id%}">Add Robot.</a>
+            <a href = "{% url "main:newFightVersion" fight.id%}">Add Robot.</a>
             </h2>
         {% endif %}
-        {% if media %}
-            Media does indeed exist
-            {% else %}
-            <h2>This Fight has no media, please add some if available.<br>
-            </h2>
+        {% if fight.media %}
+            <h2>Fight Media</h2>
+            {% if fight.media.media_type == "LI" %}
+                {% if fight.media.internal %}
+                    <img src="{{ fight.media.internal.url }}" alt="This Image is Broken, please change it.">
+                {% else %}
+                    <p>This media appears to be broken, please change it.</p>
+                {% endif %}
+
+            {% elif fight.media.media_type == "EI" %}
+                {% if fight.media.external %}
+                    <img src="{{ fight.media.external }}" alt="This Image is Broken, please change it.">
+                {% else %}
+                    <p>This media appears to be broken, please change it.</p>
+                {% endif %}
+
+            {% elif fight.media.media_type == "LV" %}
+                <video width="800" height="450" controls>
+	                <source src="{{ fight.media.internal.url }}" type="video/mp4">
+                </video>
+
+            {% elif fight.media.media_type == "FB" %}
+                <div id="fb-root"></div>
+                <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v13.0" nonce="DsgXG9yz"></script>
+
+                <div class="fb-video" data-href="{{ fight.media.external}}" data-width="500" data-show-text="false">
+                    <blockquote cite="{{ fight.media.external}}" class="fb-xfbml-parse-ignore">
+                        <a href="{{ fight.media.external}}">Fight Video</a>
+                    </blockquote>
+                </div>
+
+            {% elif fight.media.media_type == "IF" %}
+                <iframe src="{{ fight.media.external }}" title="Fight Video"></iframe>
+
+            {% elif fight.media.media_type == "IG" %}
+                <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.media.external }}" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">This Media is Broken</blockquote>
+                <script async src="www.instagram.com/embed.js"></script>
+
+            {% elif fight.media.media_type == "TW" %}
+                <blockquote class="twitter-tweet"><a href="{{ fight.media.external }}">This media is broken.</a></blockquote>
+                <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+            {% elif fight.media.media_type == "TT" %}
+                <blockquote class="tiktok-embed" cite="{{ fight.media.external }}" data-video-id="{{ fight.media.get_tt_id }}" >
+                <section></section> <!--This section tag is required, embed will fail without it. -->
+                </blockquote><script async src="https://www.tiktok.com/embed.js"></script>
             {% endif %}
+            <br><a href = "{% url "main:editMedia" fight.id fight.media.id %}">Edit Media</a>
+        {% else %}
+            <h2>This Fight has no media, please add some if available.<br>
+            <a href = "{% url "main:newMedia" fight.id %}">Add Media</a>
+            </h2>
+        {% endif %}
         <P>TODO: Add save button here or something.</P>
     {% else %}
         Something has gone wrong

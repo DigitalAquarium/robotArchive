@@ -102,7 +102,7 @@ def contest_signup_view(response, contest_id):
             for result in t:
                 teams.append(result.team)
             form.fields['version'].queryset = Version.objects.filter(team__in=teams,
-                                                                     weight_class__in=contest.weight_class)
+                                                                     weight_class=contest.weight_class)
         return render(response, "main/contest_signup.html", {"form": form, "contest": contest})
 
     else:
@@ -285,20 +285,19 @@ def franchise_detail_view(request, fran_id):
     return render(request, "main/franchise_detail.html", {"fran": fran, "member": member})
 
 
-def new_fight_view(request, contest_id):
+def new_fight_view(request, contest_id):#TODO: Make sure you can't add the same Version to the same fight.
     contest = Contest.objects.get(pk=contest_id)
     f = Fight()
     f.contest = contest
     f.number = 1
-    for prevFight in contest.fight_set:  # Should Probably find a more efficient way of doing this but it'll work for now
+    for prevFight in contest.fight_set.all():  # Should Probably find a more efficient way of doing this but it'll work for now
         if prevFight.number >= f.number:
             f.number = prevFight.number + 1
-    f.number = contest.fight_set + 1
     if contest.fight_type == "MU":
-        f.fight_type = contest.fight_type
         f.save()
         return redirect("main:editJustFight", f.id)
     else:
+        f.fight_type = contest.fight_type
         f.save()
         return redirect("main:editWholeFight", f.id)
 
@@ -333,7 +332,23 @@ def modify_robot_version_view(request, fight_id, vf_id=None):
     form.fields['version'].queryset = registered
     return render(request, "main/modify_robot_version.html",
                   {"form": form, "fight_id": fight_id, "fight_version_id": vf_id})
-    # TODO: This is basically identical to modify_fight
+    # TODO: This is basically identical to modify_fight and probably many more
+
+
+def modify_media_view(request, fight_id, media_id=None):
+    fight = Fight.objects.get(pk=fight_id)
+    if media_id is not None:
+        media = Media.objects.get(pk=media_id)
+    else:
+        media = Media()
+    form = MediaForm(request.POST or None, request.FILES, instance=media)
+    if form.is_valid():
+        new = form.save()
+        fight.media = new
+        fight.save()
+        return redirect("main:editWholeFight", fight_id)
+    return render(request, "main/modify_media.html",
+                  {"form": form, "fight_id": fight_id, "media_id": media_id})
 
 
 def message_view(request):
