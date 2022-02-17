@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 import pycountry
+import re
 
 FULL_COMBAT = 'FC'
 SPORTSMAN = 'SP'
@@ -21,8 +22,9 @@ COUNTRY_CHOICES.extend([
     ('XS', "Scotland"),
     ('XW', "Wales"),
     ('XI', "Northern Ireland"),
-    ('XX', "Unspecified")
 ])
+COUNTRY_CHOICES.sort(key=lambda x: x[1])
+COUNTRY_CHOICES = [('XX', "Unspecified")] + COUNTRY_CHOICES
 
 
 class Person(models.Model):
@@ -186,32 +188,6 @@ class Registration(models.Model):
         return str(self.version) + " @ " + str(self.contest)
 
 
-class Media(models.Model):
-    TYPE_CHOICES = [
-        ("LI", "Local Image"),
-        ("EI", "External Image"),
-        ("LV", "Local Video"),
-        ("FB", "Facebook"),
-        ("IF", "IFrame Embed"),  # Such as YouTube or Vimeo
-        ("IG", "Instagram"),
-        ("TW", "Twitter"),
-        ("TT", "TikTok"),
-        ("UN", "Unknown"),
-    ]
-    media_type = models.CharField(max_length=2, choices=TYPE_CHOICES)
-    internal = models.FileField(upload_to='fight_media/%Y/', blank=True)
-    external = models.URLField(blank=True)
-
-    def get_tt_id(self):
-        # https: // www.tiktok.com / @ battlebots / video / 7060864801462963502 - Example video
-        output = ""
-        for i in range(len(self.external) - 1, 0, -1):
-            if self.external[i] not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-                break
-            output = self.external[i] + output
-        return output
-
-
 class Fight(models.Model):
     METHOD_CHOICES = [
         ("KO", "Knockout"),
@@ -224,13 +200,85 @@ class Fight(models.Model):
         ("NW", "No Winner Declared"),
         ("NM", "No Method Declared"),
     ]
+    # Media Types:
+    # LI: Local Image
+    # EI: External Image
+    # LV: Local Video
+    # IF: Iframe embed Such as YouTube or Vimeo
+    # IG: Instagram
+    # TW: Twitter
+    # TT: Tiktok
+    # FB: Facebook
+    # UN: unknown
     method = models.CharField(max_length=2, choices=METHOD_CHOICES, default="NM")
     name = models.CharField(max_length=100)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES)
     number = models.IntegerField()
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
     competitors = models.ManyToManyField(Version, through="Fight_Version")
-    media = models.ForeignKey(Media, blank=True, null=True, on_delete=models.CASCADE)
+    internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
+    external_media = models.URLField(blank=True)
+
+    def format_external_media(self):
+        if re.match("(https?://)?(www\.)?youtu\.?be", self.external_media) is not None:
+            get_info = self.external_media[
+                       re.match("(https?://)?(www\.)?youtu((\.be/)|(be\.com/watch))", self.external_media).end():]
+            video_id = re.search("((\?v=)|(&v=))[a-zA-z0-9]*", get_info)
+            if video_id is None:
+                video_id = get_info[:11]
+            else:
+                video_id = video_id.group()[3:]
+
+            start_time = re.search("((\?t=)|(&t=))[0-9]*", get_info)
+            if start_time is None:
+                start_time = ""
+            else:
+                start_time = "?start=" + start_time.group()[3:]
+
+            self.external_media = "https://youtube.com/embed/" + video_id + start_time
+
+    def get_media_type(self):
+        if bool(self.internal_media):
+            # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers
+            if self.internal_media.url[-4:] == ".mp4" or self.internal_media.url[-4:] == ".ogg":
+                return "LV"
+            elif self.internal_media.url[-5:] == ".webm":
+                return "LV"
+            else:
+                # Local Image
+                return "LI"
+
+        elif self.external_media is not None:
+            if "twitter" in self.external_media:
+                return "TW"
+            elif "tiktok" in self.external_media:
+                return "TT"
+            elif "instagram" in self.external_media:
+                return "IG"
+            elif "facebook" in self.external_media:
+                return "FB"
+            elif re.search("youtu\.?be", self.external_media) is not None:
+                return "IF"
+            # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
+            elif self.external_media[-4:] in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
+                return "EI"
+            elif self.external_media[-5:] in [".jpeg", ".jfif", ".webp"]:
+                return "EI"
+            elif self.external_media[-6:] == ".pjpeg":
+                return "EI"
+            else:
+                "Error"
+        else:
+            "Error"
+
+    def get_tt_id(self):
+        # https: // www.tiktok.com / @ battlebots / video / 7060864801462963502 - Example video
+        output = ""
+        for i in range(len(self.external_media) - 1, 0, -1):
+            if self.external_media[i] not in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+                break
+            output = self.external_media[i] + output
+        return output
 
     def __str__(self):
         if self.name is not None and self.name != "":

@@ -131,16 +131,10 @@ class ContestForm(forms.ModelForm):
 class FightForm(forms.ModelForm):
     class Meta:
         model = Fight
-        fields = ["name", "fight_type", "method"]
+        fields = ["name", "fight_type", "method", "internal_media", "external_media"]
 
 
 class RobotFightForm(forms.ModelForm):
     class Meta:
         model = Fight_Version
         fields = ["version", "won", "tag_team"]
-
-
-class MediaForm(forms.ModelForm):
-    class Meta:
-        model = Media
-        fields = ['media_type', "internal", "external"]

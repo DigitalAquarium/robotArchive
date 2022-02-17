@@ -304,11 +304,13 @@ def new_fight_view(request, contest_id):#TODO: Make sure you can't add the same 
 
 def fight_editj_view(request, fight_id):  # Just the Fight
     fight = Fight.objects.get(pk=fight_id)
-    form = FightForm(request.POST or None, instance=fight)
-    if form.is_valid():
-        form.save()
-        return redirect("main:editWholeFight", fight_id)
+    if request.method == "POST":
+        form = FightForm(request.POST, request.FILES, instance=fight)
+        if form.is_valid():
+            form.save()
+            return redirect("main:editWholeFight", fight_id)
     else:
+        form = FightForm(instance=fight)
         return render(request, "main/modify_fight.html", {"form": form, "fight_id": fight_id})
 
 
@@ -333,22 +335,6 @@ def modify_robot_version_view(request, fight_id, vf_id=None):
     return render(request, "main/modify_robot_version.html",
                   {"form": form, "fight_id": fight_id, "fight_version_id": vf_id})
     # TODO: This is basically identical to modify_fight and probably many more
-
-
-def modify_media_view(request, fight_id, media_id=None):
-    fight = Fight.objects.get(pk=fight_id)
-    if media_id is not None:
-        media = Media.objects.get(pk=media_id)
-    else:
-        media = Media()
-    form = MediaForm(request.POST or None, request.FILES, instance=media)
-    if form.is_valid():
-        new = form.save()
-        fight.media = new
-        fight.save()
-        return redirect("main:editWholeFight", fight_id)
-    return render(request, "main/modify_media.html",
-                  {"form": form, "fight_id": fight_id, "media_id": media_id})
 
 
 def message_view(request):

@@ -13,6 +13,13 @@
             {% endfor %}
             </ul>
         {% endif %}
+            <h2> Fights:</h2>
+            <ul>
+            {% for fight in contest.fight_set.all %}
+                <li><a href = "{% url "main:editWholeFight" fight.id %}">Temporary Fight Button: {{ fight }} </a> <!--change this--></li>
+            {% endfor %}
+            </ul>
+            <a href = "{% url "main:newFight" contest.id %}"> New Fight </a>
         {% endif %}
     {% endif %}
 {% endblock %}
