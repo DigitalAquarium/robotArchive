@@ -9,6 +9,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils import timezone
 from django.views import generic
+from django.db.models import Q
 
 from .forms import *
 
@@ -173,12 +174,17 @@ def register(response):
     return render(response, "main/register.html", {"form": form})
 
 
-class RobotIndexView(generic.ListView):
-    template_name = "main/robot_index.html"
-    context_object_name = "robot_list"
+def robot_index_view(request):
+    name = request.GET.get("name") or ""
+    page = request.GET.get("page") or 1
+    page = int(page)
+    num = 50
+    robot_list = Robot.objects.filter(name__icontains=name)
+    version_thing = Robot.objects.filter(version__robot_name__icontains=name)
+    robot_list = robot_list.union(version_thing).order_by("name")
+    robot_list = robot_list[num*(page-1):num*page]
 
-    def get_queryset(self):
-        return Robot.objects.order_by("name")[:5]
+    return render(request, "main/robot_index.html", {"robot_list": robot_list})
 
 
 class RobotDetailView(generic.DetailView):
@@ -285,7 +291,7 @@ def franchise_detail_view(request, fran_id):
     return render(request, "main/franchise_detail.html", {"fran": fran, "member": member})
 
 
-def new_fight_view(request, contest_id):#TODO: Make sure you can't add the same Version to the same fight.
+def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the same Version to the same fight.
     contest = Contest.objects.get(pk=contest_id)
     f = Fight()
     f.contest = contest
@@ -332,6 +338,7 @@ def modify_robot_version_view(request, fight_id, vf_id=None):
         form.save()
         return redirect("main:editWholeFight", fight_id)
     form.fields['version'].queryset = registered
+
     return render(request, "main/modify_robot_version.html",
                   {"form": form, "fight_id": fight_id, "fight_version_id": vf_id})
     # TODO: This is basically identical to modify_fight and probably many more

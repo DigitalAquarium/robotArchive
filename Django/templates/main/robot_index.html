@@ -1,9 +1,27 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 
-{%block content%}
-	<ul>
-	{%for robot in robot_list%}
-		<li><a href = "{%url 'main:robotDetail' robot.id %}">{{robot.name}}</a></li>
-		{%endfor%}
-	</ul>
-{%endblock%}
+{% block content %}
+    <section class="search-params">
+        <form method="get" action="{% url "main:robotIndex" %}">
+            <label>
+                <input name="name" type="text">
+            </label>
+            <input type="submit" value="Search">
+        </form>
+    </section>
+    {% for robot in robot_list %}
+        <div class="hrz-index-result" style="text-align: justify; vertical-align: top">
+        <span class="hrz-index-image">
+        <img class="main-image"
+             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} https://cdn-icons-png.flaticon.com/512/25/25400.png  {% endif %}"
+             alt="Robot Image">
+        </span>
+            <div class="hrz-index-content" style="display: inline-flex; background-color: #d0d0d0; height:100%;">
+            <span class="hrz-index-flag-and-link" style="font-size: 24px; display:flex; ">
+                <img class="flag-image" height="24em" src="{{ robot.get_flag }}" alt="Flag">
+                <a href="{% url 'main:robotDetail' robot.id %}">{{ robot.name }}</a>
+            </span>
+        </div>
+        </div>
+    {% endfor %}
+{% endblock %}

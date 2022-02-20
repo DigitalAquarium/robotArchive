@@ -3,7 +3,7 @@ class Subdivisions:
         "au": ["cx", "cc", "hm", "nf"],
         "gb": ["xi", "xe", "xs", "xw", "gg", "im", "je", "ai", "bm", "io", "ky", "fk", "gi", "ms", "pn", "sh", "gs",
                "tc", "vg"],
-        "cn": ["hk", "mo"],
+        "cn": ["hk", "mo", "tw"],
         "dk": ["fo", "gl"],
         "fi": ["ax"],
         "fr": ["gf", "pf", "tf", "gp", "mq", "yt", "nc", "re", "bl", "mf", "pm", "wf"],

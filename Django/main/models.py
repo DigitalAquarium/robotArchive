@@ -27,6 +27,10 @@ COUNTRY_CHOICES.sort(key=lambda x: x[1])
 COUNTRY_CHOICES = [('XX', "Unspecified")] + COUNTRY_CHOICES
 
 
+def get_flag(code):
+    return settings.STATIC_URL + "flags/4x3/" + code.lower() + ".svg"
+
+
 class Person(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -46,6 +50,8 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
+    def get_flag(self):
+        return get_flag(self.country)
 
 class Weight_Class(models.Model):
     name = models.CharField(max_length=30)
@@ -109,6 +115,12 @@ class Robot(models.Model):
     def __str__(self):
         return self.name
 
+    def get_flag(self):
+        try:
+            return self.version_set.last().get_flag()
+        except:
+            return get_flag("xx")
+
 
 class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)
@@ -120,7 +132,17 @@ class Version(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.CASCADE)
 
+    def get_flag(self):
+        return get_flag(self.team.country)
+
     def __str__(self):
+        if self.robot_name != "":
+            return self.robot_name
+        else:
+            return self.robot.name
+
+    def get_full_name(self):
+        # TODO: check where __str__ is used and should use this instead
         if self.robot_name != "":
             return self.robot_name + " " + self.version_name
         else:
@@ -142,7 +164,7 @@ class Franchise(models.Model):
 
 
 class Event(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     logo = models.ImageField(upload_to='event_logos/%Y/', blank=True)
     start_date = models.DateField()
@@ -159,13 +181,16 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
+    def get_flag(self):
+        return get_flag(self.country)
+
 
 class Contest(models.Model):
-    name = models.CharField(max_length=50, blank=True)
+    name = models.CharField(max_length=255, blank=True)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES + [("MU", "Multiple Types")])
     auto_awards = models.BooleanField()
-    entries = models.PositiveSmallIntegerField()
-    reserves = models.PositiveSmallIntegerField(blank=True)
+    entries = models.PositiveSmallIntegerField(default=0)
+    reserves = models.PositiveSmallIntegerField(default=0, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.CASCADE)
 
@@ -211,7 +236,7 @@ class Fight(models.Model):
     # FB: Facebook
     # UN: unknown
     method = models.CharField(max_length=2, choices=METHOD_CHOICES, default="NM")
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES)
     number = models.IntegerField()
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
@@ -220,10 +245,11 @@ class Fight(models.Model):
     external_media = models.URLField(blank=True)
 
     def format_external_media(self):
-        if re.match("(https?://)?(www\.)?youtu\.?be", self.external_media) is not None:
+        if re.match("(https?://)?(www\.)?youtu\.?be",
+                    self.external_media) is not None and "embed" not in self.external_media:  # This could break in the rare case the url contains embed for no reason
             get_info = self.external_media[
                        re.match("(https?://)?(www\.)?youtu((\.be/)|(be\.com/watch))", self.external_media).end():]
-            video_id = re.search("((\?v=)|(&v=))[a-zA-z0-9]*", get_info)
+            video_id = re.search("((\?v=)|(&v=))[a-zA-Z0-9\-_]*", get_info)
             if video_id is None:
                 video_id = get_info[:11]
             else:
@@ -236,6 +262,9 @@ class Fight(models.Model):
                 start_time = "?start=" + start_time.group()[3:]
 
             self.external_media = "https://youtube.com/embed/" + video_id + start_time
+
+        elif "twitch.tv/" in self.external_media:
+            get_data = self.external_media[25:]
 
     def get_media_type(self):
         if bool(self.internal_media):
@@ -267,7 +296,7 @@ class Fight(models.Model):
             elif self.external_media[-6:] == ".pjpeg":
                 return "EI"
             else:
-                "Error"
+                "UN"
         else:
             "Error"
 
@@ -281,15 +310,22 @@ class Fight(models.Model):
         return output
 
     def __str__(self):
-        if self.name is not None and self.name != "":
-            return self.name
-        elif self.competitors.count() >= 2:  # TODO: Fix this for team stuff
-            ret = ""
-            for robot in self.competitors.all():
-                ret += " vs " + robot.__str__()
-            return ret[4:]
-        else:
-            return "Unnamed Fight"
+        # This can cause a recursian error
+        try:
+            if self.name is not None and self.name != "":
+                return self.name
+            elif self.competitors.count() >= 2:  # TODO: Fix this for team stuff
+                ret = ""
+                for version in self.competitors.all():
+                    if version.robot_name != "" and version.robot_name is not None:
+                        ret += " vs " + version.robot_name  # __str__()
+                    else:
+                        ret += " vs " + version.robot.name
+                return ret[4:]
+            else:
+                return "A fight with less than two robots"
+        except:
+            return "Trying to name this fight is causing errors (Oh no!)"
 
 
 class Award(models.Model):
@@ -316,6 +352,9 @@ class Fight_Version(models.Model):
     won = models.BooleanField()
     tag_team = models.PositiveSmallIntegerField(
         default=0)  # matching number, matching side on a tag team match, 0 for free for all fights
-    ranking_change = models.SmallIntegerField(default=0)
+    ranking_change = models.FloatField(default=0)
     fight = models.ForeignKey(Fight, on_delete=models.CASCADE)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.version.__str__() + " in |" + self.fight.__str__() + "|"

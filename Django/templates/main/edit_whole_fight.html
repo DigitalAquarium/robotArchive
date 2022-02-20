@@ -1,4 +1,4 @@
-{% comment %}{%extends "base.html"%}{% endcomment %}
+{%extends "base.html"%}
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags %}
 {% load static %}
@@ -49,7 +49,6 @@
 
             {% else %}
                 <p>We're unsure how to embed this media, here's a <a href="{{ fight.external_media }}">link.</a></p>
-                <p>{{ fight.get_media_type }}</p>
             {% endif %}
         {% endif %}
 

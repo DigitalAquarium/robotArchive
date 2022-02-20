@@ -5,7 +5,7 @@ from . import views
 app_name = 'main'
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
-    path('robots', views.RobotIndexView.as_view(), name='robotIndex'),
+    path('robots', views.robot_index_view, name='robotIndex'),
     path('robots/<int:pk>', views.RobotDetailView.as_view(), name='robotDetail'),
     path('robots/new/<int:team_id>', views.new_robot_view, name='newRobot'),
     path('events', views.EventIndexView.as_view(), name='eventIndex'),

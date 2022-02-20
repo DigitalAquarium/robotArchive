@@ -1,36 +1,76 @@
-*{
-	font-family:arial,sans-serif;
+@import url("https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@300;500&display=swap");
+* {
+  font-family: Red Hat Mono, arial, sans-serif;
 }
 
-.navbar{
-	top:0;
-	position:fixed;
-	width:100%;
-	background-color:lightgrey;
-	overflow:hidden;
-	display:inline-block;
-}
-.navbar a{
-	display:inline-block;
-	background-color:darkgrey;
-	height:100%;
-	padding:10px;
-}
-.navlinks{
-	display:inline-block;
-	float:right
-}
-.navlinks button{
-	border:none;
-}
-.navtitle{
-	float:left;
+body {
+  margin: 0;
 }
 
-.content{
-	margin-top:50px;
+.navbar {
+  top: 0;
+  padding: 0.5em;
+  position: fixed;
+  width: 100%;
+  background-color: darkgrey;
+  overflow: hidden;
+  display: inline-block;
+}
+.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.navbar li {
+  float: right;
+  height: 100%;
+  text-decoration: none;
+}
+.navbar a {
+  display: inline-block;
+  text-decoration: none;
+  border: dimgrey 2px solid;
+  height: 100%;
+  margin-inline: 0.5em;
+  box-sizing: border-box;
+}
+.navbar .navlinks {
+  display: inline-block;
+  float: right;
+}
+.navbar .navlinks button {
+  border: none;
+}
+.navbar .navtitle {
+  float: left;
 }
 
-.content fieldset{
-	text-align:center;
+.content {
+  padding: 10em 3em;
 }
+.content .hrz-index-result {
+  margin: 2.5em 0;
+  padding: 1em;
+  width: 70%;
+  height: 10em;
+  border: 1px solid dimgrey;
+  float: inside;
+  box-shadow: 3px 4px 4px grey;
+}
+.content .hrz-index-result .hrz-index-image {
+  height: 100%;
+  width: 25%;
+  justify-content: center;
+  display: inline-flex;
+}
+.content .hrz-index-result .hrz-index-image .main-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.content fieldset {
+  text-align: center;
+}
+
+/*# sourceMappingURL=base.css.map */
