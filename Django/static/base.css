@@ -49,17 +49,18 @@ body {
   padding: 10em 3em;
 }
 .content .hrz-index-result {
-  margin: 2.5em 0;
+  margin: 2em 0;
   padding: 1em;
   width: 70%;
   height: 10em;
   border: 1px solid dimgrey;
   float: inside;
   box-shadow: 3px 4px 4px grey;
+  display: flex;
 }
 .content .hrz-index-result .hrz-index-image {
   height: 100%;
-  width: 25%;
+  width: 20%;
   justify-content: center;
   display: inline-flex;
 }

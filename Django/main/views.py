@@ -182,9 +182,11 @@ def robot_index_view(request):
     robot_list = Robot.objects.filter(name__icontains=name)
     version_thing = Robot.objects.filter(version__robot_name__icontains=name)
     robot_list = robot_list.union(version_thing).order_by("name")
-    robot_list = robot_list[num*(page-1):num*page]
+    results = len(robot_list)
+    robot_list = robot_list[num * (page - 1):num * page]
 
-    return render(request, "main/robot_index.html", {"robot_list": robot_list})
+    return render(request, "main/robot_index.html",
+                  {"robot_list": robot_list, "page":page, "pages": results // num if results % num == 0 else results // num + 1})
 
 
 class RobotDetailView(generic.DetailView):

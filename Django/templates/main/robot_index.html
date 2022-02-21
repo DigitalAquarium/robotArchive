@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load bonus_filters %}
 
 {% block content %}
     <section class="search-params">
@@ -16,12 +17,32 @@
              src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} https://cdn-icons-png.flaticon.com/512/25/25400.png  {% endif %}"
              alt="Robot Image">
         </span>
-            <div class="hrz-index-content" style="display: inline-flex; background-color: #d0d0d0; height:100%;">
-            <span class="hrz-index-flag-and-link" style="font-size: 24px; display:flex; ">
-                <img class="flag-image" height="24em" src="{{ robot.get_flag }}" alt="Flag">
+            <div class="hrz-index-content" style="display: inline-flex;">
+            <span class="hrz-index-flag-and-link" style="font-size: 24px; display:inline-flex; ">
+                <img class="flag-image" style="top:2px; box-shadow: black 0 0 5px; margin:0 5px" height="24em" src="{{ robot.get_flag }}" alt="Flag">
                 <a href="{% url 'main:robotDetail' robot.id %}">{{ robot.name }}</a>
             </span>
-        </div>
+            </div>
         </div>
     {% endfor %}
+    {% if pages > 1 %}
+        {% url "main:robotIndex" as this %}
+        <ul class="page-select">
+            {% if page > 1 %}
+                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">first</a></li>
+                {% if page > 4 %}
+                    <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a></li>
+                {% endif %}
+                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a></li>
+            {% endif %}
+            <li>{{ page }}</li>
+            {% if page < pages %}
+                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a></li>
+                {% if page < pages|add:"-5" %}
+                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a></li>
+            {% endif %}
+                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">last</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
 {% endblock %}

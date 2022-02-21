@@ -9,7 +9,7 @@
                      {% endif %}" alt="logo">
         {% endif %}
         <h1>{{ event.name }}</h1>
-        <p>{{ event.description }}</p>
+        <p>{{ event.description|urlize }}</p>
         <iframe width="600" height="450" style="border:0" loading="lazy" allowfullscreen
                 src="https://www.google.com/maps/embed/v1/view?key={{ map }}&zoom=14&center={{ event.latitude }},{{ event.longitude }}"></iframe>
         <h2>Contests</h2>
