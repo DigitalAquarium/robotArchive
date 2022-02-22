@@ -57,19 +57,33 @@ body {
 .content {
   padding: 10em 3em;
 
+  fieldset{
+     text-align: center;
+    legend{
+      text-align: left;
+      margin: 0 0 0 5%;
+    }
+  }
+
+  .form-group{
+    margin:5px;
+  }
+
   .hrz-index-result {
-    margin: 2em 0;
+    margin: 1em 0;
     padding: 1em;
     width: 70%;
     height: 10em;
     border: 1px solid dimgrey;
     float: inside;
-    box-shadow: 3px 4px 4px grey ;
+    box-shadow: 3px 4px 4px grey;
     display: flex;
+    text-align: justify;
+    vertical-align: top;
 
     .hrz-index-image {
       height: 100%;
-      width: 20%;
+      width: 20%; // this + content = 100%
       justify-content: center;
       display: inline-flex;
 
@@ -79,10 +93,31 @@ body {
         object-fit: contain;
       }
     }
+    .hrz-index-content{
+      display: inline-flex;
+      flex-direction: column;
+      width: 80%; // this + image = 100%
+      overflow:hidden;
+
+      .hrz-index-title{
+        font-size: 24px;
+        display:inline-flex;
+      }
+      .hrz-index-details{
+        margin: 5px 5px;
+        span {
+          margin: 0 1em 0 0;
+        }
+      }
+      .hrz-index-description{
+        font-size: 13px;
+        margin:0 5px
+      }
+    }
   }
-
-}
-
-.content fieldset {
-  text-align: center;
+.flag-image{
+          box-shadow: black 0 0 3px;
+          margin:3px 5px 5px 5px;
+          height:1em
+        }
 }

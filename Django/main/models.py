@@ -121,6 +121,20 @@ class Robot(models.Model):
         except:
             return get_flag("xx")
 
+    def awards(self):
+        awards = []
+        for ver in self.version_set.all():
+            awards += Award.objects.filter(version=ver)
+        return awards
+
+    def last_fought(self):
+        last = self.version_set.all().last()
+        try:
+            reg = last.fight_set.order_by("contest__event__start_date").last()
+            return reg.contest.event.start_date
+        except AttributeError:
+            return None
+
 
 class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)

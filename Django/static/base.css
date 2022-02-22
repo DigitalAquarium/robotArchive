@@ -48,8 +48,18 @@ body {
 .content {
   padding: 10em 3em;
 }
+.content fieldset {
+  text-align: center;
+}
+.content fieldset legend {
+  text-align: left;
+  margin: 0 0 0 5%;
+}
+.content .form-group {
+  margin: 5px;
+}
 .content .hrz-index-result {
-  margin: 2em 0;
+  margin: 1em 0;
   padding: 1em;
   width: 70%;
   height: 10em;
@@ -57,6 +67,8 @@ body {
   float: inside;
   box-shadow: 3px 4px 4px grey;
   display: flex;
+  text-align: justify;
+  vertical-align: top;
 }
 .content .hrz-index-result .hrz-index-image {
   height: 100%;
@@ -69,9 +81,30 @@ body {
   max-height: 100%;
   object-fit: contain;
 }
-
-.content fieldset {
-  text-align: center;
+.content .hrz-index-result .hrz-index-content {
+  display: inline-flex;
+  flex-direction: column;
+  width: 80%;
+  overflow: hidden;
+}
+.content .hrz-index-result .hrz-index-content .hrz-index-title {
+  font-size: 24px;
+  display: inline-flex;
+}
+.content .hrz-index-result .hrz-index-content .hrz-index-details {
+  margin: 5px 5px;
+}
+.content .hrz-index-result .hrz-index-content .hrz-index-details span {
+  margin: 0 1em 0 0;
+}
+.content .hrz-index-result .hrz-index-content .hrz-index-description {
+  font-size: 13px;
+  margin: 0 5px;
+}
+.content .flag-image {
+  box-shadow: black 0 0 3px;
+  margin: 3px 5px 5px 5px;
+  height: 1em;
 }
 
 /*# sourceMappingURL=base.css.map */

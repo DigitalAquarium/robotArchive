@@ -177,16 +177,24 @@ def register(response):
 def robot_index_view(request):
     name = request.GET.get("name") or ""
     page = request.GET.get("page") or 1
+    country = request.GET.get("country") or ""
     page = int(page)
     num = 50
-    robot_list = Robot.objects.filter(name__icontains=name)
-    version_thing = Robot.objects.filter(version__robot_name__icontains=name)
+
+    if country != "" and country is not None:
+        robot_list = Robot.objects.filter(name__icontains=name, version__team__country=country.capitalize())
+        version_thing = Robot.objects.filter(version__robot_name__icontains=name,
+                                             version__team__country=country.capitalize())
+    else:
+        robot_list = Robot.objects.filter(name__icontains=name)
+        version_thing = Robot.objects.filter(version__robot_name__icontains=name)
     robot_list = robot_list.union(version_thing).order_by("name")
     results = len(robot_list)
     robot_list = robot_list[num * (page - 1):num * page]
 
     return render(request, "main/robot_index.html",
-                  {"robot_list": robot_list, "page":page, "pages": results // num if results % num == 0 else results // num + 1})
+                  {"robot_list": robot_list, "page": page,
+                   "pages": results // num if results % num == 0 else results // num + 1})
 
 
 class RobotDetailView(generic.DetailView):
@@ -327,6 +335,11 @@ def fight_edith_view(request, fight_id):  # The fight and the robots and media e
     return render(request, "main/edit_whole_fight.html", {"fight": fight})
 
 
+def fight_detail_view(request, fight_id):
+    fight = Fight.objects.get(pk=fight_id)
+    return render(request, "main/fight_detail.html", {"fight": fight})
+
+
 def modify_robot_version_view(request, fight_id, vf_id=None):
     fight = Fight.objects.get(pk=fight_id)
     registered = Version.objects.filter(registration__contest=fight.contest.id)
@@ -352,3 +365,9 @@ def message_view(request):
         return render(request, "main/message.html", {"text": message})
     else:
         return redirect("main:index")
+
+
+def version_detail_view(request,version_id):
+    v = Version.objects.get(pk=version_id)
+    robot_id = v.robot.id
+    return redirect("main:robotDetail", robot_id)

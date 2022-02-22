@@ -1,4 +1,4 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags %}
 {% load static %}
@@ -7,8 +7,10 @@
         <h1>{{ fight }} </h1>
         <ul>
             <li>Fight #{{ fight.number }}</li>
-            <li>Fight Type: {{ fight.get_fight_type_display }} {% if fight.contest.fight_type != "MU" and fight.fight_type != fight.contest.fight_type %}
-                <strong>Warn: The type of this fight conflicts with the type of the contest.</strong>{% endif %}</li>
+            <li>Fight Type: {{ fight.get_fight_type_display }}
+                {% if fight.contest.fight_type != "MU" and fight.fight_type != fight.contest.fight_type %}
+                    <strong>Warn: The type of this fight conflicts with the type of the contest.</strong>{% endif %}
+            </li>
             <li>Win Method: {{ fight.get_method_display }}</li>
         </ul>
         {% if fight.internal_media or fight.external_media %}
@@ -24,7 +26,8 @@
 
             {% elif fight.get_media_type == "FB" %}
                 <div id="fb-root"></div>
-                <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v13.0" nonce="DsgXG9yz"></script>
+                <script async defer crossorigin="anonymous"
+                        src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v13.0" nonce="DsgXG9yz"></script>
                 <div class="fb-video" data-href="{{ fight.external_media }}" data-width="500" data-show-text="false">
                     <blockquote cite="{{ fight.external_media }}" class="fb-xfbml-parse-ignore">
                         <a href="{{ fight.external_media }}">Fight Video</a>
@@ -35,40 +38,48 @@
                 <iframe src="{{ fight.external_media }}" title="Fight Video" allowfullscreen></iframe>
 
             {% elif fight.get_media_type == "IG" %}
-                <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.external_media }}" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">Fight video on Instagram</blockquote>
+                <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.external_media }}"
+                            data-instgrm-version="14"
+                            style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
+                    Fight video on Instagram
+                </blockquote>
                 <script async src="http://www.instagram.com/embed.js"></script>
 
             {% elif fight.get_media_type == "TW" %}
-                <blockquote class="twitter-tweet"><a href="{{ fight.external_media }}">Fight video on Twitter.</a></blockquote>
+                <blockquote class="twitter-tweet"><a href="{{ fight.external_media }}">Fight video on Twitter.</a>
+                </blockquote>
                 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
             {% elif fight.get_media_type == "TT" %}
-                <blockquote class="tiktok-embed" cite="{{ fight.external_media }}" data-video-id="{{ fight.get_tt_id }}" >
-                <section></section> <!--This section tag is required, embed will fail without it. -->
-                </blockquote><script async src="https://www.tiktok.com/embed.js"></script>
+                <blockquote class="tiktok-embed" cite="{{ fight.external_media }}"
+                            data-video-id="{{ fight.get_tt_id }}">
+                    <section></section> <!--This section tag is required, embed will fail without it. -->
+                </blockquote>
+                <script async src="https://www.tiktok.com/embed.js"></script>
 
             {% else %}
                 <p>We're unsure how to embed this media, here's a <a href="{{ fight.external_media }}">link.</a></p>
             {% endif %}
         {% endif %}
 
-       <p> <a href= "{% url "main:editJustFight" fight.id %}"> Edit details.</a> </p>
+        <p><a href="{% url "main:editJustFight" fight.id %}"> Edit details.</a></p>
 
         {% if fight.competitors.count > 0 %}
-           <h2>Competitors</h2>
+            <h2>Competitors</h2>
             <ul>
-            {% for fv in fight.fight_version_set.all %}
-                <li>{{ fv.version }} {% if fv.won %} Winner {% else %} Loser {% endif %}  <a href="{% url "main:editFightVersion" fight.id fv.id %}">Edit Competitor</a></li>
-            {% endfor %}
+                {% for fv in fight.fight_version_set.all %}
+                    <li>{{ fv.version }} {% if fv.won %} Winner {% else %} Loser {% endif %}  <a
+                            href="{% url "main:editFightVersion" fight.id fv.id %}">Edit Competitor</a></li>
+                {% endfor %}
             </ul>
-            <a href="{% url "main:newFightVersion" fight.id %}" >Add Robot</a>
+            <a href="{% url "main:newFightVersion" fight.id %}">Add Robot</a>
         {% else %}
             <h2> This fight has no participants please add some. <br>
-            <a href = "{% url "main:newFightVersion" fight.id%}">Add Robot.</a>
+                <a href="{% url "main:newFightVersion" fight.id %}">Add Robot.</a>
             </h2>
         {% endif %}
 
-        <p><a href="{% url "main:contestDetail" fight.contest.id %}" >TODO: This save button does nothing</a></p>
+        <p><a href="{% url "main:contestDetail" fight.contest.id %}">TODO: This save button does nothing</a></p>
     {% else %}
         Something has gone wrong
     {% endif %}
