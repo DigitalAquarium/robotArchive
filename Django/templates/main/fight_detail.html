@@ -1,28 +1,87 @@
 {% extends "base.html" %}
+{% load static %}
+{% block meta %}
+    <title> {{ fight }} </title>
+    <link rel="stylesheet" href="{% static 'fight_detail.css' %}">
+{% endblock %}
 {% block content %}
     {% if fight %}
+        <div class="main-content">
         <h1> {{ fight }}</h1>
-        {% if fight.competitors.all|length == 2 %}
-            <div style="display: inline-flex">
-                <div>
-                    <div><img class="flag-image" src="{{ fight.competitors.first.get_flag }}" alt="Flag">
-                        <a href="{% url 'main:versionDetail' fight.competitors.first.id %}">{{ fight.competitors.first }}</a>
+        <h4>{{ fight.get_fight_type_display }} </h4>
+        {% if fight.fight_version_set.last.tag_team == 0 %}
+            <div class="competitor-row">
+                {% for version in fight.competitors.all %}
+                    {% if forloop.counter == 2 and forloop.last %}
+                        <div class="competitor-vs">
+                            <p>vs</p>
+                        </div>
+                    {% endif %}
+                    <div class="competitor-square">
+                        <div class="competitor-title">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
+                            <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
+                        </div>
+                        <div class="image-container">
+                            <img class="fit-image" src="
+                                    {% if version.image %}{{ version.image.url }} {% else %}{% static "unknown.png" %}{% endif %}"
+                                 alt="Robot Image">
+                        </div>
                     </div>
-                    <div>
-                        <img src="{{ fight.competitors.first.image.url }}" alt="Robot Image">
-                    </div>
+
+                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                        </div>
+                        <div class="competitor-row">
+                    {% endif %}
+                {% endfor %}
                 </div>
-                <div>vs</div>
-                <div>
-                    <div><img class="flag-image" src="{{ fight.competitors.last.get_flag }}" alt="Flag">
-                        <a href="{% url 'main:versionDetail' fight.competitors.last.id %}">{{ fight.competitors.last }}</a>
+        {% elif fight.competitors.all|length > 2 and fight.fight_version_set.last.tag_team > 0 %}
+            {% for team in fight.teams %}
+                <div class="competitor-row">
+                    {% for version in team %}
+                        {% if forloop.counter == 2 and forloop.last %}
+                            <div class="competitor-and">
+                                <p>&</p>
+                            </div>
+                        {% endif %}
+                        <div class="competitor-square">
+                            <div class="competitor-title">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
+                                <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
+                            </div>
+                            <div class="image-container">
+                                <img class="fit-image" src="
+                                        {% if version.image %}{{ version.image.url }} {% else %}{% static "unknown.png" %}{% endif %}"
+                                     alt="Robot Image">
+                            </div>
+                        </div>
+                        {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                            </div>
+                            <div class="competitor-row">
+                        {% endif %}
+                    {% endfor %}
                     </div>
-                    <div>
-                        <img src="{{ fight.competitors.last.image.url }}" alt="Robot Image">
-                    </div>
-                </div>
-            </div>
+                {% if not forloop.last %}
+                    <div class="team-vs">vs</div>
+                {% endif %}
+            {% endfor %}
+
+        {% else %}
+            This fight appears to have no competitors
         {% endif %}
+
+        <div class="results">
+            <p>
+                {% if fight.winners|length > 0 %}
+                    {% for robot in  fight.winners %}
+                        {{ robot }} {% if not forloop.last %} & {% endif %}
+                    {% endfor %}
+                    {% if fight.winners|length == 1 %}wins{% else %}win{% endif %} by
+                {% endif %}
+                {{ fight.get_method_display }}
+            </p>
+        </div>
+
 
         <div class="fight-media">
             {% if fight.internal_media or fight.external_media %}
@@ -53,8 +112,7 @@
 
                 {% elif fight.get_media_type == "IG" %}
                     <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.external_media }}"
-                                data-instgrm-version="14"
-                                style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; width:800px; min-width:326px; padding:0;">
+                                data-instgrm-version="14">
                         Fight video on Instagram
                     </blockquote>
                     <script async src="http://www.instagram.com/embed.js"></script>
@@ -81,4 +139,5 @@
     {% else %}
         something has gone wrong
     {% endif %}
+</div>
 {% endblock %}

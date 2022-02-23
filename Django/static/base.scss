@@ -55,24 +55,26 @@ body {
 }
 
 .content {
-  padding: 10em 3em;
+  //padding: 10em 3em;
+  padding-top:3em;
 
-  fieldset{
-     text-align: center;
-    legend{
+  fieldset {
+    text-align: center;
+
+    legend {
       text-align: left;
       margin: 0 0 0 5%;
     }
   }
 
-  .form-group{
-    margin:5px;
+  .form-group {
+    margin: 5px;
   }
 
   .hrz-index-result {
     margin: 1em 0;
     padding: 1em;
-    width: 70%;
+    width: 100%;
     height: 10em;
     border: 1px solid dimgrey;
     float: inside;
@@ -87,37 +89,47 @@ body {
       justify-content: center;
       display: inline-flex;
 
-      .main-image{
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-      }
     }
-    .hrz-index-content{
+
+    .hrz-index-content {
       display: inline-flex;
       flex-direction: column;
       width: 80%; // this + image = 100%
-      overflow:hidden;
+      overflow: hidden;
 
-      .hrz-index-title{
+      .hrz-index-title {
         font-size: 24px;
-        display:inline-flex;
+        display: inline-flex;
       }
-      .hrz-index-details{
+
+      .hrz-index-details {
         margin: 5px 5px;
+
         span {
           margin: 0 1em 0 0;
         }
       }
-      .hrz-index-description{
+
+      .hrz-index-description {
         font-size: 13px;
-        margin:0 5px
+        margin: 0 5px
       }
     }
   }
-.flag-image{
-          box-shadow: black 0 0 3px;
-          margin:3px 5px 5px 5px;
-          height:1em
-        }
+
+  .flag-image {
+    box-shadow: black 0 0 3px;
+    margin: 3px 5px 5px 5px;
+    height: 1em
+  }
+
+  .fit-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+}
+
+.main-content{
+  padding:0 15%;
 }

@@ -367,7 +367,7 @@ def message_view(request):
         return redirect("main:index")
 
 
-def version_detail_view(request,version_id):
+def version_detail_view(request, version_id):
     v = Version.objects.get(pk=version_id)
     robot_id = v.robot.id
     return redirect("main:robotDetail", robot_id)

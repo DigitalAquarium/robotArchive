@@ -46,7 +46,7 @@ body {
 }
 
 .content {
-  padding: 10em 3em;
+  padding-top: 3em;
 }
 .content fieldset {
   text-align: center;
@@ -61,7 +61,7 @@ body {
 .content .hrz-index-result {
   margin: 1em 0;
   padding: 1em;
-  width: 70%;
+  width: 100%;
   height: 10em;
   border: 1px solid dimgrey;
   float: inside;
@@ -75,11 +75,6 @@ body {
   width: 20%;
   justify-content: center;
   display: inline-flex;
-}
-.content .hrz-index-result .hrz-index-image .main-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
 }
 .content .hrz-index-result .hrz-index-content {
   display: inline-flex;
@@ -105,6 +100,15 @@ body {
   box-shadow: black 0 0 3px;
   margin: 3px 5px 5px 5px;
   height: 1em;
+}
+.content .fit-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.main-content {
+  padding: 0 15%;
 }
 
 /*# sourceMappingURL=base.css.map */

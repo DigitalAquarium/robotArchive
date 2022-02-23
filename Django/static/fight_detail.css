@@ -1,0 +1,58 @@
+.image-container{
+    width:100%;
+    height:90%;
+    display:flex;
+    justify-content: center;
+}
+
+h1{
+    margin-block: -0.2em;
+}
+
+.competitor-row {
+    display: inline-flex;
+    width: 100%;
+    height: 20em;
+    justify-content: center;
+}
+
+.competitor-square{
+    width: 30%;
+    height:100%;
+}
+
+.competitor-title{
+    font-size:24px;
+    display: flex;
+}
+
+.competitor-vs{
+    font-size: 64px;
+    width:30%;
+    text-align: center;
+}
+.competitor-and{
+    font-size: 64px;
+    width:10%;
+    text-align: center;
+}
+
+.team-vs{
+    font-size:64px;
+    text-align: center;
+}
+
+.fight-media{
+    text-align: center
+}
+
+.instagram-media{
+    background:#FFF;
+    border:0;
+    border-radius:3px;
+    box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15);
+    margin: 1px;
+    width:800px;
+    min-width:326px;
+    padding:0;
+}

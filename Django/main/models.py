@@ -237,7 +237,8 @@ class Fight(models.Model):
         ("DR", "Draw"),
         ("WU", "Winner Unknown"),
         ("NW", "No Winner Declared"),
-        ("NM", "No Method Declared"),
+        ("NM", "Method not Declared"),
+        ("OT", "Other Win Method")
     ]
     # Media Types:
     # LI: Local Image
@@ -322,6 +323,23 @@ class Fight(models.Model):
                 break
             output = self.external_media[i] + output
         return output
+
+    def teams(self):
+        teams = []
+        for fv in self.fight_version_set.all().order_by("tag_team"):
+            if fv.tag_team != 0:
+                try:
+                    teams[fv.tag_team-1].append(fv.version)
+                except IndexError:
+                    teams.append([fv.version])
+        return teams
+
+    def winners(self):
+        winners = []
+        for fv in self.fight_version_set.all():
+            if fv.won == 1:
+                winners.append(fv.version)
+        return winners
 
     def __str__(self):
         # This can cause a recursian error

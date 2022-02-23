@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load bonus_filters %}
+{% load static %}
 
 {% block content %}
     <section class="search-params">
@@ -10,11 +11,12 @@
             <input type="submit" value="Search">
         </form>
     </section>
+    <div class="main-content">
     {% for robot in robot_list %}
         <div class="hrz-index-result">
         <span class="hrz-index-image">
-        <img class="main-image"
-             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} https://cdn-icons-png.flaticon.com/512/25/25400.png  {% endif %}"
+        <img class="fit-image"
+             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
              alt="Robot Image">
         </span>
             <div class="hrz-index-content">
@@ -58,4 +60,5 @@
             {% endif %}
         </ul>
     {% endif %}
+    </div>
 {% endblock %}

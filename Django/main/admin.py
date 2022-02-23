@@ -1,16 +1,72 @@
 from django.contrib import admin
 from .models import *
-admin.site.register(Person)
-admin.site.register(Team)
-admin.site.register(Robot)
-admin.site.register(Version)
-admin.site.register(Franchise)
-admin.site.register(Event)
-admin.site.register(Weight_Class)
-admin.site.register(Contest)
-admin.site.register(Person_Team)
-admin.site.register(Fight)
-admin.site.register(Person_Franchise)
-admin.site.register(Fight_Version)
-admin.site.register(Registration)
-admin.site.register(Award)
+
+
+@admin.register(Person)
+class PersonAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Robot)
+class RobotAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Version)
+class VersionAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Franchise)
+class FranchiseAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Weight_Class)
+class WeightClassAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Contest)
+class ContestAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Person_Team)
+class PersonTeamAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Fight)
+class FightAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Person_Franchise)
+class PersonFranchiseAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Fight_Version)
+class FightVersionAdmin(admin.ModelAdmin):
+    search_fields = ['version__robot_name', 'version__robot__name']
+
+
+@admin.register(Registration)
+class RegistrationAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Award)
+class AwardAdmin(admin.ModelAdmin):
+    pass

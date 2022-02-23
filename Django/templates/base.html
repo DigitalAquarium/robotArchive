@@ -4,7 +4,9 @@
 {%load static%}
 <link rel="stylesheet" href="{%static 'base.css' %}">
 <meta charset="UTF-8">
-<title> Event Manager </title>
+    {% block meta %}
+        <title> Event Manager </title>
+    {% endblock %}
 </head>
 <body>
 <nav class="navbar">
