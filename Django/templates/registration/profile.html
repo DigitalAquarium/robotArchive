@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block meta %}
+<title>View Profile</title>
+{% endblock %}
+{% block content %}
+    <p>Username: {{ user.get_username }}</p>
+    <p>Email: {{ user.get_email_field_name }}</p>
+
+    <P>Name: {{ person.name }}</P>
+    <p>Contact Email: {{ person.email }}</p>
+    <a href="{% url "main:myFranchises" %}">My Franchises</a>
+    <a href="{% url "main:myTeams" %}">My Teams</a>
+{% endblock %}

@@ -47,6 +47,7 @@ body {
 
 .content {
   padding-top: 3em;
+  margin-bottom: 3em;
 }
 .content fieldset {
   text-align: center;

@@ -138,3 +138,9 @@ class RobotFightForm(forms.ModelForm):
     class Meta:
         model = Fight_Version
         fields = ["version", "won", "tag_team"]
+
+
+class AwardForm(forms.ModelForm):
+    class Meta:
+        model = Award
+        fields = ['name', 'award_type', 'contest', 'version']

@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from django.db import models
 from django.conf import settings
 import pycountry
@@ -198,6 +200,21 @@ class Event(models.Model):
     def get_flag(self):
         return get_flag(self.country)
 
+    def is_registration_open(self):
+        return self.registration_open < timezone.now() < self.registration_close
+
+    def is_registration_past(self):
+        return timezone.now() > self.registration_close
+
+    def is_registration_full(self):
+        for c in self.contest_set.all():
+            if not c.is_registration_full():
+                return False
+        return True
+
+    def is_one_day(self):
+        return self.start_date == self.end_date
+
 
 class Contest(models.Model):
     name = models.CharField(max_length=255, blank=True)
@@ -213,6 +230,15 @@ class Contest(models.Model):
             return self.name
         else:
             return self.weight_class.name
+
+    def is_registration_open(self):
+        return self.event.is_registration_open()
+
+    def is_registration_past(self):
+        return self.event.is_registration_past()
+
+    def is_registration_full(self):
+        return self.entries != 0 and (self.registration_set.count() >= self.entries + self.reserves)
 
 
 class Registration(models.Model):
@@ -362,8 +388,16 @@ class Fight(models.Model):
 
 class Award(models.Model):
     name = models.CharField(max_length=255)
-    award_type = models.PositiveSmallIntegerField()  # 0 other, 1 first place, 2 second place, 3 third place
-    contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
+    TYPE_CHOICES = [
+        (0, "Other"),
+        (1, "First Place"),
+        (2, "Second Place"),
+        (3, "Third Place"),
+    ]
+    award_type = models.PositiveSmallIntegerField(choices=TYPE_CHOICES, default=0)  # 0 other, 1 first place, 2 second place,
+    # 3 third place
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    contest = models.ForeignKey(Contest, on_delete=models.CASCADE, blank=True, null=True)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
 
     def __str__(self):

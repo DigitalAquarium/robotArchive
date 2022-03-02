@@ -9,7 +9,6 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils import timezone
 from django.views import generic
-from django.db.models import Q
 
 from .forms import *
 
@@ -38,8 +37,7 @@ def event_detail_view(request, event_id):
     return render(request, "main/event_detail.html",
                   {"event": event,
                    "map": stuff.map,
-                   "can_change": can_change,
-                   "reg_open": event.registration_open < timezone.now() < event.registration_close})
+                   "can_change": can_change})
 
 
 def new_event_view(request, franchise_id):
@@ -71,12 +69,13 @@ def modify_event_view(request, event_id):
 def contest_signup_view(response, contest_id):
     contest = Contest.objects.get(pk=contest_id)
 
-    if timezone.now() > contest.event.registration_close:
-        return redirect("%s?m=%s" % (reverse("main:message"), "Registration for this contest has closed."))
-    elif timezone.now() < contest.event.registration_open:
-        return redirect("%s?m=%s" % (reverse("main:message"), "Registration for this contest has not yet opened."))
+    if not contest.is_registration_open():
+        if contest.is_registration_past():
+            return redirect("%s?m=%s" % (reverse("main:message"), "Registration for this contest has closed."))
+        else:
+            return redirect("%s?m=%s" % (reverse("main:message"), "Registration for this contest has not yet opened."))
 
-    if contest.entries != 0 and (contest.registration_set.count() >= contest.entries + contest.reserves):
+    if contest.is_registration_full():
         return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
 
     if response.user.is_authenticated:
@@ -157,6 +156,7 @@ def edit_contest_view(request, contest_id):
 
 
 def register(response):
+    # TODO: This should proabably be moved
     if response.method == "POST":
         form = RegistrationForm(response.POST)
         name = response.POST["name"]
@@ -177,14 +177,15 @@ def register(response):
 def robot_index_view(request):
     name = request.GET.get("name") or ""
     page = request.GET.get("page") or 1
-    country = request.GET.get("country") or ""
+    country_code = request.GET.get("country") or ""
     page = int(page)
     num = 50
 
-    if country != "" and country is not None:
-        robot_list = Robot.objects.filter(name__icontains=name, version__team__country=country.capitalize())
+    if country_code != "" and country_code is not None:
+        robot_list = Robot.objects.filter(name__icontains=name, version__team__country=country_code.capitalize())
+        print("hi?!?!?", robot_list,"country",country_code)
         version_thing = Robot.objects.filter(version__robot_name__icontains=name,
-                                             version__team__country=country.capitalize())
+                                             version__team__country=country_code.capitalize())
     else:
         robot_list = Robot.objects.filter(name__icontains=name)
         version_thing = Robot.objects.filter(version__robot_name__icontains=name)
@@ -222,7 +223,7 @@ def team_detail_view(request, team_id):
 
 @login_required(login_url='/accounts/login/')
 def new_robot_view(request, team_id):
-    team = Team.objects.get(pk=team_id)  ##TODO: Add verification
+    team = Team.objects.get(pk=team_id)  # TODO: Add verification
     if request.method == "POST":
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
@@ -231,6 +232,12 @@ def new_robot_view(request, team_id):
     else:
         form = NewRobotForm()
     return render(request, "main/new_robot.html", {"form": form, "team": team})
+
+
+def version_detail_view(request, version_id):
+    v = Version.objects.get(pk=version_id)
+    robot_id = v.robot.id
+    return redirect("main:robotDetail", robot_id)
 
 
 def team_edit_view(request, team_id=None):
@@ -306,7 +313,8 @@ def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the sa
     f = Fight()
     f.contest = contest
     f.number = 1
-    for prevFight in contest.fight_set.all():  # Should Probably find a more efficient way of doing this but it'll work for now
+    for prevFight in contest.fight_set.all():  # Should Probably find a more efficient way of doing
+        # this but it'll work for now
         if prevFight.number >= f.number:
             f.number = prevFight.number + 1
     if contest.fight_type == "MU":
@@ -340,7 +348,7 @@ def fight_detail_view(request, fight_id):
     return render(request, "main/fight_detail.html", {"fight": fight})
 
 
-def modify_robot_version_view(request, fight_id, vf_id=None):
+def modify_fight_version_view(request, fight_id, vf_id=None):
     fight = Fight.objects.get(pk=fight_id)
     registered = Version.objects.filter(registration__contest=fight.contest.id)
     if vf_id is not None:
@@ -354,9 +362,40 @@ def modify_robot_version_view(request, fight_id, vf_id=None):
         return redirect("main:editWholeFight", fight_id)
     form.fields['version'].queryset = registered
 
-    return render(request, "main/modify_robot_version.html",
+    return render(request, "main/modify_fight_version.html",
                   {"form": form, "fight_id": fight_id, "fight_version_id": vf_id})
     # TODO: This is basically identical to modify_fight and probably many more
+
+
+def new_award_view(request, event_id):
+    event = Event.objects.get(pk=event_id)
+    if request.method == "POST":
+        form = AwardForm(request.POST)
+        if form.is_valid():
+            a = form.save(False)
+            a.event = event
+            a.save()
+            return redirect("main:eventDetail", event_id)
+    else:
+        form = AwardForm()
+        form.fields['contest'].queryset = Contest.objects.filter(event=event)
+        form.fields['version'].queryset = Version.objects.filter(registration__contest__in=event.contest_set.all())
+        return render(request, "main/new_award.html", {"form": form, "event_id": event_id})
+# TODO: THis is almost identical to edit award should probably make a more generic one esp the template
+
+
+def award_edit_view(request, award_id):
+    a = Award.objects.get(pk=award_id)
+    if request.method == "POST":
+        form = AwardForm(request.POST, instance=a)
+        if form.is_valid():
+            form.save()
+            return redirect("main:eventDetail", a.event.id)
+    else:
+        form = AwardForm(instance=a)
+        form.fields['contest'].queryset = Contest.objects.filter(event=a.event)
+        form.fields['version'].queryset = Version.objects.filter(registration__contest__in=a.event.contest_set.all())
+        return render(request, "main/edit_award.html", {"form": form, "award_id": award_id})
 
 
 def message_view(request):
@@ -367,7 +406,13 @@ def message_view(request):
         return redirect("main:index")
 
 
-def version_detail_view(request, version_id):
-    v = Version.objects.get(pk=version_id)
-    robot_id = v.robot.id
-    return redirect("main:robotDetail", robot_id)
+def search_view():
+    pass
+
+
+@login_required
+def profile_view(request):
+    # TODO: Should this be moved too?
+    user = request.user
+    person = Person(user=user)
+    return render(request, "registration/profile.html", {"user": user, "person": person})

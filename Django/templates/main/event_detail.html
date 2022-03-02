@@ -1,38 +1,115 @@
 {% extends "base.html" %}
+{% load static %}
+{% block meta %}
+    <title>{{ event }} - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static 'event_detail.css' %}">
+{% endblock %}
 {% block content %}
     {% if event %}
-        {% if event.logo or event.franchise.logo %}
-        <img src=
-                     "{% if event.logo %} {{ event.logo.url }}
-                     {% else %}
-                         {% if event.franchise.logo %} {{ event.franchise.logo.url }}{% endif %}
-                     {% endif %}" alt="logo">
-        {% endif %}
-        <h1>{{ event.name }}</h1>
-        <p>{{ event.description|urlize }}</p>
-        <iframe width="600" height="450" style="border:0" loading="lazy" allowfullscreen
-                src="https://www.google.com/maps/embed/v1/view?key={{ map }}&zoom=14&center={{ event.latitude }},{{ event.longitude }}"></iframe>
-        <h2>Contests</h2>
-        <ul>
-            {% for contest in event.contest_set.all %}
-                <li>{{ contest }}
-                    {% if reg_open %}
-                        <a href="{% url 'main:contestSignup' contest.id %}">Sign up.</a>
-                    {% else %}
-                        <a href="{% url 'main:contestDetail' contest.id %}">View.</a>
-                    {% endif %}
+        <div class="main-content">
+        <div class="event-heading">
+            <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
+            <h1>{{ event.name }}</h1>
+            {% if can_change %}
+                <a class="editor-link" href="{% url 'main:editEvent' event.id %}">Edit Event.</a>
+            {% endif %}
+        </div>
 
-                {% if can_change %}
-                    <a href="{% url 'main:editContest' contest.id %}"> Edit Contest </a>
+
+
+        {% if event.logo or event.franchise.logo %}
+            <div class="event-logo-image">
+                <img class="fit-image" src="{% if event.logo %}
+                    {{ event.logo.url }}{% else %}{% if event.franchise.logo %} {{ event.franchise.logo.url }}{% endif %}{% endif %}"
+                     alt="logo">
+            </div>
+        {% endif %}
+
+
+
+        <div class="event-details">
+            <p>Organised by: <a href="{% url "main:franchiseDetail" event.franchise.id %}">
+                {{ event.franchise }}{% if event.franchise.website %}:</a>  {{ event.franchise.website|urlize }}
+                    {% else %}</a>{% endif %}</p>
+            <p>
+                {% if event.is_one_day %}
+                    Event date: {{ event.start_date }}
+                {% else %}
+                    Event dates: {{ event.start_date }} - {{ event.end_date }}
                 {% endif %}
+            </p>
+            <p>Event times: {{ event.start_time }} - {{ event.end_time }}</p>
+            <p>
+                {% if not event.is_registration_past %}
+                    {% if event.is_registration_open %}
+                        {% if event.is_registration_full %}
+                            Registration full.
+                        {% else %}
+                            Registration open until {{ event.registration_close }}
+                        {% endif %}
+                    {% else %}
+                        Registration opens at {{ event.registration_open }}
+                    {% endif %}
+                {% endif %}
+            </p>
+        </div>
+
+
+
+        <p>{{ event.description|urlize }} {% lorem 4 %}</p>
+
+
+
+        {% if event.contest_set.all|length !=  0 %}
+            <h2>Contests</h2>
+            <table>
+                {% for contest in event.contest_set.all %}
+                    <tr>
+                        <td>{{ contest }}</td>
+                        <td>{{ contest.weight_class.weight_string }}</td>
+                        <td>
+                        {% if reg_open %}
+                            <a href="{% url 'main:contestSignup' contest.id %}">Sign up.</a>
+                        {% else %}
+                            <a href="{% url 'main:contestDetail' contest.id %}">View.</a>
+                        {% endif %}
+                        </td>
+                        {% if can_change %}
+                            <td><a class="editor-link" href="{% url 'main:editContest' contest.id %}"> Edit Contest </a></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+
+        {% if can_change %}
+            <a class="editor-link" href="{% url 'main:newContest' event.id %}">Add Contest.</a>
+        {% endif %}
+
+
+
+        <ul>
+            {% for award in event.award_set.all %}
+                <li>{{ award }}
+                    {% if can_change %}
+                        <a href="{% url 'main:editAward' award.id %}"> Edit Award </a>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
         {% if can_change %}
-            <a href="{% url 'main:newContest' event.id %}">Add Contest.</a>
-            <a href="{% url 'main:editEvent' event.id %}">Edit Event.</a>
+            <a href="{% url 'main:newAward' event.id %}">Add Award.</a>
         {% endif %}
+
+
+
+        <iframe loading="lazy" allowfullscreen
+                src="https://www.google.com/maps/embed/v1/place?key={{ map }}&zoom=14&center={{ event.latitude }},{{ event.longitude }}&q={{ event.latitude }},{{ event.longitude }}"></iframe>
+
+
+
     {% else %}
         There is no event with this ID.
     {% endif %}
+</div>
 {% endblock %}

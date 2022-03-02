@@ -1,0 +1,18 @@
+{%extends "base.html"%}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+{% block content %}
+    {% if event_id %}
+        <form method="post" action="{% url 'main:newAward' event_id %}">
+        {% csrf_token %}
+        <fieldset>
+            <legend><h1>New Award</h1></legend>
+            {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            {{ form|crispy }}
+            <input type="submit" value="Submit">
+        </fieldset>
+        </form>
+    {% else %}
+        Something has gone wrong
+    {% endif %}
+{% endblock %}

@@ -2,6 +2,10 @@
 {% load bonus_filters %}
 {% load static %}
 
+{% block meta %}
+    <title>Robots - Roboteer's Tavern</title>
+{% endblock %}
+
 {% block content %}
     <section class="search-params">
         <form method="get" action="{% url "main:robotIndex" %}">
@@ -12,53 +16,66 @@
         </form>
     </section>
     <div class="main-content">
-    {% for robot in robot_list %}
-        <div class="hrz-index-result">
-        <span class="hrz-index-image">
-        <img class="fit-image"
-             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
-             alt="Robot Image">
-        </span>
-            <div class="hrz-index-content">
-                <span class="hrz-index-title">
-                <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                <a href="{% url 'main:robotDetail' robot.id %}">{{ robot.name }}</a>
-            </span>
-                <span class="hrz-index-details">
+        {% for robot in robot_list %}
+            <div class="hrz-index-result">
+                <span class="hrz-index-image">
+                    <img class="fit-image"
+                         src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                         alt="Robot Image">
+                </span>
+                <div class="hrz-index-content">
+                    <span class="hrz-index-title">
+                        <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
+                        <a href="{% url 'main:robotDetail' robot.id %}">{{ robot.name }}</a>
+                    </span>
+                    <span class="hrz-index-details">
                     {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
-                    <span>Weight Class: {{ robot.version_set.last.weight_class.weight_string }}</span>
-                    {% if robot.awards|length > 0 %}<span> Awards: {{ robot.awards|length }}</span>{% endif %}
-                    {% if robot.last_fought %}<span>Last Competed: {{ robot.last_fought|date:"M Y" }}</span>{% endif %}
-                </span>
-                <span class="hrz-index-description">
-                    {% if robot.description  %}
-                    {{   robot.description }}
-                    {% else %}
-                    {{ robot.version_set.last.description }}
-                    {% endif %}
-                </span>
+                        <span>Weight Class: {{ robot.version_set.last.weight_class.weight_string }}</span>
+                        {% if robot.awards|length > 0 %}<span> Awards: {{ robot.awards|length }}</span>{% endif %}
+                        {% if robot.last_fought %}
+                            <span>Last Competed: {{ robot.last_fought|date:"M Y" }}</span>{% endif %}
+                    </span>
+                    <span class="hrz-index-description">
+                        {% if robot.description %}
+                            {{ robot.description }}
+                        {% else %}
+                            {{ robot.version_set.last.description }}
+                        {% endif %}
+                    </span>
+                </div>
             </div>
-        </div>
-    {% endfor %}
-    {% if pages > 1 %}
-        {% url "main:robotIndex" as this %}
-        <ul class="page-select">
-            {% if page > 1 %}
-                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">first</a></li>
-                {% if page > 4 %}
-                    <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a></li>
+        {% endfor %}
+        {% if pages > 1 %}
+            {% url "main:robotIndex" as this %}
+            <ul class="page-select">
+                {% if page > 1 %}
+                    <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">first</a></li>
+                    {% if page > 4 %}
+                        <li><a href="
+
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
+                        </li>
+                    {% endif %}
+                    <li><a href="
+
+                            {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
+                    </li>
                 {% endif %}
-                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a></li>
-            {% endif %}
-            <li>{{ page }}</li>
-            {% if page < pages %}
-                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a></li>
-                {% if page < pages|add:"-5" %}
-                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a></li>
-            {% endif %}
-                <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">last</a></li>
-            {% endif %}
-        </ul>
-    {% endif %}
+                <li>{{ page }}</li>
+                {% if page < pages %}
+                    <li><a href="
+
+                            {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
+                    </li>
+                    {% if page < pages|add:"-5" %}
+                        <li><a href="
+
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
+                        </li>
+                    {% endif %}
+                    <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">last</a></li>
+                {% endif %}
+            </ul>
+        {% endif %}
     </div>
 {% endblock %}

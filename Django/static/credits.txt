@@ -1,2 +1,4 @@
 Question Mark Icon: <a href="https://www.flaticon.com/free-icons/question" title="question icons">Question icons created by Dave Gandy - Flaticon</a>
 Flags: https://github.com/lipis/flag-icons
+Medal Icon: <a href="https://www.flaticon.com/free-icons/trophy" title="trophy icons">Trophy icons created by Freepik - Flaticon</a> : https://www.flaticon.com/premium-icon/medal_3113054
+Trophy Icon: <a href="https://www.flaticon.com/free-icons/trophy" title="trophy icons">Trophy icons created by Pixel perfect - Flaticon</a> : https://www.flaticon.com/free-icon/trophy_889518#
