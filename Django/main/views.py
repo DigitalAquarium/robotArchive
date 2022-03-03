@@ -7,7 +7,6 @@ from EventManager import stuff
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.utils import timezone
 from django.views import generic
 
 from .forms import *
@@ -183,7 +182,7 @@ def robot_index_view(request):
 
     if country_code != "" and country_code is not None:
         robot_list = Robot.objects.filter(name__icontains=name, version__team__country=country_code.capitalize())
-        print("hi?!?!?", robot_list,"country",country_code)
+        print("hi?!?!?", robot_list, "country", country_code)
         version_thing = Robot.objects.filter(version__robot_name__icontains=name,
                                              version__team__country=country_code.capitalize())
     else:
@@ -367,6 +366,12 @@ def modify_fight_version_view(request, fight_id, vf_id=None):
     # TODO: This is basically identical to modify_fight and probably many more
 
 
+def award_index_view(request, event_id):
+    event = Event.objects.get(pk=event_id)
+    awards = Award.objects.filter(event=event).order_by("-award_type", "name")
+    return render(request, "main/award_index.html", {"award_list": awards, "event": event})
+
+
 def new_award_view(request, event_id):
     event = Event.objects.get(pk=event_id)
     if request.method == "POST":
@@ -381,6 +386,8 @@ def new_award_view(request, event_id):
         form.fields['contest'].queryset = Contest.objects.filter(event=event)
         form.fields['version'].queryset = Version.objects.filter(registration__contest__in=event.contest_set.all())
         return render(request, "main/new_award.html", {"form": form, "event_id": event_id})
+
+
 # TODO: THis is almost identical to edit award should probably make a more generic one esp the template
 
 

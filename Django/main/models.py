@@ -12,7 +12,7 @@ NON_COMBAT = 'NC'
 FIGHT_TYPE_CHOICES = [
     (FULL_COMBAT, "Full Combat"),
     (SPORTSMAN, "Sportsman"),
-    (PLASTIC, "Restricted Material"),
+    (PLASTIC, "Plastic"),
     (NON_COMBAT, "Non-Combat"),
 ]
 
@@ -54,6 +54,14 @@ class Team(models.Model):
 
     def get_flag(self):
         return get_flag(self.country)
+
+    def can_edit(self, user):
+        p = Person.objects.get(user=user)
+        if p in self.members:
+            return True
+        else:
+            return False
+
 
 class Weight_Class(models.Model):
     name = models.CharField(max_length=30)
@@ -137,6 +145,10 @@ class Robot(models.Model):
         except AttributeError:
             return None
 
+    def can_edit(self, user):
+        last = self.version_set.all().last()
+        return last.can_edit(user)
+
 
 class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)
@@ -164,6 +176,9 @@ class Version(models.Model):
         else:
             return self.robot.name + " " + self.version_name
 
+    def can_edit(self, user):
+        return self.team.can_edit(user)
+
 
 class Franchise(models.Model):
     name = models.CharField(max_length=50)
@@ -177,6 +192,13 @@ class Franchise(models.Model):
 
     def __str__(self):
         return self.name
+
+    def can_edit(self, user):
+        p = Person.objects.get(user=user)
+        if p in self.members:
+            return True
+        else:
+            return False
 
 
 class Event(models.Model):
@@ -215,6 +237,9 @@ class Event(models.Model):
     def is_one_day(self):
         return self.start_date == self.end_date
 
+    def can_edit(self,user):
+        return self.franchise.can_edit(user)
+
 
 class Contest(models.Model):
     name = models.CharField(max_length=255, blank=True)
@@ -239,6 +264,9 @@ class Contest(models.Model):
 
     def is_registration_full(self):
         return self.entries != 0 and (self.registration_set.count() >= self.entries + self.reserves)
+
+    def can_edit(self, user):
+        return self.event.franchise.can_edit(user)
 
 
 class Registration(models.Model):
@@ -277,7 +305,7 @@ class Fight(models.Model):
     # FB: Facebook
     # UN: unknown
     method = models.CharField(max_length=2, choices=METHOD_CHOICES, default="NM")
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=True)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES)
     number = models.IntegerField()
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
@@ -355,7 +383,7 @@ class Fight(models.Model):
         for fv in self.fight_version_set.all().order_by("tag_team"):
             if fv.tag_team != 0:
                 try:
-                    teams[fv.tag_team-1].append(fv.version)
+                    teams[fv.tag_team - 1].append(fv.version)
                 except IndexError:
                     teams.append([fv.version])
         return teams
@@ -385,6 +413,8 @@ class Fight(models.Model):
         except:
             return "Trying to name this fight is causing errors (Oh no!)"
 
+    def can_edit(self, user):
+        return self.contest.can_edit(user)
 
 class Award(models.Model):
     name = models.CharField(max_length=255)
@@ -394,7 +424,8 @@ class Award(models.Model):
         (2, "Second Place"),
         (3, "Third Place"),
     ]
-    award_type = models.PositiveSmallIntegerField(choices=TYPE_CHOICES, default=0)  # 0 other, 1 first place, 2 second place,
+    award_type = models.PositiveSmallIntegerField(choices=TYPE_CHOICES,
+                                                  default=0)  # 0 other, 1 first place, 2 second place,
     # 3 third place
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE, blank=True, null=True)
@@ -403,6 +434,18 @@ class Award(models.Model):
     def __str__(self):
         return self.name
 
+    def get_icon(self):
+        if self.award_type == 0:
+            return settings.STATIC_URL + "awards/medal.png"
+        elif self.award_type == 1:
+            return settings.STATIC_URL + "awards/trophy_gold.png"
+        elif self.award_type == 2:
+            return settings.STATIC_URL + "awards/trophy_silver.png"
+        else:
+            return settings.STATIC_URL + "awards/trophy_bronze.png"
+
+    def can_edit(self, user):
+        return self.event.can_edit(user)
 
 class Person_Team(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)

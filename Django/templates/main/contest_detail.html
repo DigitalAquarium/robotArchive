@@ -1,10 +1,43 @@
 {% extends "base.html" %}
+{% block meta %}
+    <title>{{ contest }} - Roboteer's Tavern</title>
+{% endblock %}
 {% block content %}
     {% if contest %}
+        <div class="main-content">
         <h1>{{ contest }}</h1>
+
         {% if future %}
             <h2>Registrations for this contest open {{ contest.event.registration_open }}</h2>
         {% else %}
+
+            {% if contest.fight_set.all|length > 0 %}
+                <table>
+                <thead >
+                <th>Fight</th>
+                <th>Winners</th>
+                </thead>
+                {% for fight in contest.fight_set.all %}
+                    <tr>
+                    <td><a href = "{% url "main:fightDetail" fight.id %}">{{ fight|truncatechars:55 }} </a></td>
+                    <td>
+                        {% if fight.winners|length > 0 %}
+                            {% if fight.winners|length == 1 %}
+                                {{ fight.winners|first }}
+                            {% elif fight.winners|length == 2 %}
+                                {{ fight.winners|first }} & {{ fight.winners|last }}
+                            {% else %}
+                                {{ fight.winners|first }}, {{ fight.winners|last }}, and {{ fight.winners|length|add:-2 }} more...
+                            {% endif %}
+                        {% else %}
+                            None
+                        {% endif %}
+                    </td>
+                    </tr>
+                {% endfor %}
+                </table>
+            {% endif %}
+
         {% if applications %}
             <h2>Applicants</h2>
             <ul>
@@ -13,13 +46,7 @@
             {% endfor %}
             </ul>
         {% endif %}
-            <h2> Fights:</h2>
-            <ul>
-            {% for fight in contest.fight_set.all %}
-                <li><a href = "{% url "main:fightDetail" fight.id %}">{{ fight }} </a></li>
-            {% endfor %}
-            </ul>
-            <a href = "{% url "main:newFight" contest.id %}"> New Fight </a>
         {% endif %}
     {% endif %}
+    </div>
 {% endblock %}

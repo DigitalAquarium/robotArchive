@@ -37,7 +37,7 @@
                     </span>
                     <span class="hrz-index-description">
                         {% if robot.description %}
-                            {{ robot.description }}
+                            {{ robot.description|truncatechars:650 }}
                         {% else %}
                             {{ robot.version_set.last.description }}
                         {% endif %}

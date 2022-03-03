@@ -1,15 +1,15 @@
 {%extends "base.html"%}
 {% load static %}
 {% block meta %}
-<title>Events</title>
+<title>Events - Roboteer's Tavern</title>
 {% endblock %}
 {%block content%}
 {%if event_list%}
-    <div class="main-content"></div>
+    <div class="main-content">
 	{%for event in event_list%}
 		<div class="hrz-index-result">
         <span class="hrz-index-image">
-        <img class="main-image"
+        <img class="fit-image"
              src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
              alt="Event Logo">
         </span>
@@ -22,11 +22,12 @@
                     <span>{{ event.start_date|date:"jS F Y" }}</span>
                 </span>
                 <span class="hrz-index-description">
-                    {{ event.description }}
+                    {{ event.description|truncatechars:650 }}
                 </span>
             </div>
         </div>
     {%endfor%}
+    </div>
 {% else %}
     Something has gone wrong, No events to display
 {% endif %}

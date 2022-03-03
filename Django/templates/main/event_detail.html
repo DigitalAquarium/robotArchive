@@ -56,30 +56,51 @@
 
 
 
-        <p>{{ event.description|urlize }} {% lorem 4 %}</p>
+        <p>{{ event.description|urlize }}</p>
 
 
 
         {% if event.contest_set.all|length !=  0 %}
-            <h2>Contests</h2>
+            <div class="contest-table">
             <table>
+            <thead>
+                <th>Contest Name</th>
+                <th>Weight Class</th>
+                <th>Fight Type</th>
+                <th>
+                    {% if reg_open %}
+                       Sign up
+                    {% else %}
+                       View More
+                    {% endif %}
+                </th>
+                {% if can_change %}
+                    <th> Edit Contest </th>
+                {% endif %}
+            </thead>
                 {% for contest in event.contest_set.all %}
                     <tr>
                         <td>{{ contest }}</td>
                         <td>{{ contest.weight_class.weight_string }}</td>
+                        <td>{{ contest.get_fight_type_display }}</td>
                         <td>
                         {% if reg_open %}
-                            <a href="{% url 'main:contestSignup' contest.id %}">Sign up.</a>
+                            <a href="{% url 'main:contestSignup' contest.id %}">Sign up</a>
                         {% else %}
-                            <a href="{% url 'main:contestDetail' contest.id %}">View.</a>
+                            <a href="{% url 'main:contestDetail' contest.id %}">View</a>
                         {% endif %}
                         </td>
                         {% if can_change %}
-                            <td><a class="editor-link" href="{% url 'main:editContest' contest.id %}"> Edit Contest </a></td>
+                            <td><a class="editor-link" href="{% url 'main:editContest' contest.id %}"> Edit </a></td>
                         {% endif %}
                     </tr>
                 {% endfor %}
             </table>
+            </div>
+        {% else %}
+            {% if can_change %}
+                <h2 id="no-contest-warn">Warning: This event has no contests, please add one.</h2>
+            {% endif %}
         {% endif %}
 
         {% if can_change %}
@@ -87,16 +108,15 @@
         {% endif %}
 
 
-
-        <ul>
-            {% for award in event.award_set.all %}
-                <li>{{ award }}
-                    {% if can_change %}
-                        <a href="{% url 'main:editAward' award.id %}"> Edit Award </a>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+        {% if event.award_set.all|length > 0 %}
+            <p>There
+                {% if event.award_set.all|length == 1 %}
+                    was <a href="{% url "main:awardIndex" event.id %}">{{ event.award_set.all|length }} award</a>
+                {% else %}
+                    were <a href="{% url "main:awardIndex" event.id %}">{{ event.award_set.all|length }} awards</a>
+                {% endif %}
+                given out at this event</p>
+        {% endif %}
         {% if can_change %}
             <a href="{% url 'main:newAward' event.id %}">Add Award.</a>
         {% endif %}

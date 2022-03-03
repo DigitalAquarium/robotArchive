@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load bonus_filters %}
+{% load static %}
+
+{% block meta %}
+    <title>{{ event }}: Awards - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static "award_index.css" %}">
+{% endblock %}
+
+{% block content %}
+    <div class="main-content">
+        {% for award in award_list %}
+            <div class="hrz-index-result">
+                <span class="hrz-index-image">
+                    <img class="fit-image"
+                         src="{% if award.version.image %} {{ award.version.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                         alt="Robot Image">
+                </span>
+                <div class="hrz-index-content">
+                    <span class="hrz-index-title">
+                        <img class="award-icon" src="{{award.get_icon}}" alt="Flag">
+                        {{ award }}
+                    </span>
+                    <span class="hrz-index-details">
+                        <img class="flag-image" src="{{ award.version.get_flag }}" alt="Flag">
+                        <a href="{% url 'main:versionDetail' award.version.id %}">{{ award.version }}</a>
+                    </span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

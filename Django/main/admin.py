@@ -49,7 +49,7 @@ class PersonTeamAdmin(admin.ModelAdmin):
 
 @admin.register(Fight)
 class FightAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ['contest__event__name']
 
 
 @admin.register(Person_Franchise)
@@ -69,4 +69,4 @@ class RegistrationAdmin(admin.ModelAdmin):
 
 @admin.register(Award)
 class AwardAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ['name', 'event__name']

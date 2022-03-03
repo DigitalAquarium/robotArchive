@@ -31,6 +31,7 @@ urlpatterns = [
     path('fights/<int:fight_id>/addRobot', views.modify_fight_version_view, name='newFightVersion'),
     path('fights/<int:fight_id>/editRobot/<int:vf_id>', views.modify_fight_version_view, name='editFightVersion'),
     path('versions/<int:version_id>', views.version_detail_view, name='versionDetail'),
+    path('events/<int:event_id>/awards', views.award_index_view, name='awardIndex'),
     path('awards/<int:event_id>/new', views.new_award_view, name='newAward'),
     path('awards/<int:award_id>/edit', views.award_edit_view, name='editAward'),
     path('accounts/register', views.register, name='register'),

@@ -12,6 +12,21 @@ h1{
     text-align: center;
     max-height: 700px;
 }
+
+#no-contest-warn{
+    color: red;
+}
+
+/*.contest-table{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}*/
+
+table, th, td{
+    text-align: center;
+}
+
 iframe{
     border:0;
     width:100%;
