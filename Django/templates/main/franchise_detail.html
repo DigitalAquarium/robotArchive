@@ -1,23 +1,49 @@
 {% extends "base.html" %}
 {% load static %}
+{% block meta %}
+    <title>{{ fran }} - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static 'franchise_detail.css' %}">
+{% endblock %}
 {% block content %}
     {% if fran %}
-        <img src=
-                     {% if fran.logo %} {{ fran.logo.url }}
-                     {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
-                     {% endif %} alt=logo>
-        <img src='{% get_static_prefix %}flags/4x3/{{ fran.country | lower }}.svg' width="30" height="40" alt="flag">
-        <h1>{{ fran }}</h1>
-        <p>{{ fran.website }}</p>
+        <div class="main-content">
+        <div class="franchise-heading">
+            <h1>{{ fran }}</h1>
+            {% if can_change %}
+                <a class="editor-link" href="{% url 'main:editEvent' event.id %}">Edit Event.</a>
+            {% endif %}
+        </div>
+
+         {% if fran.logo %}
+            <div class="franchise-logo-image">
+                <img class="fit-image" src="{{ fran.logo.url }}" alt="logo">
+            </div>
+        {% endif %}
+
+        {{ fran.description }}
+
         <h2>Events</h2>
-        <ul>
-            {% for event in fran.event_set.all %}
-                <li>{{ event }} <a href="{% url 'main:eventDetail' event.id %}">View</a></li>
-            {% endfor %}
-        </ul>
         {% if member %}
             <a href="{% url 'main:newEvent' fran.id %} ">New Event</a>
         {% endif %}
+        <table>
+        <thead>
+        <th>Event Name</th>
+        <th>Event Date</th>
+         {% if can_change %}
+             <th> Edit Contest </th>
+         {% endif %}
+        </thead>
+            {% for event in fran.event_set.all %}
+                <tr>
+                    <td><a href="{% url 'main:eventDetail' event.id %}">{{ event }}</a></td>
+                    <td>{{ event.start_date }}</td>
+                    {% if can_change %}
+                        <td><a class="editor-link" href="{% url 'main:editEvent' event.id %}"> Edit </a></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </table>
     {% else %}
         Something has gone wrong.
     {% endif %}

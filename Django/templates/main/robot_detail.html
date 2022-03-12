@@ -1,18 +1,97 @@
 {% extends "base.html" %}
+{% load bonus_filters %}
+{% load static %}
+{% block meta %}
+    <title>{{ robot.name }} - Roboteer's Tavern</title>
+{% endblock %}
 {% block content %}
-    <h1>{{ robot.name }}</h1>
-    <p>{{ robot.description }}</p>
-    <h2>Versions!</h2>
+    <div class="main-content">
     {% if robot %}
-        <ul>
+        <h1>{{ robot.name }}</h1>
+        {% if not robot.opt_out %}
+            <h2>Rank: {{ robot.ranking|floatformat:2 }}</h2>
+            <h2>Win/Loss: {{ robot.wins }}/{{ robot.losses }}</h2>
+        {% endif %}
+        <p>{{ robot.description }}</p>
+
+
             {% for v in robot.version_set.all %}
-                <li>{{ v }}<img src=
-                                        {% if v.image %} {{ v.image.url }}
-                                        {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
-                                        {% endif %} alt=image></li>
+                <div class="version-block" style="border:black solid 2px; background-color: #babcc0; height:25em;" id="ver-{{ v.id }}">
+                    <div style ="font-size: 32px;display:flex" >
+                        <img class="flag-image" src="{{ v.get_flag }}" alt="Flag">{{ v }}
+                    </div>
+
+                    <div style="display:flex;height:100%;">
+                        <div class="version-image" style="display:flex; width:30%; height:85%; justify-content: center">
+                            <img class="fit-image" src= "{% if v.image %} {{ v.image.url }} {% else %} {% static "unknown.png" %} {% endif %}" alt="Version Image">
+                        </div>
+                        <div style="width: 70%; margin-left:5px">
+                            <div style="font-size: 18px; display:flex; flex-direction: column">
+                                <span>Weapon: {{ v.weapon_type }}</span>
+                                <span>Weight Class: {{ v.weight_class }}</span>
+                                <span>Team : <a href="{% url "main:teamDetail" v.team.id %}">{{ v.team }}</a></span>
+                            </div>
+                            <div style="height:17em; overflow: auto;">
+                                <p>{{ v.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
+        {{ robot.description }}
+
+        {% if awards|length > 0 %}
+            <h2>{{ robot }} has won {{ awards|length }} {% if awards|length == 1 %}award. {% else %}awards.{% endif %}</h2>
+            <table>
+            <thead>
+            <th></th>
+            <th>Award Name</th>
+            <th>Event</th>
+            </thead>
+            {% for award in awards %}
+                <tr>
+                <td><img style="height:1em; width: 1em" src="{{ award.get_icon }}" alt="award icon"></td>
+                <td>{{ award }}</td>
+                <td>{{ award.contest.event }}</td>
+                </tr>
+            {% endfor %}
+            </table>
+        {% endif %}
+
+        {% if fights|length > 0 %}
+             <h2>{{ robot }} has fought {{ fights|length }} {% if fights|length == 1 %}fight. {% else %}fights.{% endif %}</h2>
+            <table>
+            <thead>
+            <th>Event</th>
+            <th>Type</th>
+            <th>Opponents</th>
+            <th>Result</th>
+            <th>View More</th>
+            </thead>
+            {% for fight in fights  %}
+                <tr>
+                {% if fights|fights_event_number:fight != -1 %}
+                    <td rowspan="{{ fights|fights_event_number:fight }}">
+                        <a href="{% url "main:eventDetail" fight.contest.event.id %}">{{ fight.contest.event }}</a>
+                    </td>
+                {% endif %}
+                <td>{{ fight.get_fight_type_display }}</td>
+                <td>{{ fight|fight_opponents:robot }}</td>
+                <td>{{ fight|fight_result:robot }}</td>
+                <td>
+                {% if fight.has_video %}
+                    <a href="{% url "main:fightDetail" fight.id %}">Video</a>
+                {% else %}
+                    <a href="{% url "main:fightDetail" fight.id %}">Details</a>
+                {% endif %}
+                </td>
+                </tr>
+            {% endfor %}
+            </table>
+            {% endif %}
+
     {% else %}
         Something appears to have gone wrong
     {% endif %}
+    </div>
 {% endblock %}

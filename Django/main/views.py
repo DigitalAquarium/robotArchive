@@ -197,9 +197,12 @@ def robot_index_view(request):
                    "pages": results // num if results % num == 0 else results // num + 1})
 
 
-class RobotDetailView(generic.DetailView):
-    model = Robot
-    template_name = "main/robot_detail.html"
+def robot_detail_view(request, robot_id):
+    r = Robot.objects.get(pk=robot_id)
+    fights = Fight.objects.filter(competitors__robot=r)
+    awards = Award.objects.filter(version__robot=r)
+    return render(request, "main/robot_detail.html",
+                  {"robot": r, "fights": fights, "awards": awards})
 
 
 @login_required(login_url='/accounts/login/')

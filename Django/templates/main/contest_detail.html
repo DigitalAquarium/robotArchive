@@ -15,11 +15,13 @@
                 <table>
                 <thead >
                 <th>Fight</th>
+                <th>Type</th>
                 <th>Winners</th>
                 </thead>
                 {% for fight in contest.fight_set.all %}
                     <tr>
                     <td><a href = "{% url "main:fightDetail" fight.id %}">{{ fight|truncatechars:55 }} </a></td>
+                    <td>{{ fight.get_fight_type_display }}</td>
                     <td>
                         {% if fight.winners|length > 0 %}
                             {% if fight.winners|length == 1 %}

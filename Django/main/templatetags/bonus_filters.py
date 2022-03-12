@@ -1,6 +1,7 @@
 import re
 from django import template
 from django.template.defaultfilters import stringfilter
+from main.models import *
 
 register = template.Library()
 
@@ -14,3 +15,22 @@ def page_url(get_data):
     if len(get_data) > 1:
         get_data += "&"
     return get_data
+
+
+@register.filter
+def fight_result(fight, robot):
+    return fight.result(robot)
+
+
+@register.filter
+def fights_event_number(fights, this_fight):
+    this_event_fights = fights.filter(contest__event=this_fight.contest.event)
+    if this_event_fights.first() != this_fight:
+        return -1
+    else:
+        return len(this_event_fights)
+
+
+@register.filter
+def fight_opponents(fight, robot):
+    return fight.opponents_string(robot)

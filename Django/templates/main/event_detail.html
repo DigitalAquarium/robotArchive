@@ -67,29 +67,21 @@
                 <th>Contest Name</th>
                 <th>Weight Class</th>
                 <th>Fight Type</th>
-                <th>
-                    {% if reg_open %}
-                       Sign up
-                    {% else %}
-                       View More
-                    {% endif %}
-                </th>
+                {% if reg_open %}
+                    <th>Sign up</th>
+                {% endif %}
                 {% if can_change %}
                     <th> Edit Contest </th>
                 {% endif %}
             </thead>
                 {% for contest in event.contest_set.all %}
                     <tr>
-                        <td>{{ contest }}</td>
+                        <td><a href="{% url 'main:contestDetail' contest.id %}">{{ contest }}</a></td>
                         <td>{{ contest.weight_class.weight_string }}</td>
                         <td>{{ contest.get_fight_type_display }}</td>
-                        <td>
                         {% if reg_open %}
-                            <a href="{% url 'main:contestSignup' contest.id %}">Sign up</a>
-                        {% else %}
-                            <a href="{% url 'main:contestDetail' contest.id %}">View</a>
+                            <td><a href="{% url 'main:contestSignup' contest.id %}">Sign up</a></td>
                         {% endif %}
-                        </td>
                         {% if can_change %}
                             <td><a class="editor-link" href="{% url 'main:editContest' contest.id %}"> Edit </a></td>
                         {% endif %}

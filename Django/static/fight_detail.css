@@ -14,11 +14,13 @@ h1{
     width: 100%;
     height: 20em;
     justify-content: center;
+    margin:15px;
 }
 
 .competitor-square{
     width: 30%;
     height:100%;
+    padding:15px;
 }
 
 .competitor-title{

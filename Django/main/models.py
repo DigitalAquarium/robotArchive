@@ -237,7 +237,7 @@ class Event(models.Model):
     def is_one_day(self):
         return self.start_date == self.end_date
 
-    def can_edit(self,user):
+    def can_edit(self, user):
         return self.franchise.can_edit(user)
 
 
@@ -369,6 +369,9 @@ class Fight(models.Model):
         else:
             "Error"
 
+    def has_video(self):
+        return self.get_media_type() in ["LV", "IF", "IG", "TW", "TT", "FB"]
+
     def get_tt_id(self):
         # https: // www.tiktok.com / @ battlebots / video / 7060864801462963502 - Example video
         output = ""
@@ -395,6 +398,57 @@ class Fight(models.Model):
                 winners.append(fv.version)
         return winners
 
+    def result(self, r):
+        fv = Fight_Version.objects.get(version__robot=r, fight=self)
+        if fv.won:
+            if len(self.competitors.filter(fight_version__won=1)) == 1 or fv.tag_team != 0:
+                return "Won"
+            else:
+                return "Qualified"
+        else:
+            if self.method in ["KO", "JD", "TO", "OA", "PT"]:
+                return "Lost"
+            if self.method == "NM":
+                if len(self.competitors.filter(fight_version__won=1)) == 0:
+                    return "Unknown"
+                else:
+                    return "Lost"
+            elif self.method == "DR":
+                return "Draw"
+            else:
+                return "Unknown"
+
+    def opponents_fv(self, robot):
+        fvs = Fight_Version.objects.filter(fight=self)
+        tag = Fight_Version.objects.get(version__robot=robot, fight=self).tag_team
+        out = []
+        for fv in fvs:
+            if fv.version.robot != robot and (fv.tag_team == 0 or fv.tag_team != tag):
+                out.append(fv)
+        return out
+
+    def opponents_string(self, robot):
+        tag = Fight_Version.objects.get(version__robot=robot, fight=self).tag_team
+        opponents = self.opponents_fv(robot)
+        out = ""
+        last = None
+        i = 1
+        for fv in opponents:
+            if i > 3:
+                out += " + " + str(len(opponents)-3) + " more..."
+                break
+            if out != "":
+                if fv.tag_team == last.tag_team and fv.tag_team != 0:
+                    out += " & "
+                else:
+                    out += ", "
+            out += fv.version.__str__()
+
+            last = fv
+            i += 1
+
+        return out
+
     def __str__(self):
         # This can cause a recursian error
         try:
@@ -415,6 +469,7 @@ class Fight(models.Model):
 
     def can_edit(self, user):
         return self.contest.can_edit(user)
+
 
 class Award(models.Model):
     name = models.CharField(max_length=255)
@@ -446,6 +501,7 @@ class Award(models.Model):
 
     def can_edit(self, user):
         return self.event.can_edit(user)
+
 
 class Person_Team(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
