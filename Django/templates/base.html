@@ -1,46 +1,52 @@
 <!DOCTYPE html>
 <html lang="en-gb">
 <head>
-{%load static%}
-<link rel="stylesheet" href="{%static 'base.css' %}">
-<meta charset="UTF-8">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style/base.css' %}">
+    <meta charset="UTF-8">
     {% block meta %}
         <title> Event Manager </title>
     {% endblock %}
 </head>
 <body>
 <nav class="navbar">
-	{%block navbar%}
-	<div class="navtitle">
-		<span>Roboteer's Tavern</span>
-	</div>
-	<div class="navlinks">
-    <ul>
-    <li>
-		<a href="{%url 'main:eventIndex'%}"> Events </a>
-    </li>
-    <li>
-		<a href="{%url 'main:robotIndex' %}"> Robots </a>
-    </li>
-    <li>
-        <label>
-            <input type="text">
-        </label>
-        <button type="submit">Search</button>
-    </li>
-    <li>
-        {% if user.is_authenticated %}
-            <a href="{%url 'logout'%}">Logout</a>
-        {% else %}
-            <a href="{%url 'login'%}">Login</a>
-        {% endif %}
-    </li>
-    </ul>
-	</div>
-	{%endblock%}
+    {% block navbar %}
+        <div class="navtitle">
+            <span>Roboteer's Tavern</span>
+        </div>
+        <div class="navlinks">
+            <ul>
+                <li>
+                    <a href="{% url 'main:eventIndex' %}"> Events </a>
+                </li>
+                <li>
+                    <a href="{% url 'main:robotIndex' %}"> Robots </a>
+                </li>
+                <li>
+                    <label>
+                        <input type="text">
+                    </label>
+                    <button type="submit">Search</button>
+                </li>
+                <li>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'logout' %}">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}">Login</a>
+                    {% endif %}
+                </li>
+                {% if user.is_authenticated %}
+                    <Li>
+                        <a href="{% url 'main:profile' %}">Profile</a>
+                    </Li>
+                {% endif %}
+
+            </ul>
+        </div>
+    {% endblock %}
 </nav>
 <div class="content">
-	{%block content%}{%endblock%}
+    {% block content %}{% endblock %}
 </div>
 </body>
 </html>

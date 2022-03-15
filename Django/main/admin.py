@@ -19,7 +19,7 @@ class RobotAdmin(admin.ModelAdmin):
 
 @admin.register(Version)
 class VersionAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ['robot_name', 'robot__name']
 
 
 @admin.register(Franchise)

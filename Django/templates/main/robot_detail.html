@@ -68,13 +68,15 @@
             <th>Result</th>
             <th>View More</th>
             </thead>
-            {% for fight in fights  %}
+            {% for fight in fights %}
                 <tr>
-                {% if fights|fights_event_number:fight != -1 %}
-                    <td rowspan="{{ fights|fights_event_number:fight }}">
+                {% with fights|fights_event_number:fight as num_fights %}
+                {% if num_fights != -1 %}
+                    <td rowspan="{{ num_fights }}">
                         <a href="{% url "main:eventDetail" fight.contest.event.id %}">{{ fight.contest.event }}</a>
                     </td>
                 {% endif %}
+                {% endwith %}
                 <td>{{ fight.get_fight_type_display }}</td>
                 <td>{{ fight|fight_opponents:robot }}</td>
                 <td>{{ fight|fight_result:robot }}</td>

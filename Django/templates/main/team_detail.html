@@ -1,14 +1,30 @@
 {% extends "base.html" %}
 {% load static %}
+{% block meta %}
+    <title>{{ team }} - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
+{% endblock %}
 {% block content %}
     {% if team %}
-        <img src=
-                     {% if team.logo %} {{ team.logo.url }}
-                     {% else %} "https://cdn-icons-png.flaticon.com/512/25/25400.png"
-                     {% endif %} alt=logo>
-        <img src='{% get_static_prefix %}flags/4x3/{{ team.country | lower }}.svg' width="30" height="40" alt="flag">
-        <h1>{{ team }}</h1>
-        <p>{{ team.website }}</p>
+        <div class="main-content">
+        <div class="team-heading">
+            <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+            <h1>{{ team }}</h1>
+            {% if team.can_edit %}
+                <a class="editor-link" href="{% url 'main:editTeam' event.id %}">Edit Team.</a>
+            {% endif %}
+        </div>
+        {% if team.logo %}
+            <div class="team-logo-image">
+                <img class="fit-image" src="{{ team.logo.url }}" alt="logo">
+            </div>
+        {% endif %}
+            <p>Website: {{ team.website|urlize }}</p>
+        {% if team.members|length > 0 %}
+            <h2>Members</h2>
+            {% for p in team.members %}
+            {% endfor %}
+        {% endif %}
         <h2>Robots</h2>
         <ul>
             {% for robot in team.version_set.all %}
@@ -18,6 +34,7 @@
         {% if member %}
             <a href="{% url 'main:newRobot' team.id %} ">New Robot</a>
         {% endif %}
+        </div>
     {% else %}
         Something has gone wrong.
     {% endif %}

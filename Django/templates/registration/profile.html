@@ -1,13 +1,67 @@
 {% extends "base.html" %}
+{% load static %}
 {% block meta %}
-<title>View Profile</title>
+    <title>View Profile - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static "style/profile.css" %}">
 {% endblock %}
 {% block content %}
-    <p>Username: {{ user.get_username }}</p>
-    <p>Email: {{ user.get_email_field_name }}</p>
+    <div class="main-content">
+        <h1>View Profile</h1>
+        <div class="data-block">
+            <h3>Account Details</h3>
+            <p>Username: {{ user.get_username }}</p>
+            <p>Email: {{ user.get_email_field_name }}</p>
+            <a href="{% url "password_change" %}">Change Password</a>
+        </div>
 
-    <P>Name: {{ person.name }}</P>
-    <p>Contact Email: {{ person.email }}</p>
-    <a href="{% url "main:myFranchises" %}">My Franchises</a>
-    <a href="{% url "main:myTeams" %}">My Teams</a>
+        <div class="data-block">
+            <h3>Public Details: {% if person.public %}Available{% else %}Hidden{% endif %}</h3>
+            <P>Name: {{ person.name }}</P>
+            <p>Contact Email: {{ person.email }}</p>
+            <a>Edit</a>
+        </div>
+    <div class="tf-divider">
+        <h3>My Franchises</h3>
+        <div class="gridview-row">
+            {% for franchise in franchises %}
+                <div class="gridview-square">
+                    <div class="gridview-title">
+                        <a href="{% url 'main:franchiseDetail' franchise.id %}">{{ franchise }}</a>
+                    </div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="
+                                   {% if franchise.logo %}{{ franchise.logo.url }} {% else %}{% static "unknown.png" %}{% endif %}"
+                                 alt="Franchise Image">
+                    </div>
+                </div>
+                {% if forloop.counter|divisibleby:2 and not forloop.last %}
+                    </div>
+                    <div class="gridview-row">
+                {% endif %}
+            {% endfor %}
+            </div>
+    </div>
+    <div class="tf-divider">
+        <h3>My Teams</h3>
+        <div class="gridview-row">
+            {% for team in teams %}
+                <div class="gridview-square">
+                    <div class="gridview-title">
+                        <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+                        <a href="{% url 'main:teamDetail' team.id %}">{{ team }}</a>
+                    </div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="
+                                   {% if team.image %}{{ team.image.url }} {% else %}{% static "unknown.png" %}{% endif %}"
+                                 alt="Franchise Image">
+                    </div>
+                </div>
+                {% if forloop.counter|divisibleby:2 and not forloop.last %}
+                    </div>
+                    <div class="gridview-row">
+                {% endif %}
+            {% endfor %}
+            </div>
+    </div>
+    </div>
 {% endblock %}

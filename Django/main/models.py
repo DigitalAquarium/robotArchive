@@ -37,9 +37,14 @@ class Person(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     email = models.EmailField()
+    public = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.name
+        if self.public:
+            return self.name
+        else:
+            return self.user.name
+
 
 
 class Team(models.Model):
@@ -428,7 +433,6 @@ class Fight(models.Model):
         return out
 
     def opponents_string(self, robot):
-        tag = Fight_Version.objects.get(version__robot=robot, fight=self).tag_team
         opponents = self.opponents_fv(robot)
         out = ""
         last = None

@@ -2,7 +2,7 @@
 {% load static %}
 {% block meta %}
     <title> {{ fight }} - Roboteer's Tavern </title>
-    <link rel="stylesheet" href="{% static 'fight_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
 {% endblock %}
 {% block content %}
     {% if fight %}
@@ -10,19 +10,19 @@
         <h1> {{ fight }}</h1>
         <h4>{{ fight.get_fight_type_display }} </h4>
         {% if fight.fight_version_set.last.tag_team == 0 %}
-            <div class="competitor-row">
+            <div class="gridview-row competitor-row">
                 {% for version in fight.competitors.all %}
                     {% if forloop.counter == 2 and forloop.last %}
                         <div class="competitor-vs">
                             <p>vs</p>
                         </div>
                     {% endif %}
-                    <div class="competitor-square">
-                        <div class="competitor-title">
+                    <div class="gridview-square competitor-square">
+                        <div class="gridview-title">
                             <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
                             <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
                         </div>
-                        <div class="image-container">
+                        <div class="gridview-image-container">
                             <img class="fit-image" src="
                                     {% if version.image %}{{ version.image.url }} {% else %}{% static "unknown.png" %}{% endif %}"
                                  alt="Robot Image">
@@ -31,25 +31,25 @@
 
                     {% if forloop.counter|divisibleby:3 and not forloop.last %}
                         </div>
-                        <div class="competitor-row">
+                        <div class="gridview-row">
                     {% endif %}
                 {% endfor %}
                 </div>
         {% elif fight.competitors.all|length > 2 and fight.fight_version_set.last.tag_team > 0 %}
             {% for team in fight.teams %}
-                <div class="competitor-row">
+                <div class="gridview-row">
                     {% for version in team %}
                         {% if forloop.counter == 2 and forloop.last %}
                             <div class="competitor-and">
                                 <p>&</p>
                             </div>
                         {% endif %}
-                        <div class="competitor-square">
-                            <div class="competitor-title">
+                        <div class="gridview-square">
+                            <div class="gridview-title">
                                 <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
                                 <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
                             </div>
-                            <div class="image-container">
+                            <div class="gridview-image-container">
                                 <img class="fit-image" src="
                                         {% if version.image %}{{ version.image.url }} {% else %}{% static "unknown.png" %}{% endif %}"
                                      alt="Robot Image">
@@ -57,7 +57,7 @@
                         </div>
                         {% if forloop.counter|divisibleby:3 and not forloop.last %}
                             </div>
-                            <div class="competitor-row">
+                            <div class="gridview-row">
                         {% endif %}
                     {% endfor %}
                     </div>

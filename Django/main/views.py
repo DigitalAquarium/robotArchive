@@ -199,20 +199,10 @@ def robot_index_view(request):
 
 def robot_detail_view(request, robot_id):
     r = Robot.objects.get(pk=robot_id)
-    fights = Fight.objects.filter(competitors__robot=r)
+    fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "number")
     awards = Award.objects.filter(version__robot=r)
     return render(request, "main/robot_detail.html",
                   {"robot": r, "fights": fights, "awards": awards})
-
-
-@login_required(login_url='/accounts/login/')
-def my_teams_view(request):
-    me = Person.objects.get(user=request.user)
-    p_t = Person_Team.objects.filter(person=me)
-    teams = []
-    for value in p_t:
-        teams.append(value.team)
-    return render(request, "main/my_teams.html", {"teams": teams})
 
 
 def team_detail_view(request, team_id):
@@ -290,16 +280,6 @@ def franchise_modify_view(request, franchise_id=None):
         return render(request, "main/modify_franchise.html", {"form": form, "franchise_id": franchise_id})
     else:
         return render(request, "main/modify_franchise.html", {"form": form, "franchise_id": franchise_id})
-
-
-@login_required(login_url='/accounts/login/')
-def my_franchises_view(request):
-    me = Person.objects.get(user=request.user)
-    p_f = Person_Franchise.objects.filter(person=me)
-    frans = []
-    for value in p_f:
-        frans.append(value.franchise)
-    return render(request, "main/my_franchises.html", {"frans": frans})
 
 
 def franchise_detail_view(request, fran_id):
@@ -424,5 +404,15 @@ def search_view():
 def profile_view(request):
     # TODO: Should this be moved too?
     user = request.user
-    person = Person(user=user)
-    return render(request, "registration/profile.html", {"user": user, "person": person})
+    me = Person.objects.get(user=user)
+    p_t = Person_Team.objects.filter(person=me)
+    teams = []
+    for value in p_t:
+        teams.append(value.team)
+    p_f = Person_Franchise.objects.filter(person=me)
+    frans = []
+    for value in p_f:
+        frans.append(value.franchise)
+
+    return render(request, "registration/profile.html",
+                  {"user": user, "person": me, "teams": teams, "franchises": frans})

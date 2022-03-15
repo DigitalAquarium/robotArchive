@@ -2,7 +2,7 @@
 {% load static %}
 {% block meta %}
     <title>{{ event }} - Roboteer's Tavern</title>
-    <link rel="stylesheet" href="{% static 'event_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'style/event_detail.css' %}">
 {% endblock %}
 {% block content %}
     {% if event %}
@@ -30,7 +30,7 @@
         <div class="event-details">
             <p>Organised by: <a href="{% url "main:franchiseDetail" event.franchise.id %}">
                 {{ event.franchise }}{% if event.franchise.website %}:</a>  {{ event.franchise.website|urlize }}
-                    {% else %}</a>{% endif %}</p>
+                    {% else %}{% endif %}</p>
             <p>
                 {% if event.is_one_day %}
                     Event date: {{ event.start_date }}

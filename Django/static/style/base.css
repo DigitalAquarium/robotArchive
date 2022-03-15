@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@300;500&display=swap");
 * {
-  font-family: Red Hat Mono, arial, sans-serif;
+  font-family: Red Hat Mono, Arial, sans-serif;
 }
 
 body {
@@ -59,10 +59,10 @@ body {
 .content .form-group {
   margin: 5px;
 }
-.content .hrz-index-result {
+
+.hrz-index-result {
   margin: 1em 0;
   padding: 1em;
-  width: 100%;
   height: 10em;
   border: 1px solid dimgrey;
   float: inside;
@@ -71,38 +71,40 @@ body {
   text-align: justify;
   text-overflow: ellipsis;
 }
-.content .hrz-index-result .hrz-index-image {
+.hrz-index-result .hrz-index-image {
   height: 100%;
   width: 20%;
   justify-content: center;
   display: inline-flex;
 }
-.content .hrz-index-result .hrz-index-content {
+.hrz-index-result .hrz-index-content {
   display: inline-flex;
   flex-direction: column;
   width: 80%;
   overflow: hidden;
 }
-.content .hrz-index-result .hrz-index-content .hrz-index-title {
+.hrz-index-result .hrz-index-content .hrz-index-title {
   font-size: 24px;
   display: inline-flex;
 }
-.content .hrz-index-result .hrz-index-content .hrz-index-details {
+.hrz-index-result .hrz-index-content .hrz-index-details {
   margin: 5px 5px;
 }
-.content .hrz-index-result .hrz-index-content .hrz-index-details span {
+.hrz-index-result .hrz-index-content .hrz-index-details span {
   margin: 0 1em 0 0;
 }
-.content .hrz-index-result .hrz-index-content .hrz-index-description {
+.hrz-index-result .hrz-index-content .hrz-index-description {
   font-size: 13px;
   margin: 0 5px;
 }
-.content .flag-image {
+
+.flag-image {
   box-shadow: black 0 0 3px;
   margin: 3px 5px 5px 5px;
   height: 1em;
 }
-.content .fit-image {
+
+.fit-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -112,6 +114,11 @@ body {
   padding: 0 15%;
 }
 
+@media only screen and (max-width: 999px) {
+  .main-content {
+    padding: 10px !important;
+  }
+}
 table, th, td {
   border: solid 1px black;
   border-collapse: collapse;
@@ -122,6 +129,42 @@ th {
   background-color: #babcc0;
   text-decoration: none;
   font-weight: normal;
+}
+
+.gridview-row {
+  display: inline-flex;
+  width: 100%;
+  height: 15em;
+  justify-content: center;
+  margin: 1em;
+}
+
+.gridview-square {
+  width: 20%;
+  height: calc(100% - 2em);
+  padding: 1em;
+  text-overflow: ellipsis;
+}
+
+.gridview-title {
+  font-size: 24px;
+  width: 100%;
+  display: flex;
+  height: 1.2em;
+}
+
+.gridview-title a {
+  display: inline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gridview-image-container {
+  width: 100%;
+  height: 90%;
+  display: flex;
+  justify-content: center;
 }
 
 /*# sourceMappingURL=base.css.map */
