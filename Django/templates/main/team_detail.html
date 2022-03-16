@@ -7,30 +7,44 @@
 {% block content %}
     {% if team %}
         <div class="main-content">
-        <div class="team-heading">
-            <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
-            <h1>{{ team }}</h1>
-            {% if team.can_edit %}
-                <a class="editor-link" href="{% url 'main:editTeam' event.id %}">Edit Team.</a>
-            {% endif %}
-        </div>
-        {% if team.logo %}
-            <div class="team-logo-image">
-                <img class="fit-image" src="{{ team.logo.url }}" alt="logo">
+            <div class="team-heading">
+                <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+                <h1>{{ team }}</h1>
+                {% if team.can_edit %}
+                    <a class="editor-link" href="{% url 'main:editTeam' event.id %}">Edit Team.</a>
+                {% endif %}
             </div>
-        {% endif %}
+            {% if team.logo %}
+                <div class="team-logo-image">
+                    <img class="fit-image" src="{{ team.logo.url }}" alt="logo">
+                </div>
+            {% endif %}
             <p>Website: {{ team.website|urlize }}</p>
-        {% if team.members|length > 0 %}
-            <h2>Members</h2>
+
+            {% if team.members|length > 0 %}
+                <h2>Members</h2>
             {% for p in team.members %}
             {% endfor %}
-        {% endif %}
+
+            {% endif %}
         <h2>Robots</h2>
-        <ul>
-            {% for robot in team.version_set.all %}
-                <li>{{ robot }} <a href="{% url 'main:robotDetail' robot.robot.id %}">View</a></li>
+         <div class="gridview-row">
+            {% for robot in team.robots %}
+                <div class="gridview-square">
+                    <div class="gridview-title">
+                        <a href="{% url 'main:robotDetail' robot.id %}">{{ robot }}</a>
+                    </div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                                 alt="Robot Image">
+                    </div>
+                </div>
+                {% if forloop.counter|divisibleby:5 and not forloop.last %}
+                    </div>
+                    <div class="gridview-row">
+                {% endif %}
             {% endfor %}
-        </ul>
+            </div>
         {% if member %}
             <a href="{% url 'main:newRobot' team.id %} ">New Robot</a>
         {% endif %}

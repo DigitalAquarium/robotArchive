@@ -3,6 +3,8 @@
 {% load static %}
 {% block meta %}
     <title>{{ robot.name }} - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static "style/robot_detail.css" %}">
+    <script src="{% static "scripts/robot_detail.js" %}"></script>
 {% endblock %}
 {% block content %}
     <div class="main-content">
@@ -14,30 +16,38 @@
         {% endif %}
         <p>{{ robot.description }}</p>
 
-
+            <div>
+                <div class="version tabs">
+                    {% for v in robot.version_set.all %}
+                        <button class="tab-button{% if version_id == v.id%} active{% elif version_id == -1 and forloop.last %} active{% endif %}"
+                                id="but-{{ v.id }}" onclick="viewRobot({{ v.id }})">{{ v.get_full_name }}</button>
+                    {% endfor %}
+                </div>
             {% for v in robot.version_set.all %}
-                <div class="version-block" style="border:black solid 2px; background-color: #babcc0; height:25em;" id="ver-{{ v.id }}">
-                    <div style ="font-size: 32px;display:flex" >
+                <div class="version-block" id="ver-{{ v.id }}" {% if version_id == v.id%}style="display:block"{% elif version_id == -1 and forloop.last %}style="display:block"{% endif %}>
+                    <div class="version-header">
                         <img class="flag-image" src="{{ v.get_flag }}" alt="Flag">{{ v }}
                     </div>
 
-                    <div style="display:flex;height:100%;">
-                        <div class="version-image" style="display:flex; width:30%; height:85%; justify-content: center">
+                    <div class="version-content">
+                        <div class="version-image">
                             <img class="fit-image" src= "{% if v.image %} {{ v.image.url }} {% else %} {% static "unknown.png" %} {% endif %}" alt="Version Image">
                         </div>
-                        <div style="width: 70%; margin-left:5px">
-                            <div style="font-size: 18px; display:flex; flex-direction: column">
+                        <div class="version-text">
+                            <div class="version-mini-head">
                                 <span>Weapon: {{ v.weapon_type }}</span>
                                 <span>Weight Class: {{ v.weight_class }}</span>
+                                <span>Time Competing: {{ v.first_fought|date:"F Y" }} - {{ v.last_fought|date:"F Y" }}</span>
                                 <span>Team : <a href="{% url "main:teamDetail" v.team.id %}">{{ v.team }}</a></span>
                             </div>
-                            <div style="height:17em; overflow: auto;">
+                            <div class="version-description">
                                 <p>{{ v.description }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             {% endfor %}
+            </div>
         {{ robot.description }}
 
         {% if awards|length > 0 %}
@@ -50,7 +60,7 @@
             </thead>
             {% for award in awards %}
                 <tr>
-                <td><img style="height:1em; width: 1em" src="{{ award.get_icon }}" alt="award icon"></td>
+                <td><img class="award-icon" src="{{ award.get_icon }}" alt="award icon"></td>
                 <td>{{ award }}</td>
                 <td>{{ award.contest.event }}</td>
                 </tr>

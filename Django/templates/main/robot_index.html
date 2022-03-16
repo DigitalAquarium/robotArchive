@@ -29,7 +29,7 @@
                         <a href="{% url 'main:robotDetail' robot.id %}">{{ robot.name }}</a>
                     </span>
                     <span class="hrz-index-details">
-                    {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
+                        {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
                         <span>Weight Class: {{ robot.version_set.last.weight_class.weight_string }}</span>
                         {% if robot.awards|length > 0 %}<span> Awards: {{ robot.awards|length }}</span>{% endif %}
                         {% if robot.last_fought %}

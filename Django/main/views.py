@@ -199,10 +199,17 @@ def robot_index_view(request):
 
 def robot_detail_view(request, robot_id):
     r = Robot.objects.get(pk=robot_id)
+    version_id = -1
+    if request.method == "GET":
+        version_id = request.GET.get("v")
+        try:
+            version_id = int(version_id)
+        except (ValueError, TypeError):
+            version_id = -1
     fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "number")
     awards = Award.objects.filter(version__robot=r)
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "fights": fights, "awards": awards})
+                  {"robot": r, "fights": fights, "awards": awards, "version_id": version_id})
 
 
 def team_detail_view(request, team_id):
@@ -229,7 +236,7 @@ def new_robot_view(request, team_id):
 def version_detail_view(request, version_id):
     v = Version.objects.get(pk=version_id)
     robot_id = v.robot.id
-    return redirect("main:robotDetail", robot_id)
+    return redirect("%s?v=%d" % (reverse("main:robotDetail", args=[robot_id]), version_id))
 
 
 def team_edit_view(request, team_id=None):
@@ -396,8 +403,9 @@ def message_view(request):
         return redirect("main:index")
 
 
-def search_view():
-    pass
+def search_view(request):
+    if request.method == "GET":
+        message = request.GET.get("q")
 
 
 @login_required

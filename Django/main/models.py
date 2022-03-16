@@ -46,7 +46,6 @@ class Person(models.Model):
             return self.user.name
 
 
-
 class Team(models.Model):
     name = models.CharField(max_length=255)
     logo = models.ImageField(upload_to='team_logos/%Y/', blank=True)
@@ -59,6 +58,9 @@ class Team(models.Model):
 
     def get_flag(self):
         return get_flag(self.country)
+
+    def robots(self):
+        return Robot.objects.filter(version__team=self).distinct()
 
     def can_edit(self, user):
         p = Person.objects.get(user=user)
@@ -142,13 +144,13 @@ class Robot(models.Model):
             awards += Award.objects.filter(version=ver)
         return awards
 
+    def first_fought(self):
+        first = self.version_set.all().first()
+        return first.first_fought()
+
     def last_fought(self):
         last = self.version_set.all().last()
-        try:
-            reg = last.fight_set.order_by("contest__event__start_date").last()
-            return reg.contest.event.start_date
-        except AttributeError:
-            return None
+        return last.last_fought()
 
     def can_edit(self, user):
         last = self.version_set.all().last()
@@ -167,6 +169,21 @@ class Version(models.Model):
 
     def get_flag(self):
         return get_flag(self.team.country)
+
+    def first_fought(self):
+        try:
+            reg = self.fight_set.order_by("contest__event__start_date").first()
+            return reg.contest.event.start_date
+        except AttributeError:
+            return None
+
+    def last_fought(self):
+        try:
+            reg = self.fight_set.order_by("contest__event__start_date").last()
+            return reg.contest.event.start_date
+        except AttributeError:
+            return None
+
 
     def __str__(self):
         if self.robot_name != "":
@@ -439,7 +456,7 @@ class Fight(models.Model):
         i = 1
         for fv in opponents:
             if i > 3:
-                out += " + " + str(len(opponents)-3) + " more..."
+                out += " + " + str(len(opponents) - 3) + " more..."
                 break
             if out != "":
                 if fv.tag_team == last.tag_team and fv.tag_team != 0:

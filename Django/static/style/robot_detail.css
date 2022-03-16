@@ -1,0 +1,48 @@
+.tab-button{
+    background-color: #babcc0;
+    border-radius:0;
+    border:black 2px solid;
+    border-bottom: none;
+}
+.tab-button.active{
+    background-color: white;
+}
+.version-block{
+    border:black solid 2px;
+    height:25em;
+    display: none;
+}
+.version-header{
+    font-size: 32px;
+    display:flex;
+}
+.version-content {
+    display: flex;
+    height: calc(100% - 43px);
+}
+.version-image {
+    display: flex;
+    width: 30%;
+    height: 85%;
+    justify-content: center;
+}
+.version-text {
+    width: 70%;
+    margin-left: 5px;
+}
+.version-mini-head {
+    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+}
+.version-description {
+    height: calc(100% - (23px)*4);
+    overflow: auto;
+}
+.version-description p{
+    margin:0
+}
+.award-icon {
+    height: 1em;
+    width: 1em;
+}
