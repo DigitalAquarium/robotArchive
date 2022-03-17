@@ -34,5 +34,6 @@ urlpatterns = [
     path('awards/<int:award_id>/edit', views.award_edit_view, name='editAward'),
     path('accounts/register', views.register, name='register'),
     path('accounts/profile', views.profile_view, name='profile'),
+    path('search',views.search_view,name="search"),
     path('message', views.message_view, name='message'),
 ]

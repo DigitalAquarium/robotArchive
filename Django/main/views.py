@@ -404,8 +404,20 @@ def message_view(request):
 
 
 def search_view(request):
+    franchises = None
+    teams = None
+    robots = None
+    events = None
     if request.method == "GET":
-        message = request.GET.get("q")
+        search_term = request.GET.get("q")
+        franchises = Franchise.objects.filter(name__icontains=search_term).distinct()
+        teams = Team.objects.filter(name__icontains=search_term).distinct()
+        robots = Robot.objects.filter(name__icontains=search_term).union(
+            Robot.objects.filter(version__robot_name__icontains=search_term))
+        events = Event.objects.filter(name__icontains=search_term).union(
+            Event.objects.filter(contest__name__icontains=search_term))
+    return render(request, "main/search.html",
+                  {"events": events, "robots": robots, "teams": teams, "franchises": franchises})
 
 
 @login_required

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+{% block meta %}
+    <title>{{ team }} - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
+{% endblock %}
+{% block content %}
+    <div class="main-content">
+        {% for robot in robots %}
+            <div class="hrz-index-result">
+                <span class="hrz-index-image">
+                    <img class="fit-image"
+                         src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                         alt="Robot Image">
+                </span>
+                <div class="hrz-index-content">
+                    <span class="hrz-index-title">
+                        <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
+                        <a href="{% url 'main:robotDetail' robot.id %}">{{ robot.name }}</a>
+                    </span>
+                    <span class="hrz-index-details">
+                        {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
+                        <span>Weight Class: {{ robot.version_set.last.weight_class.weight_string }}</span>
+                        {% if robot.awards|length > 0 %}<span> Awards: {{ robot.awards|length }}</span>{% endif %}
+                        {% if robot.last_fought %}
+                            <span>Last Competed: {{ robot.last_fought|date:"M Y" }}</span>{% endif %}
+                    </span>
+                    <span class="hrz-index-description">
+                        {% if robot.description %}
+                            {{ robot.description|truncatechars:650 }}
+                        {% else %}
+                            {{ robot.version_set.last.description }}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        {% endfor %}
+    {%for event in events%}
+		<div class="hrz-index-result">
+        <span class="hrz-index-image">
+        <img class="fit-image"
+             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             alt="Event Logo">
+        </span>
+            <div class="hrz-index-content">
+                <span class="hrz-index-title">
+                <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
+                <a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a>
+            </span>
+                <span class="hrz-index-details">
+                    <span>{{ event.start_date|date:"jS F Y" }}</span>
+                </span>
+                <span class="hrz-index-description">
+                    {{ event.description|truncatechars:650 }}
+                </span>
+            </div>
+        </div>
+    {%endfor%}
+    {%for team in teams%}
+		<div class="hrz-index-result">
+        <span class="hrz-index-image">
+        <img class="fit-image"
+             src="{% if team.logo %} {{ team.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             alt="Event Logo">
+        </span>
+            <div class="hrz-index-content">
+                <span class="hrz-index-title">
+                <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+                <a href="{% url 'main:teamDetail' team.id %}">{{ team.name }}</a>
+            </span>
+                <span class="hrz-index-details">
+                    <span>{{team.website|urlize}}</span>
+                </span>
+            </div>
+        </div>
+    {%endfor%}
+    {%for franchise in franchises%}
+		<div class="hrz-index-result">
+        <span class="hrz-index-image">
+        <img class="fit-image"
+             src="{% if franchise.logo %} {{ franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             alt="Event Logo">
+        </span>
+            <div class="hrz-index-content">
+                <span class="hrz-index-title">
+                <a href="{% url 'main:franchiseDetail' franchise.id %}">{{ franchise.name }}</a>
+            </span>
+                <span class="hrz-index-details">
+                    <span>{{franchise.website|urlize}}</span>
+                </span>
+                <span class="hrz-index-description">
+                    {{ franchise.description|truncatechars:650 }}
+                </span>
+            </div>
+        </div>
+    {%endfor%}
+    </div>
+{% endblock %}
