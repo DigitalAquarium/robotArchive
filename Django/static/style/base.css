@@ -3,6 +3,11 @@
   font-family: Red Hat Mono, Arial, sans-serif;
 }
 
+a:visited, a:link {
+  color: blue;
+  text-decoration: none;
+}
+
 body {
   margin: 0;
 }
@@ -165,6 +170,25 @@ th {
   height: 90%;
   display: flex;
   justify-content: center;
+}
+
+.page-nav {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  font-size: 20px;
+}
+.page-nav ul {
+  text-align: center;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.page-nav li {
+  float: left;
+  margin-inline: 0.5em;
+  width: 4em;
+  border: 1px solid white;
 }
 
 /*# sourceMappingURL=base.css.map */

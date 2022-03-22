@@ -1,3 +1,5 @@
+import math
+
 from django.utils import timezone
 
 from django.db import models
@@ -150,7 +152,10 @@ class Robot(models.Model):
 
     def last_fought(self):
         last = self.version_set.all().last()
-        return last.last_fought()
+        try:
+            return last.last_fought()
+        except AttributeError:
+            return None
 
     def can_edit(self, user):
         last = self.version_set.all().last()
@@ -183,7 +188,6 @@ class Version(models.Model):
             return reg.contest.event.start_date
         except AttributeError:
             return None
-
 
     def __str__(self):
         if self.robot_name != "":
@@ -335,9 +339,129 @@ class Fight(models.Model):
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
 
-    def format_external_media(self):
+    def calculate(self, commit=True):
+        K = 25
+        fvs = self.fight_version_set.all()
+        numBots = len(fvs)
+        numWinners = len(self.winners())
+        if self.fight_type == "FC" and (numWinners > 0 or self.method == "DR"):
+            tag = False
+            for fv in fvs:
+                if fv.tag_team != 0:
+                    tag = True
+                    break
+
+            if numBots == 2:
+                q1 = 10 ** (fvs[0].version.robot.ranking / 400)
+                q2 = 10 ** (fvs[1].version.robot.ranking / 400)
+                expected1 = q1 / (q1 + q2)
+                if fvs[0].won:
+                    score1 = 1
+                elif numWinners == 0:
+                    score1 = 0.5
+                else:
+                    score1 = 0
+                change = K * (score1 - expected1)
+                fvs[0].version.robot.ranking += change
+                fvs[0].ranking_change = change
+                fvs[1].version.robot.ranking -= change
+                fvs[1].ranking_change = -change
+
+            elif not tag and numWinners > 0:
+                # Take an amount of points for a loss against the average of the group, divided by the number of robots
+                # off each robot and then add fair share of that back to the winners. makes it a low stakes loss, but
+                # still a win equal to a normal fight if you're the only winner of the rumble
+                averageRank = 0
+                for fv in fvs:
+                    averageRank += fv.version.robot.ranking / numBots
+                averageQ = 10 ** (averageRank / 400)
+                pool = 0
+                for i in range(numBots):
+                    q = 10 ** (fvs[i].version.robot.ranking / 400)
+                    averageExpected = averageQ / (averageQ + q)
+                    change = (K * (1 - averageExpected)) / numBots
+                    pool += change
+                    fvs[i].version.robot.ranking -= change
+                    fvs[i].ranking_change = -change
+
+                for i in range(numBots):  # Distribute this based on amount of elo maybe
+                    if fvs[i].won == 1:
+                        fvs[i].version.robot.ranking += pool / numWinners
+                        fvs[i].ranking_change += pool / numWinners
+
+            else:
+                tteams = []
+                tteams_key = {}
+                for i in range(numBots):  # Sort fvs into teams in a 2D array
+                    try:
+                        tteams[tteams_key[fvs[i].tag_team]].append(fvs[i])
+                    except KeyError:
+                        tteams_key[fvs[i].tag_team] = len(tteams)
+                        tteams.append([fvs[i]])
+
+                tteamsAvg = []
+                for tt in tteams:
+                    tavg = 0
+                    for fv in tt:
+                        tavg += fv.version.robot.ranking
+                    tavg /= len(tteams)
+                    tteamsAvg.append(tavg)
+
+                if len(tteams) == 2:
+                    q1 = 10 ** (tteamsAvg[0] / 400)
+                    q2 = 10 ** (tteamsAvg[1] / 400)
+                    expected1 = q1 / (q1 + q2)
+                    if tteams[0][0].won:
+                        score1 = 1
+                    elif numWinners == 0:
+                        score1 = 0.5
+                    else:
+                        score1 = 0
+                    change = K * (score1 - expected1)
+                    for fv in tteams[0]:
+                        fv.ranking_change = change / len(tteams[0])
+                        fv.version.robot.ranking += change / len(tteams[0])
+                        print(fv.ranking_change)
+                    for fv in tteams[1]:
+                        fv.ranking_change = -change / len(tteams[1])
+                        fv.version.robot.ranking -= change / len(tteams[1])
+                        print(fv.ranking_change)
+
+                elif numWinners > 0:
+                    averageRank = 0
+                    for i in range(len(tteams)):
+                        averageRank += tteamsAvg[i] / numBots
+                    averageQ = 10 ** (averageRank / 400)
+                    pool = 0
+                    for i in range(len(tteams)):
+                        q = 10 ** (tteamsAvg[i] / 400)
+                        averageExpected = averageQ / (averageQ + q)
+                        change = (K * (1 - averageExpected)) / numBots
+                        pool += change
+                        for fv in tteams[i]:
+                            fv.version.robot.ranking -= change
+                            fv.ranking_change = -change
+
+                    for i in range(len(tteams)):
+                        if fvs[i].won == 1:
+                            fvs[i].version.robot.ranking += pool / numWinners
+                            fvs[i].ranking_change += pool / numWinners
+
+        if numBots == 2 and numWinners == 1 and self.fight_type in ["FC", "SP", "PL"]:
+            for fv in fvs:
+                if fv.won:
+                    fv.version.robot.wins += 1
+                else:
+                    fv.version.robot.losses += 1
+        if commit:
+            for fv in fvs:
+                fv.version.robot.save()
+                fv.save()
+        return fvs
+
+    def format_external_media(self):  # TODO: Youtube Shorts
         if re.match("(https?://)?(www\.)?youtu\.?be",
-                    self.external_media) is not None and "embed" not in self.external_media:  # This could break in the rare case the url contains embed for no reason
+                    self.external_media) is not None and "/embed/" not in self.external_media:
             get_info = self.external_media[
                        re.match("(https?://)?(www\.)?youtu((\.be/)|(be\.com/watch))", self.external_media).end():]
             video_id = re.search("((\?v=)|(&v=))[a-zA-Z0-9\-_]*", get_info)

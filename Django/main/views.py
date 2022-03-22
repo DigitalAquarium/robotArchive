@@ -182,7 +182,7 @@ def robot_index_view(request):
 
     if country_code != "" and country_code is not None:
         robot_list = Robot.objects.filter(name__icontains=name, version__team__country=country_code.capitalize())
-        print("hi?!?!?", robot_list, "country", country_code)
+        #print("hi?!?!?", robot_list, "country", country_code)
         version_thing = Robot.objects.filter(version__robot_name__icontains=name,
                                              version__team__country=country_code.capitalize())
     else:
@@ -218,6 +218,9 @@ def team_detail_view(request, team_id):
     member = len(Person_Team.objects.filter(person=me, team=team)) > 0  # TODO: Potentially a bad check
     # for if you can edit and such, should probably use a better system in future
     return render(request, "main/team_detail.html", {"team": team, "member": member})
+
+def team_index_view(request):
+    pass
 
 
 @login_required(login_url='/accounts/login/')
@@ -295,6 +298,9 @@ def franchise_detail_view(request, fran_id):
     member = fran.is_member(me)  # TODO: Potentially a bad check
     # for if you can edit and such, should probably use a better system in future
     return render(request, "main/franchise_detail.html", {"fran": fran, "member": member})
+
+def franchise_index_view(request):
+    pass
 
 
 def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the same Version to the same fight.
@@ -405,19 +411,34 @@ def message_view(request):
 
 def search_view(request):
     franchises = None
+    fran_len = 0
     teams = None
+    team_len = 0
     robots = None
+    robot_len = 0
     events = None
+    event_len = 0
+    search_term = None
     if request.method == "GET":
         search_term = request.GET.get("q")
         franchises = Franchise.objects.filter(name__icontains=search_term).distinct()
+        fran_len = len(franchises)
+        franchises = franchises[:10]
         teams = Team.objects.filter(name__icontains=search_term).distinct()
+        team_len = len(teams)
+        teams = teams[:10]
         robots = Robot.objects.filter(name__icontains=search_term).union(
             Robot.objects.filter(version__robot_name__icontains=search_term))
+        robot_len = len(robots)
+        robots = robots[:10]
         events = Event.objects.filter(name__icontains=search_term).union(
             Event.objects.filter(contest__name__icontains=search_term))
+        event_len = len(events)
+        events = events[:10]
     return render(request, "main/search.html",
-                  {"events": events, "robots": robots, "teams": teams, "franchises": franchises})
+                  {"events": events, "robots": robots, "teams": teams, "franchises": franchises,
+                   "search_term": search_term, "fran_len": fran_len, "event_len": event_len, "robot_len": robot_len,
+                   "team_len": team_len})
 
 
 @login_required

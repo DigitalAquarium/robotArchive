@@ -46,36 +46,36 @@
             </div>
         {% endfor %}
         {% if pages > 1 %}
+            <div class="page-nav">
             {% url "main:robotIndex" as this %}
             <ul class="page-select">
-                {% if page > 1 %}
-                    <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">first</a></li>
-                    {% if page > 4 %}
-                        <li><a href="
+                <li>{% if page > 1 %}
+                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">First</a>
+                {% endif %}</li>
 
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
-                        </li>
-                    {% endif %}
-                    <li><a href="
+                <li>{% if page > 4 %}
+                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
+                {% endif %}</li>
 
-                            {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
-                    </li>
-                {% endif %}
+                <li>{% if page > 1 %}
+                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
+                {% endif %}</li>
+
                 <li>{{ page }}</li>
-                {% if page < pages %}
-                    <li><a href="
 
-                            {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
-                    </li>
-                    {% if page < pages|add:"-5" %}
-                        <li><a href="
+                <li>{% if page < pages %}
+                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
+                {% endif %}</li>
 
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
-                        </li>
-                    {% endif %}
-                    <li><a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">last</a></li>
-                {% endif %}
+                <li>{% if page < pages|add:"-5" %}
+                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
+                {% endif %}</li>
+
+                <li>{% if page < pages %}
+                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">Last</a>
+                {% endif %}</li>
             </ul>
         {% endif %}
+        </div>
     </div>
 {% endblock %}

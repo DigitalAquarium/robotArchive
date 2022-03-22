@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
 {% block meta %}
-    <title>{{ team }} - Roboteer's Tavern</title>
+    <title>"{{ search_term }}" - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
 {% endblock %}
 {% block content %}
     <div class="main-content">
+        <h1>Results for: "{{ search_term }}"</h1>
+        <h2>{% if robot_len > 0 %}Showing {{ robots|length }} robots {% if robot_len > 10 %}<a href="{% url "main:robotIndex" %}?name={{ search_term }}">view {{ robot_len|add:-10 }} more</a>{% endif %}{% endif %}</h2>
         {% for robot in robots %}
             <div class="hrz-index-result">
                 <span class="hrz-index-image">
@@ -35,6 +37,9 @@
                 </div>
             </div>
         {% endfor %}
+    <br>
+    <br>
+    <h2>{% if event_len > 0 %}Showing {{ events|length }} events {% if event_len > 10 %}<a href="{% url "main:eventIndex" %}?name={{ search_term }}">view {{ event_len|add:-10 }} more</a>{% endif %}{% endif %}</h2>
     {%for event in events%}
 		<div class="hrz-index-result">
         <span class="hrz-index-image">
@@ -56,6 +61,9 @@
             </div>
         </div>
     {%endfor%}
+    <br>
+    <br>
+    <h2>{% if team_len > 0 %}Showing {{ teams|length }} teams {% if event_len > 10 %}<a href="{% url "main:teamIndex" %}?name={{ search_term }}">view {{ team_len|add:-10 }} more</a>{% endif %}{% endif %}</h2>
     {%for team in teams%}
 		<div class="hrz-index-result">
         <span class="hrz-index-image">
@@ -74,6 +82,9 @@
             </div>
         </div>
     {%endfor%}
+    <br>
+    <br>
+    <h2>{% if fran_len > 0 %}Showing {{ franchises|length }} franchises {% if fran_len > 10 %}<a href="{% url "main:franchiseIndex" %}?name={{ search_term }}">view {{ fran_len|add:-10 }} more</a>{% endif %}{% endif %}</h2>
     {%for franchise in franchises%}
 		<div class="hrz-index-result">
         <span class="hrz-index-image">
