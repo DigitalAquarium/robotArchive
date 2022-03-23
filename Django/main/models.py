@@ -73,6 +73,16 @@ class Team(models.Model):
 
 
 class Weight_Class(models.Model):
+    LEADERBOARD_VALID = [(150, "UK Antweight / US Fairyweight"),
+                         (454, "US Antweight"),
+                         (1361, "Beetleweight"),
+                         (6000, "Hobbyweight"),  # Should this be 5553 to remove 15lbs
+                         (13608, "Featherweight"),
+                         (27212, "Lightweight"),
+                         (50000, "Middleweight"),
+                         (100000, "Heavyweight"),
+                         (154221, "Super Heavyweight"),
+                         ]
     name = models.CharField(max_length=30)
     weight_grams = models.IntegerField()
     recommended = models.BooleanField(default=False)
@@ -122,17 +132,62 @@ class Weight_Class(models.Model):
     def to_lbs(self):
         return round(self.weight_grams / 453.59237)
 
+    def __eq__(self, other):
+        if isinstance(other, Weight_Class):
+            return self.weight_grams == other.weight_grams
+        else:
+            return self.weight_grams == other
+
+    def __lt__(self, other):
+        if isinstance(other, Weight_Class):
+            return self.weight_grams < other.weight_grams
+        else:
+            return self.weight_grams < other
+
+    def __le__(self, other):
+        if isinstance(other, Weight_Class):
+            return self.weight_grams <= other.weight_grams
+        else:
+            return self.weight_grams <= other
+
+    def __gt__(self, other):
+        if isinstance(other, Weight_Class):
+            return self.weight_grams > other.weight_grams
+        else:
+            return self.weight_grams > other
+
+    def __ge__(self, other):
+        if isinstance(other, Weight_Class):
+            return self.weight_grams >= other.weight_grams
+        else:
+            return self.weight_grams >= other
+
 
 class Robot(models.Model):
+    RANKING_DEFAULT = 1000
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
-    ranking = models.FloatField(default=1000)
+    ranking = models.FloatField(default=RANKING_DEFAULT)
     opt_out = models.BooleanField(default=False)  # for opting out of rankings
 
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def get_by_rough_weight(wc, leaderboard=False):
+        upper_bound = wc + (wc * 0.21)
+        lower_bound = wc - (wc * 0.21)
+        classes = Weight_Class.objects.filter(weight_grams__lte=upper_bound, weight_grams__gte=lower_bound)
+        robs = Robot.objects.filter(version__weight_class__in=classes).distinct()
+        if leaderboard:
+            bad = []
+            for robot in robs:
+                if not (upper_bound >= robot.version_set.last().weight_class >= lower_bound):
+                    bad.append(robot.id)
+            robs = robs.exclude(id__in=bad)
+        return robs
 
     def get_flag(self):
         try:

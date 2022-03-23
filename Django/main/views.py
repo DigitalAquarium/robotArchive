@@ -10,6 +10,7 @@ from django.shortcuts import render
 from django.views import generic
 
 from .forms import *
+from main import subdivisions
 
 
 class IndexView(generic.ListView):
@@ -175,26 +176,70 @@ def register(response):
 
 def robot_index_view(request):
     name = request.GET.get("name") or ""
-    page = request.GET.get("page") or 1
+    page = request.GET.get("page")
+    regions = request.GET.get("regions")
     country_code = request.GET.get("country") or ""
-    page = int(page)
+    weight = request.GET.get("weight")
+    has_awards = request.GET.get("has_awards")
+    weapon = request.GET.get("weapon") or ""
     num = 50
+    try:
+        weight = int(weight)
+    except (ValueError, TypeError):
+        weight = 0
+    try:
+        page = int(page)
+    except (ValueError, TypeError):
+        page = 1
+
+    if weight != 0:
+        robot_list = Robot.get_by_rough_weight(weight)
+    else:
+        robot_list = Robot.objects.all()
 
     if country_code != "" and country_code is not None:
-        robot_list = Robot.objects.filter(name__icontains=name, version__team__country=country_code.capitalize())
-        #print("hi?!?!?", robot_list, "country", country_code)
-        version_thing = Robot.objects.filter(version__robot_name__icontains=name,
-                                             version__team__country=country_code.capitalize())
-    else:
-        robot_list = Robot.objects.filter(name__icontains=name)
-        version_thing = Robot.objects.filter(version__robot_name__icontains=name)
-    robot_list = robot_list.union(version_thing).order_by("name")
+        country_code = country_code.upper()
+        if regions == "on":
+            try:
+                div = subdivisions.subs[country_code].copy()
+                div.append(country_code)
+                robot_list = robot_list.filter(version__team__country__in=div).distinct()
+            except KeyError:
+                robot_list = robot_list.filter(version__team__country=country_code).distinct()
+        elif country_code == "GB":
+            robot_list = robot_list.filter(version__team__country__in=subdivisions.uk).distinct()
+        else:
+            robot_list = robot_list.filter(version__team__country=country_code).distinct()
+
+    if name != "" and name is not None:
+        robot_list = robot_list.filter(name__icontains=name).union(
+            robot_list.filter(version__robot_name__icontains=name))
+
+    if weapon != "" and weapon is not None:
+        robot_list = robot_list.filter(version__weapon_type__icontains=weapon).distinct()
+
+    if has_awards == "on":
+        bad = []
+        for robot in robot_list:
+            if len(robot.awards()) == 0:
+                bad.append(robot.id)
+        robot_list = robot_list.exclude(id__in=bad)
+
+    robot_list = robot_list.order_by("name")
     results = len(robot_list)
     robot_list = robot_list[num * (page - 1):num * page]
-
     return render(request, "main/robot_index.html",
-                  {"robot_list": robot_list, "page": page,
-                   "pages": results // num if results % num == 0 else results // num + 1})
+                  {"robot_list": robot_list,
+                   "page": page,
+                   "pages": results // num if results % num == 0 else results // num + 1,
+                   "weights": [(0, "Any Weight")] + Weight_Class.LEADERBOARD_VALID,
+                   "countries": [("", "Any Country")] + COUNTRY_CHOICES,
+                   "chosen_country": country_code,
+                   "chosen_weight": weight,
+                   "name": name,
+                   "has_awards": has_awards,
+                   "weapon": weapon,
+                   })
 
 
 def robot_detail_view(request, robot_id):
@@ -218,6 +263,7 @@ def team_detail_view(request, team_id):
     member = len(Person_Team.objects.filter(person=me, team=team)) > 0  # TODO: Potentially a bad check
     # for if you can edit and such, should probably use a better system in future
     return render(request, "main/team_detail.html", {"team": team, "member": member})
+
 
 def team_index_view(request):
     pass
@@ -298,6 +344,7 @@ def franchise_detail_view(request, fran_id):
     member = fran.is_member(me)  # TODO: Potentially a bad check
     # for if you can edit and such, should probably use a better system in future
     return render(request, "main/franchise_detail.html", {"fran": fran, "member": member})
+
 
 def franchise_index_view(request):
     pass

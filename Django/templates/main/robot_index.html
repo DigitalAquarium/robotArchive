@@ -9,9 +9,24 @@
 {% block content %}
     <section class="search-params">
         <form method="get" action="{% url "main:robotIndex" %}">
-            <label>
-                <input name="name" type="text">
+            <label> a
+                <input name="name" type="text" value={{ name }}>
             </label>
+        {{ results.GET }}
+            <select name="country">
+                {% for country in countries %}
+                    <option value="{{ country|first }}" {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
+                {% endfor %}
+            </select>
+            <input name="regions" type="checkbox" checked>
+            <select name="weight">
+                {% for wc in weights %}
+                    <option value="{{ wc|first }}" {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
+                {% endfor %}
+            </select>
+            <input name="has_awards" type="checkbox" {% if has_awards %}checked{% endif %}>
+            <input name="weapon" type="text" value={{ weapon }}>
+            <br>
             <input type="submit" value="Search">
         </form>
     </section>
@@ -50,10 +65,10 @@
             {% url "main:robotIndex" as this %}
             <ul class="page-select">
                 <li>{% if page > 1 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">First</a>
+                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
                 {% endif %}</li>
 
-                <li>{% if page > 4 %}
+                <li>{% if page > 5 %}
                     <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
                 {% endif %}</li>
 
@@ -72,7 +87,7 @@
                 {% endif %}</li>
 
                 <li>{% if page < pages %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">Last</a>
+                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
                 {% endif %}</li>
             </ul>
         {% endif %}

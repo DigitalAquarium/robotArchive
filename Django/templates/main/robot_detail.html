@@ -37,7 +37,7 @@
                             <div class="version-mini-head">
                                 <span>Weapon: {{ v.weapon_type }}</span>
                                 <span>Weight Class: {{ v.weight_class }}</span>
-                                <span>Time Competing: {{ v.first_fought|date:"F Y" }} - {{ v.last_fought|date:"F Y" }}</span>
+                                <span>Time Competing: {{ v.first_fought|date:"F Y" }}{% if v.first_fought != v.last_fought %} - {{ v.last_fought|date:"F Y" }}{% endif %}</span>
                                 <span>Team : <a href="{% url "main:teamDetail" v.team.id %}">{{ v.team }}</a></span>
                             </div>
                             <div class="version-description">
