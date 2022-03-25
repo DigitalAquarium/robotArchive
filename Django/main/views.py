@@ -21,12 +21,82 @@ class IndexView(generic.ListView):
         return Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
 
 
-class EventIndexView(generic.ListView):
-    template_name = "main/event_index.html"
-    context_object_name = "event_list"
+def event_index_view(request):
+    name = request.GET.get("name") or ""
+    page = request.GET.get("page")
+    regions = request.GET.get("regions")
+    country_code = request.GET.get("country") or ""
+    reg_open = request.GET.get("reg_open")
+    past = request.GET.get("past")
+    date_from = request.GET.get("date_from")  # TODO: Date stuff
+    date_to = request.GET.get("date_to")
+    distance = request.GET.get("distance")
+    weight = request.GET.get("weight")
 
-    def get_queryset(self):
-        return Event.objects.all
+    num = 50
+    try:
+        weight = int(weight)
+    except (ValueError, TypeError):
+        weight = 0
+    try:
+        page = int(page)
+    except (ValueError, TypeError):
+        page = 1
+    try:
+        distance = int(distance)
+    except (ValueError, TypeError):
+        distance = 0
+
+    if weight != 0:
+        event_list = Event.get_by_rough_weight(weight)
+    else:
+        event_list = Event.objects.all()
+
+    if country_code != "" and country_code is not None:
+        country_code = country_code.upper()
+        if regions == "on":
+            try:
+                event_list = event_list.filter(country__in=subdivisions.subs[country_code]).distinct()
+            except KeyError:
+                event_list = event_list.filter(country=country_code).distinct()
+        elif country_code == "GB":
+            event_list = event_list.filter(country__in=subdivisions.uk).distinct()
+        else:
+            event_list = event_list.filter(country=country_code).distinct()
+
+    if name != "" and name is not None:
+        event_list = event_list.filter(name__icontains=name).union(
+            event_list.filter(contest__name__icontains=name)).union(
+            event_list.filter(franchise__name__icontains=name))
+
+    if past != "on":
+        event_list = event_list.filter(start_date__gt=timezone.now())
+
+    if reg_open == "on":
+        bad = []
+        for event in event_list:
+            if event.is_registration_full():
+                bad.append(event.id)
+        event_list = event_list.exclude(id__in=bad)
+
+    event_list = event_list.order_by("name").order_by("start_date")
+    results = len(event_list)
+    event_list = event_list[num * (page - 1):num * page]
+
+    return render(request, "main/event_index.html",
+                  {"event_list": event_list,
+                   "page": page,
+                   "pages": results // num if results % num == 0 else results // num + 1,
+                   "weights": [(0, "")] + Weight_Class.LEADERBOARD_VALID,
+                   "countries": [("", "")] + COUNTRY_CHOICES,
+                   "chosen_country": country_code,
+                   "chosen_weight": weight,
+                   "name": name,
+                   "distance": distance,
+                   "date_from": date_from,
+                   "date_to": date_to,
+                   "past": past,
+                   })
 
 
 def event_detail_view(request, event_id):
@@ -201,9 +271,7 @@ def robot_index_view(request):
         country_code = country_code.upper()
         if regions == "on":
             try:
-                div = subdivisions.subs[country_code].copy()
-                div.append(country_code)
-                robot_list = robot_list.filter(version__team__country__in=div).distinct()
+                robot_list = robot_list.filter(version__team__country__in=subdivisions.subs[country_code]).distinct()
             except KeyError:
                 robot_list = robot_list.filter(version__team__country=country_code).distinct()
         elif country_code == "GB":
@@ -232,8 +300,8 @@ def robot_index_view(request):
                   {"robot_list": robot_list,
                    "page": page,
                    "pages": results // num if results % num == 0 else results // num + 1,
-                   "weights": [(0, "Any Weight")] + Weight_Class.LEADERBOARD_VALID,
-                   "countries": [("", "Any Country")] + COUNTRY_CHOICES,
+                   "weights": [(0, "")] + Weight_Class.LEADERBOARD_VALID,
+                   "countries": [("", "")] + COUNTRY_CHOICES,
                    "chosen_country": country_code,
                    "chosen_weight": weight,
                    "name": name,
@@ -241,6 +309,19 @@ def robot_index_view(request):
                    "weapon": weapon,
                    })
 
+
+def leaderboard(request):
+    weight = request.GET.get("weight")
+    try:
+        weight = int(weight)
+    except (ValueError, TypeError):
+        weight = 100000
+    robot_list = Robot.get_leaderboard(weight, datetime.date(2001, 12, 31))
+    return render(request, "main/robot_leaderboard.html",
+                  {"robot_list": robot_list,
+                   "weights": [(0, "")] + Weight_Class.LEADERBOARD_VALID,
+                   "chosen_weight": weight,
+                   })
 
 def robot_detail_view(request, robot_id):
     r = Robot.objects.get(pk=robot_id)

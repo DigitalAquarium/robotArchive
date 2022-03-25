@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load bonus_filters %}
+{% load static %}
+
+{% block meta %}
+    <title>Robots - Roboteer's Tavern</title>
+{% endblock %}
+
+{% block content %}
+    <section class="search-params">
+        <form method="get" action="{% url "main:leaderboard" %}">
+            <label> a
+                <input name="name" type="text" value={{ name }}>
+            </label>
+            <select name="country">
+                {% for country in countries %}
+                    <option value="{{ country|first }}" {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
+                {% endfor %}
+            </select>
+            <input name="regions" type="checkbox" checked>
+            <select name="weight">
+                {% for wc in weights %}
+                    <option value="{{ wc|first }}" {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
+                {% endfor %}
+            </select>
+            <input name="has_awards" type="checkbox" {% if has_awards %}checked{% endif %}>
+            <input name="weapon" type="text" value={{ weapon }}>
+            <br>
+            <input type="submit" value="Search">
+        </form>
+    </section>
+    <div class="main-content">
+        <table>
+        <thead>
+        <tr>
+        <th>Rank</th>
+        <th>Score</th>
+        <th></th>
+        <th>Robot</th>
+        <th>Wins</th>
+        <th>Losses</th>
+        <th>Awards</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for robot in robot_list %}
+            <tr id="row-{{ robot.id }}" {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
+            <td style="text-align: center">{% if forloop.counter <= 3 %}{% if forloop.counter == 1 %}
+                    <img class="award-icon" style="width: 1em; height:1em" src="{% static "awards/trophy_gold.png" %}" alt="award icon">
+                {% elif forloop.counter == 2 %}
+                    <img class="award-icon" style="width: 1em; height:1em" src="{% static "awards/trophy_silver.png" %}" alt="award icon">
+                {% else %}
+                    <img class="award-icon" style="width: 1em; height:1em" src="{% static "awards/trophy_bronze.png" %}" alt="award icon">
+            {% endif %}{% else %}
+                {{ forloop.counter }}
+            {% endif %}</td>
+            <td style="text-align: center">{{ robot.ranking|floatformat:1 }}</td>
+            <td style="text-align: center"><img class="flag-image" src="{{ robot.get_flag }}" alt="Flag"></td>
+            <td><a href="{% url "main:robotDetail" robot.id %}">{{ robot }}</a></td>
+            <td style="text-align: center">{{ robot.wins }}</td>
+            <td style="text-align: center">{{ robot.losses }}</td>
+            <td style="text-align: center">{{ robot.awards|length }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+{% endblock %}

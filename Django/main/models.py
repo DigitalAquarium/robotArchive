@@ -1,11 +1,16 @@
 import math
+import datetime
+from dateutil.relativedelta import relativedelta
 
+from django.db.models import Max
 from django.utils import timezone
 
 from django.db import models
 from django.conf import settings
 import pycountry
 import re
+
+from shiboken2 import wrapInstance
 
 FULL_COMBAT = 'FC'
 SPORTSMAN = 'SP'
@@ -176,18 +181,47 @@ class Robot(models.Model):
         return self.name
 
     @staticmethod
-    def get_by_rough_weight(wc, leaderboard=False):
+    def get_by_rough_weight(wc):
         upper_bound = wc + (wc * 0.21)
         lower_bound = wc - (wc * 0.21)
         classes = Weight_Class.objects.filter(weight_grams__lte=upper_bound, weight_grams__gte=lower_bound)
         robs = Robot.objects.filter(version__weight_class__in=classes).distinct()
-        if leaderboard:
-            bad = []
-            for robot in robs:
-                if not (upper_bound >= robot.version_set.last().weight_class >= lower_bound):
-                    bad.append(robot.id)
-            robs = robs.exclude(id__in=bad)
         return robs
+
+    @staticmethod
+    def get_leaderboard(wc, last_event=None):
+        upper_bound = wc + (wc * 0.21)
+        lower_bound = wc - (wc * 0.21)
+        robs = Robot.get_by_rough_weight(wc)
+        robs = robs.filter(opt_out=False)
+        if last_event is None:
+            last_event = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date
+        bad = []
+        for robot in robs: # Should really build last fought stuff into the database to stop this from being horrifically and painfully slow.
+            try:
+                last_ver = robot.version_set.first()
+                for ver in robot.version_set.all():
+                    if ver.last_fought() > last_ver.last_fought() < last_event:
+                        last_ver = ver
+                if not (upper_bound >= last_ver.weight_class >= lower_bound):
+                    # This doesn't qutie work as intended as it needs last version that fought before the correct time. not just the last version
+                    bad.append(robot.id)
+                elif last_ver.last_fought() < last_event - relativedelta(years=5) or robot.first_fought() > last_event:
+                    bad.append(robot.id)
+            except:
+                bad.append(robot.id)
+        robs = robs.exclude(id__in=bad)
+        for robot in robs:
+            robot.remove_rank_from(last_event)
+        robs = robs[:] # list cast
+        robs.sort(key=lambda x: -x.ranking)
+        #robs = robs.order_by("-ranking")
+        return robs
+
+    def remove_rank_from(self, date):
+        fvs = Fight_Version.objects.filter(version__robot=self, fight__contest__event__start_date__gte=date)
+        for fv in fvs:
+            self.ranking -= fv.ranking_change
 
     def get_flag(self):
         try:
@@ -300,11 +334,21 @@ class Event(models.Model):
     def __str__(self):
         return self.name
 
+    def available_weight_classes(self):
+        return Weight_Class.objects.filter(contest__event=self).distinct().order_by("weight_grams")
+
+    @staticmethod
+    def get_by_rough_weight(wc):
+        upper_bound = wc + (wc * 0.21)
+        lower_bound = wc - (wc * 0.21)
+        classes = Weight_Class.objects.filter(weight_grams__lte=upper_bound, weight_grams__gte=lower_bound)
+        return Event.objects.filter(contest__weight_class__in=classes).distinct()
+
     def get_flag(self):
         return get_flag(self.country)
 
     def is_registration_open(self):
-        return self.registration_open < timezone.now() < self.registration_close
+        return self.registration_open < timezone.now() < self.registration_close and not self.is_registration_full()
 
     def is_registration_past(self):
         return timezone.now() > self.registration_close
@@ -476,11 +520,9 @@ class Fight(models.Model):
                     for fv in tteams[0]:
                         fv.ranking_change = change / len(tteams[0])
                         fv.version.robot.ranking += change / len(tteams[0])
-                        print(fv.ranking_change)
                     for fv in tteams[1]:
                         fv.ranking_change = -change / len(tteams[1])
                         fv.version.robot.ranking -= change / len(tteams[1])
-                        print(fv.ranking_change)
 
                 elif numWinners > 0:
                     averageRank = 0
@@ -669,6 +711,15 @@ class Fight(models.Model):
 
     def can_edit(self, user):
         return self.contest.can_edit(user)
+
+    @staticmethod
+    def recalculate_all():
+        Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0)
+        for event in Event.objects.all().order_by("start_date"):
+            for contest in event.contest_set.all():
+                for fight in contest.fight_set.all().order_by("number"):
+                    fight.calculate(True)
+            print(event, "saved.")
 
 
 class Award(models.Model):

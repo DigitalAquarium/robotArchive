@@ -12,7 +12,6 @@
             <label> a
                 <input name="name" type="text" value={{ name }}>
             </label>
-        {{ results.GET }}
             <select name="country">
                 {% for country in countries %}
                     <option value="{{ country|first }}" {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
@@ -90,7 +89,7 @@
                     <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
                 {% endif %}</li>
             </ul>
+            </div>
         {% endif %}
-        </div>
     </div>
 {% endblock %}

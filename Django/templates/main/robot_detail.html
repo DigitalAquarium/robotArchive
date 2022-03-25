@@ -54,9 +54,11 @@
             <h2>{{ robot }} has won {{ awards|length }} {% if awards|length == 1 %}award. {% else %}awards.{% endif %}</h2>
             <table>
             <thead>
+            <tr>
             <th></th>
             <th>Award Name</th>
             <th>Event</th>
+            </tr>
             </thead>
             {% for award in awards %}
                 <tr>
