@@ -1,16 +1,11 @@
-import math
-import datetime
 from dateutil.relativedelta import relativedelta
 
-from django.db.models import Max
 from django.utils import timezone
 
 from django.db import models
 from django.conf import settings
 import pycountry
 import re
-
-from shiboken2 import wrapInstance
 
 FULL_COMBAT = 'FC'
 SPORTSMAN = 'SP'
@@ -199,14 +194,16 @@ class Robot(models.Model):
         if last_event is None:
             last_event = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date
         bad = []
-        for robot in robs: # Should really build last fought stuff into the database to stop this from being horrifically and painfully slow.
+        for robot in robs:  # Should really build last fought stuff into the database to stop this from being
+            # horrifically and painfully slow.
             try:
                 last_ver = robot.version_set.first()
                 for ver in robot.version_set.all():
                     if ver.last_fought() > last_ver.last_fought() < last_event:
                         last_ver = ver
                 if not (upper_bound >= last_ver.weight_class >= lower_bound):
-                    # This doesn't qutie work as intended as it needs last version that fought before the correct time. not just the last version
+                    # This doesn't qutie work as intended as it needs last version that fought before the correct
+                    # time. not just the last version
                     bad.append(robot.id)
                 elif last_ver.last_fought() < last_event - relativedelta(years=5) or robot.first_fought() > last_event:
                     bad.append(robot.id)
@@ -215,9 +212,9 @@ class Robot(models.Model):
         robs = robs.exclude(id__in=bad)
         for robot in robs:
             robot.remove_rank_from(last_event)
-        robs = robs[:] # list cast
+        robs = robs[:]  # list cast
         robs.sort(key=lambda x: -x.ranking)
-        #robs = robs.order_by("-ranking")
+        # robs = robs.order_by("-ranking")
         return robs
 
     def remove_rank_from(self, date):
@@ -694,7 +691,7 @@ class Fight(models.Model):
         return out
 
     def __str__(self):
-        # This can cause a recursian error
+        # This can cause a recursion error
         try:
             if self.name is not None and self.name != "":
                 return self.name

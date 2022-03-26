@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.forms.utils import ErrorList
 
 from .models import *
 
@@ -95,6 +94,18 @@ class NewRobotForm(forms.Form):
         v.team = team
         r.save()
         v.save()
+
+
+class RobotForm(forms.ModelForm):
+    class Meta:
+        model = Robot
+        fields = ['name', 'description', "opt_out"]
+
+
+class VersionForm(forms.ModelForm):
+    class Meta:
+        model = Version
+        fields = ["robot_name", "version_name", "description", "image", "weapon_type", "weight_class"]
 
 
 class TeamForm(forms.ModelForm):

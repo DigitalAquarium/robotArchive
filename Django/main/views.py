@@ -367,19 +367,57 @@ def robot_detail_view(request, robot_id):
                   {"robot": r, "fights": fights, "awards": awards, "version_id": version_id, "can_change": can_change})
 
 
-@login_required()
+@login_required(login_url='/accounts/login/')
 def robot_edit_view(request, robot_id):
-    pass
+    robot = Robot.objects.get(pk=robot_id)
+    can_change = robot.can_edit(request.user)
+    if not can_change:
+        return redirect(
+            "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this robot."))
+    if request.method == "POST":
+        form = RobotForm(request.POST, instance=robot)
+        if form.is_valid():
+            form.save()
+            return redirect("main:robotDetail", robot.id)
+    else:
+        form = RobotForm(instance=robot)
+    return render(request, "main/edit_robot.html", {"form": form, "robot": robot})
 
 
-@login_required()
+@login_required(login_url='/accounts/login/')
 def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RIGHT HERE
-    pass
+    version = Version.objects.get(pk=version_id)
+    can_change = version.can_edit(request.user)
+    if not can_change:
+        return redirect(
+            "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this robot."))
+    if request.method == "POST":
+        form = VersionForm(request.POST, request.FILES, instance=version)
+        if form.is_valid():
+            form.save()
+            return redirect("main:versionDetail", version.id)
+    else:
+        form = VersionForm(instance=version)
+    return render(request, "main/edit_version.html", {"form": form, "version": version, "new": False})
 
 
-@login_required()
+@login_required(login_url='/accounts/login/')
 def new_version_view(request, robot_id):
-    pass
+    robot = Robot.objects.get(pk=robot_id)
+    can_change = robot.can_edit(request.user)
+    if not can_change:
+        return redirect(
+            "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this robot."))
+    if request.method == "POST":
+        form = VersionForm(request.POST, request.FILES)
+        if form.is_valid():
+            version = form.save(commit=False)
+            version.robot = robot
+            version.save()
+            return redirect("main:robotDetail", robot.id)
+    else:
+        form = VersionForm()
+    return render(request, "main/edit_version.html", {"form": form, "robot": robot, "new": True})
 
 
 def team_detail_view(request, team_id):
@@ -392,7 +430,44 @@ def team_detail_view(request, team_id):
 
 
 def team_index_view(request):
-    pass
+    name = request.GET.get("name") or ""
+    page = request.GET.get("page")
+    regions = request.GET.get("regions")
+    country_code = request.GET.get("country") or ""
+    num = 50
+    try:
+        page = int(page)
+    except (ValueError, TypeError):
+        page = 1
+    team_list = Team.objects.all()
+    print(team_list)
+
+    if country_code != "" and country_code is not None:
+        country_code = country_code.upper()
+        if regions == "on":
+            try:
+                team_list = team_list.filter(country__in=subdivisions.subs[country_code]).distinct()
+            except KeyError:
+                team_list = team_list.filter(country=country_code).distinct()
+        elif country_code == "GB":
+            team_list = team_list.filter(country__in=subdivisions.uk).distinct()
+        else:
+            team_list = team_list.filter(country=country_code).distinct()
+
+    if name != "" and name is not None:
+        team_list = team_list.filter(name__icontains=name)
+
+    team_list = team_list.order_by("name")
+    results = len(team_list)
+    team_list = team_list[num * (page - 1):num * page]
+    return render(request, "main/team_index.html",
+                  {"team_list": team_list,
+                   "page": page,
+                   "pages": results // num if results % num == 0 else results // num + 1,
+                   "countries": [("", "")] + COUNTRY_CHOICES,
+                   "chosen_country": country_code,
+                   "name": name,
+                   })
 
 
 @login_required(login_url='/accounts/login/')
@@ -492,7 +567,27 @@ def franchise_detail_view(request, fran_id):
 
 
 def franchise_index_view(request):
-    pass
+    name = request.GET.get("name") or ""
+    page = request.GET.get("page")
+    num = 50
+    try:
+        page = int(page)
+    except (ValueError, TypeError):
+        page = 1
+    fran_list = Franchise.objects.all()
+
+    if name != "" and name is not None:
+        fran_list = fran_list.filter(name__icontains=name)
+
+    fran_list = fran_list.order_by("name")
+    results = len(fran_list)
+    fran_list = fran_list[num * (page - 1):num * page]
+    return render(request, "main/franchise_index.html",
+                  {"fran_list": fran_list,
+                   "page": page,
+                   "pages": results // num if results % num == 0 else results // num + 1,
+                   "name": name,
+                   })
 
 
 @login_required(login_url='/accounts/login/')
