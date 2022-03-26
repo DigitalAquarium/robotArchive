@@ -9,7 +9,7 @@
 {% block content %}
     <div class="main-content">
     {% if robot %}
-        <h1>{{ robot.name }}</h1>
+        <h1>{{ robot.name }} {% if can_change %}<a class="editor-link" href="{% url 'main:editRobot' robot.id %}">Edit Robot</a>{% endif %}</h1>
         {% if not robot.opt_out %}
             <h2>Rank: {{ robot.ranking|floatformat:2 }}</h2>
             <h2>Win/Loss: {{ robot.wins }}/{{ robot.losses }}</h2>
@@ -47,6 +47,10 @@
                     </div>
                 </div>
             {% endfor %}
+            {% with robot.version_set.last as lastV %}
+            {% if can_change %}<a class="editor-link" id="edit-version-button" href="{% url 'main:editVersion' lastV.id %}">Edit Selected Version</a>{% endif %}
+            {% endwith %}
+            {% if can_change %}<a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>{% endif %}
             </div>
         {{ robot.description }}
 
@@ -74,12 +78,15 @@
              <h2>{{ robot }} has fought {{ fights|length }} {% if fights|length == 1 %}fight. {% else %}fights.{% endif %}</h2>
             <table>
             <thead>
+            <tr>
             <th>Event</th>
             <th>Type</th>
             <th>Opponents</th>
             <th>Result</th>
             <th>View More</th>
+            </tr>
             </thead>
+            <tbody>
             {% for fight in fights %}
                 <tr>
                 {% with fights|fights_event_number:fight as num_fights %}
@@ -101,6 +108,7 @@
                 </td>
                 </tr>
             {% endfor %}
+            </tbody>
             </table>
             {% endif %}
 

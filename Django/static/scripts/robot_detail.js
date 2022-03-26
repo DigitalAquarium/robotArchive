@@ -7,4 +7,8 @@ function viewRobot(versionID) {
     }
     document.getElementById("ver-" + versionID).style.display = "block";
     document.getElementById("but-" + versionID).className += " active";
+    //document.getElementById("edit-version-button").textContent = "Edit " + document.getElementById("but-" + versionID).textContent
+    document.getElementById("edit-version-button").href = "/versions/" + versionID + "/edit"
+    //document.getElementById("edit-version-button").href =
+    //document.getElementById("edit-version-button").href.replace("/[0-9]{1,}/",versionID);
 }

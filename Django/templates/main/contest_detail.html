@@ -5,21 +5,25 @@
 {% block content %}
     {% if contest %}
         <div class="main-content">
-        <h1>{{ contest }}</h1>
+        <h1>{{ contest }} {% if can_change %} <a class="editor-link" href="{% url 'main:editContest' contest.id %}">Edit Contest.</a> {% endif %}</h1>
 
         {% if future %}
             <h2>Registrations for this contest open {{ contest.event.registration_open }}</h2>
         {% else %}
-
+            {% if can_change %}<a class="editor-link" href="{% url 'main:newFight' contest.id%}">Add Fight</a>{% endif %}
             {% if contest.fight_set.all|length > 0 %}
                 <table>
-                <thead >
+                <thead>
+                <tr>
                 <th>Fight</th>
                 <th>Type</th>
                 <th>Winners</th>
+                    {% if can_change %}<th>Edit Fight</th>{% endif %}
+                </tr>
                 </thead>
+                <tbody>
                 {% for fight in contest.fight_set.all %}
-                    <tr>
+                    <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
                     <td><a href = "{% url "main:fightDetail" fight.id %}">{{ fight|truncatechars:55 }} </a></td>
                     <td>{{ fight.get_fight_type_display }}</td>
                     <td>
@@ -29,14 +33,16 @@
                             {% elif fight.winners|length == 2 %}
                                 {{ fight.winners|first }} & {{ fight.winners|last }}
                             {% else %}
-                                {{ fight.winners|first }}, {{ fight.winners|last }}, and {{ fight.winners|length|add:-2 }} more...
+                                {{ fight.winners|first }}, {{ fight.winners|last }}, and {{ fight.winners|length|add:-2 }} more…
                             {% endif %}
                         {% else %}
                             None
                         {% endif %}
                     </td>
+                    {% if can_change %}<td><a class="editor-link" href="{% url 'main:editWholeFight' fight.id %}">Edit</a></td> {% endif %}
                     </tr>
                 {% endfor %}
+                </tbody>
                 </table>
             {% endif %}
 

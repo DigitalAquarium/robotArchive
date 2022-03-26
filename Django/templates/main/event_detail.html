@@ -11,7 +11,7 @@
             <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
             <h1>{{ event.name }}</h1>
             {% if can_change %}
-                <a class="editor-link" href="{% url 'main:editEvent' event.id %}">Edit Event.</a>
+                <a class="editor-link" href="{% url 'main:editEvent' event.id %}">Edit Event</a>
             {% endif %}
         </div>
 
@@ -109,7 +109,7 @@
                 given out at this event</p>
         {% endif %}
         {% if can_change %}
-            <a href="{% url 'main:newAward' event.id %}">Add Award.</a>
+            <a class="editor-link" href="{% url 'main:newAward' event.id %}">Add Award.</a>
         {% endif %}
 
 

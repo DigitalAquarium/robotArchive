@@ -49,8 +49,10 @@ class Person(models.Model):
     def __str__(self):
         if self.public:
             return self.name
+        elif self.user is not None:
+            return self.user.__str__()
         else:
-            return self.user.name
+            return "Unidentified Person#" + str(self.pk)
 
 
 class Team(models.Model):
@@ -71,7 +73,7 @@ class Team(models.Model):
 
     def can_edit(self, user):
         p = Person.objects.get(user=user)
-        if p in self.members:
+        if p in self.members.all():
             return True
         else:
             return False
@@ -310,7 +312,7 @@ class Franchise(models.Model):
 
     def can_edit(self, user):
         p = Person.objects.get(user=user)
-        if p in self.members:
+        if p in self.members.all():
             return True
         else:
             return False

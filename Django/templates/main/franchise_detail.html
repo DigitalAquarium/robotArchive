@@ -10,7 +10,7 @@
         <div class="franchise-heading">
             <h1>{{ fran }}</h1>
             {% if can_change %}
-                <a class="editor-link" href="{% url 'main:editEvent' event.id %}">Edit Event.</a>
+                <a class="editor-link" href="{% url 'main:modifyFranchise' fran.id %}">Edit Franchise</a>
             {% endif %}
         </div>
 
@@ -23,15 +23,15 @@
         {{ fran.description }}
 
         <h2>Events</h2>
-        {% if member %}
-            <a href="{% url 'main:newEvent' fran.id %} ">New Event</a>
+        {% if can_change %}
+            <a class="editor-link" href="{% url 'main:newEvent' fran.id %}">New Event</a>
         {% endif %}
         <table>
         <thead>
         <th>Event Name</th>
         <th>Event Date</th>
          {% if can_change %}
-             <th> Edit Contest </th>
+             <th> Edit Event </th>
          {% endif %}
         </thead>
             {% for event in fran.event_set.all %}

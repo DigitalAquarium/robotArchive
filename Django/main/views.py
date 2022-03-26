@@ -100,18 +100,25 @@ def event_index_view(request):
 
 
 def event_detail_view(request, event_id):
-    me = Person.objects.get(user=request.user)
     event = Event.objects.get(pk=event_id)
     fran = event.franchise
-    can_change = fran.is_member(me)
+    if request.user.is_authenticated:
+        can_change = fran.can_edit(request.user)
+    else:
+        can_change = False
     return render(request, "main/event_detail.html",
                   {"event": event,
                    "map": stuff.map,
                    "can_change": can_change})
 
 
+@login_required(login_url='/accounts/login/')
 def new_event_view(request, franchise_id):
     fran = Franchise.objects.get(pk=franchise_id)  # TODO: Add verification
+    can_change = fran.is_member(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (
+            reverse("main:message"), "You do not have permission to create a new event for this franchise."))
     if request.method == "POST":
         form = EventForm(request.POST)
         if form.is_valid():
@@ -124,8 +131,12 @@ def new_event_view(request, franchise_id):
     return render(request, "main/new_event.html", {"form": form, "fran": fran})
 
 
+@login_required(login_url='/accounts/login/')
 def modify_event_view(request, event_id):
     event = Event.objects.get(pk=event_id)
+    can_change = event.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this event."))
     if request.method == "POST":
         form = EventForm(request.POST, instance=event)
         if form.is_valid():
@@ -194,13 +205,22 @@ def contest_detail_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
     fights = Fight.objects.filter(contest=contest)
     registrations = Registration.objects.filter(contest=contest)
+    if request.user.is_authenticated:
+        can_change = contest.can_edit(request.user)
+    else:
+        can_change = False
     return render(request, "main/contest_detail.html",
                   {"contest": contest, "fights": fights, "applications": registrations,
-                   "future": contest.event.registration_open > timezone.now()})
+                   "future": contest.event.registration_open > timezone.now(), "can_change": can_change})
 
 
+@login_required(login_url='/accounts/login/')
 def new_contest_view(request, event_id):
     event = Event.objects.get(pk=event_id)  # TODO: Add verification
+    can_change = event.can_edit(request.user)
+    if not can_change:
+        return redirect(
+            "%s?m=%s" % (reverse("main:message"), "You do not have permission to create a new contest for this event."))
     if request.method == "POST":
         form = ContestForm(request.POST)
         if form.is_valid():
@@ -213,8 +233,12 @@ def new_contest_view(request, event_id):
     return render(request, "main/new_contest.html", {"form": form, "event": event})
 
 
+@login_required(login_url='/accounts/login/')
 def edit_contest_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
+    can_change = contest.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this contest."))
     if request.method == "POST":
         form = ContestForm(request.POST, instance=contest)
         if form.is_valid():
@@ -226,7 +250,6 @@ def edit_contest_view(request, contest_id):
 
 
 def register(response):
-    # TODO: This should proabably be moved
     if response.method == "POST":
         form = RegistrationForm(response.POST)
         name = response.POST["name"]
@@ -323,9 +346,15 @@ def leaderboard(request):
                    "chosen_weight": weight,
                    })
 
+
 def robot_detail_view(request, robot_id):
     r = Robot.objects.get(pk=robot_id)
     version_id = -1
+    if request.user.is_authenticated:
+        can_change = r.can_edit(request.user)
+    else:
+        can_change = False
+
     if request.method == "GET":
         version_id = request.GET.get("v")
         try:
@@ -335,15 +364,31 @@ def robot_detail_view(request, robot_id):
     fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "number")
     awards = Award.objects.filter(version__robot=r)
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "fights": fights, "awards": awards, "version_id": version_id})
+                  {"robot": r, "fights": fights, "awards": awards, "version_id": version_id, "can_change": can_change})
+
+
+@login_required()
+def robot_edit_view(request, robot_id):
+    pass
+
+
+@login_required()
+def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RIGHT HERE
+    pass
+
+
+@login_required()
+def new_version_view(request, robot_id):
+    pass
 
 
 def team_detail_view(request, team_id):
-    me = Person.objects.get(user=request.user)
     team = Team.objects.get(pk=team_id)
-    member = len(Person_Team.objects.filter(person=me, team=team)) > 0  # TODO: Potentially a bad check
-    # for if you can edit and such, should probably use a better system in future
-    return render(request, "main/team_detail.html", {"team": team, "member": member})
+    if request.user.is_authenticated:
+        can_change = team.can_edit(request.user)
+    else:
+        can_change = False
+    return render(request, "main/team_detail.html", {"team": team, "can_change": can_change})
 
 
 def team_index_view(request):
@@ -352,7 +397,11 @@ def team_index_view(request):
 
 @login_required(login_url='/accounts/login/')
 def new_robot_view(request, team_id):
-    team = Team.objects.get(pk=team_id)  # TODO: Add verification
+    team = Team.objects.get(pk=team_id)
+    can_change = team.can_edit(request.user)
+    if not can_change:
+        return redirect(
+            "%s?m=%s" % (reverse("main:message"), "You do not have permission to create a new robot for this team."))
     if request.method == "POST":
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
@@ -369,7 +418,14 @@ def version_detail_view(request, version_id):
     return redirect("%s?v=%d" % (reverse("main:robotDetail", args=[robot_id]), version_id))
 
 
+@login_required(login_url='/accounts/login/')
 def team_edit_view(request, team_id=None):
+    can_change = True
+    if team_id is not None:
+        team = Team.objects.get(pk=team_id)
+        can_change = team.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this team."))
     if request.method == "POST":
         if team_id is None:
             form = TeamForm(request.POST)
@@ -394,7 +450,14 @@ def team_edit_view(request, team_id=None):
         return render(request, "main/edit_team.html", {"form": form, "team_id": team_id})
 
 
+@login_required(login_url='/accounts/login/')
 def franchise_modify_view(request, franchise_id=None):
+    can_change = True
+    if franchise_id is not None:
+        franchise = Franchise.objects.get(pk=franchise_id)
+        can_change = franchise.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this franchise."))
     if request.method == "POST":
         if franchise_id is None:
             form = FranchiseForm(request.POST)
@@ -420,19 +483,25 @@ def franchise_modify_view(request, franchise_id=None):
 
 
 def franchise_detail_view(request, fran_id):
-    me = Person.objects.get(user=request.user)
     fran = Franchise.objects.get(pk=fran_id)
-    member = fran.is_member(me)  # TODO: Potentially a bad check
-    # for if you can edit and such, should probably use a better system in future
-    return render(request, "main/franchise_detail.html", {"fran": fran, "member": member})
+    if request.user.is_authenticated:
+        can_change = fran.can_edit(request.user)
+    else:
+        can_change = False
+    return render(request, "main/franchise_detail.html", {"fran": fran, "can_change": can_change})
 
 
 def franchise_index_view(request):
     pass
 
 
+@login_required(login_url='/accounts/login/')
 def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the same Version to the same fight.
     contest = Contest.objects.get(pk=contest_id)
+    can_change = contest.can_edit(request.user)
+    if not can_change:
+        return redirect(
+            "%s?m=%s" % (reverse("main:message"), "You do not have permission to add a fight to this contest."))
     f = Fight()
     f.contest = contest
     f.number = 1
@@ -449,8 +518,12 @@ def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the sa
         return redirect("main:editWholeFight", f.id)
 
 
+@login_required(login_url='/accounts/login/')
 def fight_editj_view(request, fight_id):  # Just the Fight
     fight = Fight.objects.get(pk=fight_id)
+    can_change = fight.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
     if request.method == "POST":
         form = FightForm(request.POST, request.FILES, instance=fight)
         if form.is_valid():
@@ -461,18 +534,30 @@ def fight_editj_view(request, fight_id):  # Just the Fight
         return render(request, "main/modify_fight.html", {"form": form, "fight_id": fight_id})
 
 
+@login_required(login_url='/accounts/login/')
 def fight_edith_view(request, fight_id):  # The fight and the robots and media etc
     fight = Fight.objects.get(pk=fight_id)
+    can_change = fight.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
     return render(request, "main/edit_whole_fight.html", {"fight": fight})
 
 
-def fight_detail_view(request, fight_id):
+def fight_detail_view(request, fight_id):  # TODO: Sort this better
     fight = Fight.objects.get(pk=fight_id)
-    return render(request, "main/fight_detail.html", {"fight": fight})
+    if request.user.is_authenticated:
+        can_change = fight.can_edit(request.user)
+    else:
+        can_change = False
+    return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change})
 
 
+@login_required(login_url='/accounts/login/')
 def modify_fight_version_view(request, fight_id, vf_id=None):
     fight = Fight.objects.get(pk=fight_id)
+    can_change = fight.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
     registered = Version.objects.filter(registration__contest=fight.contest.id)
     if vf_id is not None:
         vf = Fight_Version.objects.get(pk=vf_id)
@@ -493,11 +578,19 @@ def modify_fight_version_view(request, fight_id, vf_id=None):
 def award_index_view(request, event_id):
     event = Event.objects.get(pk=event_id)
     awards = Award.objects.filter(event=event).order_by("-award_type", "name")
-    return render(request, "main/award_index.html", {"award_list": awards, "event": event})
+    if request.user.is_authenticated:
+        can_change = event.can_edit(request.user)
+    else:
+        can_change = False
+    return render(request, "main/award_index.html", {"award_list": awards, "event": event, "can_change": can_change})
 
 
+@login_required(login_url='/accounts/login/')
 def new_award_view(request, event_id):
     event = Event.objects.get(pk=event_id)
+    can_change = event.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this event."))
     if request.method == "POST":
         form = AwardForm(request.POST)
         if form.is_valid():
@@ -514,9 +607,12 @@ def new_award_view(request, event_id):
 
 # TODO: THis is almost identical to edit award should probably make a more generic one esp the template
 
-
+@login_required(login_url='/accounts/login/')
 def award_edit_view(request, award_id):
     a = Award.objects.get(pk=award_id)
+    can_change = a.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this award."))
     if request.method == "POST":
         form = AwardForm(request.POST, instance=a)
         if form.is_valid():
@@ -569,9 +665,8 @@ def search_view(request):
                    "team_len": team_len})
 
 
-@login_required
+@login_required(login_url='/accounts/login/')
 def profile_view(request):
-    # TODO: Should this be moved too?
     user = request.user
     me = Person.objects.get(user=user)
     p_t = Person_Team.objects.filter(person=me)
