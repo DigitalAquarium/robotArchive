@@ -2,6 +2,9 @@
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags %}
 {% load static %}
+{% block meta %}
+    <title>Edit {{ fight }} - Roboteer's Tavern</title>
+{% endblock %}
 {% block content %}
     {% if fight %}
         <h1>{{ fight }} </h1>

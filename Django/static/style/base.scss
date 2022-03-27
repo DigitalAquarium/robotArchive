@@ -47,7 +47,8 @@ body {
 
   .navlinks {
     display: inline-block;
-    float: right
+    float: right;
+    padding-right:2em;
   }
 
   .navlinks button {
@@ -218,4 +219,24 @@ th{
   margin: 0.5em;
   text-align: center;
   background: #eeeeff;
+}
+form{
+  justify-content: center;
+  display: flex;
+
+fieldset{
+  background: #e3e5ec;
+  border: none;
+  border-radius: 1em;
+  width:70%;
+
+  legend{
+  padding-top: 4em;
+  }
+}
+@media only screen and (max-width: 999px) {
+  fieldset {
+    width:100% !important;
+  }
+}
 }

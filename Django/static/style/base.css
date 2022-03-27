@@ -42,6 +42,7 @@ body {
 .navbar .navlinks {
   display: inline-block;
   float: right;
+  padding-right: 2em;
 }
 .navbar .navlinks button {
   border: none;
@@ -198,6 +199,25 @@ th {
   margin: 0.5em;
   text-align: center;
   background: #eeeeff;
+}
+
+form {
+  justify-content: center;
+  display: flex;
+}
+form fieldset {
+  background: #e3e5ec;
+  border: none;
+  border-radius: 1em;
+  width: 70%;
+}
+form fieldset legend {
+  padding-top: 4em;
+}
+@media only screen and (max-width: 999px) {
+  form fieldset {
+    width: 100% !important;
+  }
 }
 
 /*# sourceMappingURL=base.css.map */
