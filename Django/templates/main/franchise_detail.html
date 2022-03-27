@@ -7,10 +7,11 @@
 {% block content %}
     {% if fran %}
         <div class="main-content">
-        <div class="franchise-heading">
+        <div class="heading">
             <h1>{{ fran }}</h1>
             {% if can_change %}
                 <a class="editor-link" href="{% url 'main:modifyFranchise' fran.id %}">Edit Franchise</a>
+                <a class="delete-link" href="{% url 'main:delete_noreturn' 'franchise' fran.id %}">Delete Franchise</a>
             {% endif %}
         </div>
 
@@ -32,17 +33,21 @@
         <th>Event Date</th>
          {% if can_change %}
              <th> Edit Event </th>
+             <th> Delete Event </th>
          {% endif %}
         </thead>
+        <tbody>
             {% for event in fran.event_set.all %}
                 <tr>
                     <td><a href="{% url 'main:eventDetail' event.id %}">{{ event }}</a></td>
                     <td>{{ event.start_date|date:"d M Y" }}</td>
                     {% if can_change %}
                         <td><a class="editor-link" href="{% url 'main:editEvent' event.id %}"> Edit </a></td>
+                        <td><a class="delete-link" href="{% url 'main:delete_noreturn' 'event' event.id %}"> Delete </a></td>
                     {% endif %}
                 </tr>
             {% endfor %}
+        </tbody>
         </table>
     {% else %}
         Something has gone wrong.

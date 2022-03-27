@@ -13,6 +13,58 @@ from .forms import *
 from main import subdivisions
 
 
+# TODO: Email stuff (low prio), Add deleting stuff and change models (remove cascade where needed), Registration management, Fight edit cleanup, auto person merging, transfer versions, css for search, ability to make weight classe, Profile Bullshit
+
+@login_required(login_url='/accounts/login/')
+def delete_view(request, model, instance_id, next_id=None):
+    next_url = reverse("main:index")
+
+    if model == "person":
+        instance = Person.objects.get(pk=instance_id)
+    elif model == "team":
+        instance = Team.objects.get(pk=instance_id)
+    elif model == "weight_class":
+        instance = Weight_Class.objects.get(pk=instance_id)
+    elif model == "robot":
+        instance = Robot.objects.get(pk=instance_id)
+        next_url = reverse("main:teamDetail", args=[next_id])
+    elif model == "version":
+        instance = Version.objects.get(pk=instance_id)
+        next_url = reverse("main:robotDetail", args=[next_id])
+    elif model == "franchise":
+        instance = Franchise.objects.get(pk=instance_id)
+    elif model == "event":
+        instance = Event.objects.get(pk=instance_id)
+        next_url = reverse("main:franchiseDetail", args=[next_id])
+    elif model == "contest":
+        instance = Contest.objects.get(pk=instance_id)
+        next_url = reverse("main:eventDetail", args=[next_id])
+    elif model == "registration":  # TODO: Move this
+        instance = Registration.objects.get(pk=instance_id)
+    elif model == "fight":
+        instance = Fight.objects.get(pk=instance_id)
+        next_url = reverse("main:contestDetail", args=[next_id])
+    elif model == "award":
+        instance = Award.objects.get(pk=instance_id)
+        next_url = reverse("main:eventDetail", args=[next_id])
+    elif model == "person_team":
+        instance = Person_Team.objects.get(pk=instance_id)
+    elif model == "fight_version":
+        instance = Fight_Version.objects.get(pk=instance_id)
+    else:  # model == "person_franchise":
+        instance = Person_Franchise.objects.get(pk=instance_id)
+
+    if request.GET.get("confirm") == "on":
+        can_change = instance.can_edit(request.user)
+        if not can_change:
+            return redirect("%s?m=%s" % (
+                reverse("main:message"), "You do not have permission to delete this."))
+        instance.delete()
+        return redirect(next_url)
+    else:
+        return render(request, "main/delete.html", {"instance": instance, "model": model, "next_id": next_id})
+
+
 class IndexView(generic.ListView):
     template_name = "main/index.html"
     context_object_name = "upcoming_event_list"
@@ -349,7 +401,7 @@ def leaderboard(request):
 
 def robot_detail_view(request, robot_id):
     r = Robot.objects.get(pk=robot_id)
-    version_id = -1
+    v = None
     if request.user.is_authenticated:
         can_change = r.can_edit(request.user)
     else:
@@ -359,12 +411,13 @@ def robot_detail_view(request, robot_id):
         version_id = request.GET.get("v")
         try:
             version_id = int(version_id)
+            v = Version.objects.get(pk=version_id)
         except (ValueError, TypeError):
-            version_id = -1
+            v = None
     fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "number")
     awards = Award.objects.filter(version__robot=r)
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "fights": fights, "awards": awards, "version_id": version_id, "can_change": can_change})
+                  {"robot": r, "fights": fights, "awards": awards, "ver": v, "can_change": can_change})
 
 
 @login_required(login_url='/accounts/login/')
@@ -405,18 +458,22 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
 def new_version_view(request, robot_id):
     robot = Robot.objects.get(pk=robot_id)
     can_change = robot.can_edit(request.user)
+    # if request.is_staff:
+    #    valid_teams = Team.objects.all()
+    # else:
+    valid_teams = Team.objects.filter(members__user=request.user)
     if not can_change:
         return redirect(
             "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this robot."))
     if request.method == "POST":
-        form = VersionForm(request.POST, request.FILES)
+        form = NewVersionForm(request.POST, request.FILES)
+        form.fields['team'].queryset = valid_teams
         if form.is_valid():
-            version = form.save(commit=False)
-            version.robot = robot
-            version.save()
-            return redirect("main:robotDetail", robot.id)
+            version = form.save(robot)
+            return redirect("main:versionDetail", version.id)
     else:
-        form = VersionForm()
+        form = NewVersionForm()
+        form.fields['team'].queryset = valid_teams
     return render(request, "main/edit_version.html", {"form": form, "robot": robot, "new": True})
 
 

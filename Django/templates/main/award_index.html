@@ -22,6 +22,7 @@
                         {{ award }}
                          {% if can_change %}
                              <a class="editor-link" style="font-size: 16px" href="{% url 'main:editAward' award.id %}">Edit Award</a>
+                             <a class="delete-link" style="font-size: 16px" href="{% url 'main:delete' 'award' award.id award.event.id %}">Delete Award</a>
                         {% endif %}
                     </span>
                     <span class="hrz-index-details">

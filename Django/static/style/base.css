@@ -201,9 +201,20 @@ th {
   background: #eeeeff;
 }
 
+.delete-link:visited, .delete-link:link {
+  border: 1px black solid;
+  display: inline-block;
+  padding: 0.2em 1em;
+  margin: 0.5em;
+  text-align: center;
+  color: black;
+  background: #ffeeee;
+}
+
 form {
   justify-content: center;
   display: flex;
+  align-items: center;
 }
 form fieldset {
   background: #e3e5ec;
@@ -218,6 +229,17 @@ form fieldset legend {
   form fieldset {
     width: 100% !important;
   }
+}
+
+.heading {
+  font-size: 2em;
+}
+.heading .flag-image {
+  display: inline;
+}
+.heading h1 {
+  display: inline;
+  font-size: 1.5em;
 }
 
 /*# sourceMappingURL=base.css.map */

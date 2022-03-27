@@ -5,6 +5,8 @@ from . import views
 app_name = 'main'
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
+    path('delete/<str:model>/<int:instance_id>/<int:next_id>', views.delete_view, name='delete'),
+    path('delete/<str:model>/<int:instance_id>', views.delete_view, name='delete_noreturn'),
     path('robots', views.robot_index_view, name='robotIndex'),
     path('robots/<int:robot_id>', views.robot_detail_view, name='robotDetail'),
     path('robots/<int:robot_id>/edit', views.robot_edit_view, name='editRobot'),

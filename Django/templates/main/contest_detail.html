@@ -5,7 +5,12 @@
 {% block content %}
     {% if contest %}
         <div class="main-content">
-        <h1>{{ contest }} {% if can_change %} <a class="editor-link" href="{% url 'main:editContest' contest.id %}">Edit Contest.</a> {% endif %}</h1>
+        <div class="heading">
+        <h1>{{ contest }}</h1>
+        {% if can_change %}
+            <a class="editor-link" href="{% url 'main:editContest' contest.id %}">Edit Contest</a>
+            <a class="delete-link" href="{% url 'main:delete' 'contest' contest.id contest.event.id %}">Delete Contest</a>
+        {% endif %}</div>
 
         {% if future %}
             <h2>Registrations for this contest open {{ contest.event.registration_open }}</h2>
@@ -18,7 +23,10 @@
                 <th>Fight</th>
                 <th>Type</th>
                 <th>Winners</th>
-                    {% if can_change %}<th>Edit Fight</th>{% endif %}
+                    {% if can_change %}
+                        <th>Edit Fight</th>
+                        <th>Delete Fight</th>
+                    {% endif %}
                 </tr>
                 </thead>
                 <tbody>
@@ -39,7 +47,8 @@
                             None
                         {% endif %}
                     </td>
-                    {% if can_change %}<td><a class="editor-link" href="{% url 'main:editWholeFight' fight.id %}">Edit</a></td> {% endif %}
+                    {% if can_change %}<td><a class="editor-link" href="{% url 'main:editWholeFight' fight.id %}">Edit</a></td>
+                    <td><a class="delete-link" href="{% url 'main:delete' "fight" fight.id contest.id %} ">Delete</a></td> {% endif %}
                     </tr>
                 {% endfor %}
                 </tbody>

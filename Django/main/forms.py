@@ -96,6 +96,29 @@ class NewRobotForm(forms.Form):
         v.save()
 
 
+class NewVersionForm(forms.Form):
+    robot_name = forms.CharField(max_length=255, required=False)
+    version_name = forms.CharField(max_length=255, required=True)
+    description = forms.CharField(widget=forms.Textarea, required=False)
+    img = forms.ImageField(required=False)
+    weapon_type = forms.CharField(max_length=20, required=True)
+    weight_class = forms.ModelChoiceField(queryset=Weight_Class.objects.all().order_by("-recommended", "weight_grams"),
+                                          required=True)
+    team = forms.ModelChoiceField(queryset=None, required=True)
+
+    def save(self, robot):
+        v = Version()
+        v.robot = robot
+        v.robot_name = self.cleaned_data['robot_name']
+        v.version_name = self.cleaned_data['version_name']
+        v.image = self.cleaned_data['img']
+        v.weapon_type = self.cleaned_data['weapon_type']
+        v.weight_class = self.cleaned_data['weight_class']
+        v.team = self.cleaned_data['team']
+        v.save()
+        return v
+
+
 class RobotForm(forms.ModelForm):
     class Meta:
         model = Robot
@@ -136,7 +159,7 @@ class EventForm(forms.ModelForm):
 class ContestForm(forms.ModelForm):
     class Meta:
         model = Contest
-        fields = ["name", "fight_type", "auto_awards", "entries", "reserves", "weight_class"]
+        fields = ["name", "fight_type", "entries", "reserves", "weight_class"]
 
 
 class FightForm(forms.ModelForm):

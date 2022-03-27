@@ -7,11 +7,12 @@
 {% block content %}
     {% if event %}
         <div class="main-content">
-        <div class="event-heading">
+        <div class="heading">
             <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
             <h1>{{ event.name }}</h1>
             {% if can_change %}
                 <a class="editor-link" href="{% url 'main:editEvent' event.id %}">Edit Event</a>
+                <a class="delete-link" href="{% url 'main:delete' 'event' event.id event.franchise.id %}">Delete Event</a>
             {% endif %}
         </div>
 
@@ -70,7 +71,8 @@
                     <th>Sign up</th>
                 {% endif %}
                 {% if can_change %}
-                    <th> Edit Contest </th>
+                    <th>Edit Contest</th>
+                    <th>Delete Contest</th>
                 {% endif %}
             </thead>
                 {% for contest in event.contest_set.all %}
@@ -83,6 +85,7 @@
                         {% endif %}
                         {% if can_change %}
                             <td><a class="editor-link" href="{% url 'main:editContest' contest.id %}"> Edit </a></td>
+                            <td><a class="delete-link" href="{% url 'main:delete' "contest" contest.id event.id %}"> Delete </a></td>
                         {% endif %}
                     </tr>
                 {% endfor %}

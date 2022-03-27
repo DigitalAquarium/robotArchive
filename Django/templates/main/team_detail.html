@@ -12,6 +12,7 @@
                 <h1>{{ team }}</h1>
             {% if can_change %}
                 <a class="editor-link" href="{% url 'main:editTeam' team.id %}">Edit Team</a>
+                <a class="delete-link" href="{% url 'main:delete_noreturn' 'team' team.id %}">Delete Team</a>
             {% endif %}
             </div>
             {% if team.logo %}

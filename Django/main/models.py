@@ -41,6 +41,10 @@ class Person(models.Model):
     email = models.EmailField()
     public = models.BooleanField(default=True)
 
+    def can_edit(self, user):
+        p = Person.objects.get(user=user)
+        return p == self or user.is_staff
+
     def __str__(self):
         if self.public:
             return self.name
@@ -68,10 +72,7 @@ class Team(models.Model):
 
     def can_edit(self, user):
         p = Person.objects.get(user=user)
-        if p in self.members.all():
-            return True
-        else:
-            return False
+        return p in self.members.all() or user.is_staff
 
 
 class Weight_Class(models.Model):
@@ -86,7 +87,7 @@ class Weight_Class(models.Model):
                          (154221, "Super Heavyweight"),
                          ]
     name = models.CharField(max_length=30)
-    weight_grams = models.IntegerField()
+    weight_grams = models.PositiveIntegerField()
     recommended = models.BooleanField(default=False)
 
     def __str__(self):
@@ -247,7 +248,7 @@ class Robot(models.Model):
 
     def can_edit(self, user):
         last = self.version_set.all().last()
-        return last.can_edit(user)
+        return last.can_edit(user) or user.is_staff
 
 
 class Version(models.Model):
@@ -258,7 +259,7 @@ class Version(models.Model):
     weapon_type = models.CharField(max_length=20)
     robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    weight_class = models.ForeignKey(Weight_Class, on_delete=models.CASCADE)
+    weight_class = models.ForeignKey(Weight_Class, models.SET(Weight_Class.objects.get(pk=1)))
 
     def get_flag(self):
         return get_flag(self.team.country)
@@ -291,7 +292,7 @@ class Version(models.Model):
             return self.robot.name + " " + self.version_name
 
     def can_edit(self, user):
-        return self.team.can_edit(user)
+        return self.team.can_edit(user) or self.robot.version_set.last().team.can_edit(user)
 
 
 class Franchise(models.Model):
@@ -309,10 +310,7 @@ class Franchise(models.Model):
 
     def can_edit(self, user):
         p = Person.objects.get(user=user)
-        if p in self.members.all():
-            return True
-        else:
-            return False
+        return p in self.members.all() or user.is_staff
 
 
 class Event(models.Model):
@@ -368,11 +366,11 @@ class Event(models.Model):
 class Contest(models.Model):
     name = models.CharField(max_length=255, blank=True)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES + [("MU", "Multiple Types")])
-    auto_awards = models.BooleanField()
+    #auto_awards = models.BooleanField()
     entries = models.PositiveSmallIntegerField(default=0)
     reserves = models.PositiveSmallIntegerField(default=0, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    weight_class = models.ForeignKey(Weight_Class, on_delete=models.CASCADE)
+    weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(Weight_Class.objects.get(pk=1)))
 
     def __str__(self):
         if self.name is not None and self.name != "":
@@ -400,6 +398,13 @@ class Registration(models.Model):
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
     signee = models.ForeignKey(Person, on_delete=models.CASCADE)
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
+
+    def can_edit(self, user):
+        return self.contest.can_edit(user)
+
+    def can_delete(self, user):
+        p = Person.objects.get(user=user)
+        return self.can_edit or p == self.signee
 
     def __str__(self):
         return str(self.version) + " @ " + str(self.contest)
@@ -733,7 +738,7 @@ class Award(models.Model):
                                                   default=0)  # 0 other, 1 first place, 2 second place,
     # 3 third place
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    contest = models.ForeignKey(Contest, on_delete=models.CASCADE, blank=True, null=True)
+    contest = models.ForeignKey(Contest, on_delete=models.SET_NULL, blank=True, null=True)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -757,10 +762,16 @@ class Person_Team(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
 
+    def can_edit(self, user):
+        return self.team.can_edit(user)
+
 
 class Person_Franchise(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
+
+    def can_edit(self, user):
+        return self.franchise.can_edit(user)
 
 
 class Fight_Version(models.Model):
@@ -771,5 +782,28 @@ class Fight_Version(models.Model):
     fight = models.ForeignKey(Fight, on_delete=models.CASCADE)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
 
+    def can_edit(self, user):
+        return self.fight.can_edit(user)
+
     def __str__(self):
         return self.version.__str__() + " in |" + self.fight.__str__() + "|"
+
+
+
+try:
+    w = Weight_Class.objects.get(pk=1)
+    if w.name != "unknown":
+        w.id = None
+        w.save("force_insert")
+    w.name = "unknown"
+    w.weight_grams = 0
+    w.recommended = False
+    w.id = 1
+    w.save()
+except:
+    w = Weight_Class()
+    w.name = "unknown"
+    w.weight_grams = 0
+    w.recommended = False
+    w.id = 1
+    w.save()
