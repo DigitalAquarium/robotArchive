@@ -72,7 +72,6 @@
             {% endwith %}
             {% if can_change %}<a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>{% endif %}
             </div>
-        {{ robot.description }}
 
         {% if awards|length > 0 %}
             <h2>{{ robot }} has won {{ awards|length }} {% if awards|length == 1 %}award. {% else %}awards.{% endif %}</h2>

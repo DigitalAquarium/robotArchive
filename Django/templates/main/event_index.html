@@ -57,14 +57,18 @@
                 <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
                 <a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a>
             </span>
-                <span class="hrz-index-details">
+                <div class="hrz-index-details">
                     <span>{{ event.start_date|date:"jS F Y" }}</span>
-                <span>Weight Classes:
-                    {% for class in event.available_weight_classes %}
-                        {{ class.weight_string }}
-                    {% endfor %}
-                </span>
-                </span>
+                    {% if vent.available_weight_classes|length > 0 %}<span>Weight Classes:
+                        {% for class in event.available_weight_classes %}
+                            {{ class.weight_string }}
+                        {% endfor %}
+                    {% endif %}
+                    </span>
+                {% if reg_future %}<span> Registration Opens: {{ event.registration_open }}</span>
+                {% elif event.is_registration_open %}<span> Registration Open!</span>
+                {% endif %}
+                </div>
                 <span class="hrz-index-description">
                     {{ event.description|truncatechars:650 }}
                 </span>

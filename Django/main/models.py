@@ -259,7 +259,7 @@ class Version(models.Model):
     weapon_type = models.CharField(max_length=20)
     robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    weight_class = models.ForeignKey(Weight_Class, models.SET(Weight_Class.objects.get(pk=1)))
+    weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(1))
 
     def get_flag(self):
         return get_flag(self.team.country)
@@ -370,7 +370,7 @@ class Contest(models.Model):
     entries = models.PositiveSmallIntegerField(default=0)
     reserves = models.PositiveSmallIntegerField(default=0, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(Weight_Class.objects.get(pk=1)))
+    weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(1))
 
     def __str__(self):
         if self.name is not None and self.name != "":
@@ -391,7 +391,7 @@ class Contest(models.Model):
         return self.event.franchise.can_edit(user)
 
 
-class Registration(models.Model):
+class Registration(models.Model): #  Idea for future: Add a team limit to reservations.
     signup_time = models.DateTimeField(auto_now_add=True)
     approved = models.BooleanField(default=False)
     reserve = models.BooleanField(default=False)

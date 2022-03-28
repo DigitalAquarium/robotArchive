@@ -67,7 +67,7 @@
                 <th>Contest Name</th>
                 <th>Weight Class</th>
                 <th>Fight Type</th>
-                {% if reg_open %}
+                {% if event.is_registration_open %}
                     <th>Sign up</th>
                 {% endif %}
                 {% if can_change %}
@@ -80,7 +80,7 @@
                         <td><a href="{% url 'main:contestDetail' contest.id %}">{{ contest }}</a></td>
                         <td>{{ contest.weight_class.weight_string }}</td>
                         <td>{{ contest.get_fight_type_display }}</td>
-                        {% if reg_open %}
+                        {% if event.is_registration_open %}
                             <td><a href="{% url 'main:contestSignup' contest.id %}">Sign up</a></td>
                         {% endif %}
                         {% if can_change %}

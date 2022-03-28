@@ -13,7 +13,7 @@ from .forms import *
 from main import subdivisions
 
 
-# TODO: Email stuff (low prio), Registration management, Fight edit cleanup, auto person merging, transfer versions, css for search, ability to make weight classes
+# TODO: Email stuff (low prio), Registration management, Fight edit cleanup, auto person merging, transfer versions, css for search, ability to make weight classes, Adding People to/From Franchises, Removing People Too.
 
 @login_required(login_url='/accounts/login/')
 def delete_view(request, model, instance_id, next_id=None):
@@ -170,7 +170,8 @@ def event_detail_view(request, event_id):
     return render(request, "main/event_detail.html",
                   {"event": event,
                    "map": stuff.map,
-                   "can_change": can_change})
+                   "can_change": can_change,
+                   "reg_future": event.registration_open > timezone.now()})
 
 
 @login_required(login_url='/accounts/login/')
@@ -221,6 +222,11 @@ def contest_signup_view(response, contest_id):
         return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
 
     if response.user.is_authenticated:
+        owned_versions = Version.objects.filter(team__members__user=response.user)
+        applied = contest.registration_set.filter(version__in=owned_versions).exists()
+        if applied:
+            return redirect("%s?m=%s" % (reverse("main:message"), "You've Already signed up for this contest."))
+
         user = response.user
         me = Person.objects.get(user=user)
         if response.method == "POST":
@@ -236,7 +242,7 @@ def contest_signup_view(response, contest_id):
                     # form was completed
                     return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
                 form.save(contest, me)
-                return redirect("main:index")
+                return redirect("%s?m=%s" % (reverse("main:message"), "Successfully signed up to " + contest.__str__()))
         else:
             form = SignupForm()
             t = Person_Team.objects.filter(person=me)
@@ -265,14 +271,54 @@ def contest_signup_view(response, contest_id):
 def contest_detail_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
     fights = Fight.objects.filter(contest=contest)
-    registrations = Registration.objects.filter(contest=contest)
+    registrations = contest.registration_set.all().order_by("signup_time")
+    applied = False
+    approved = False
+    reserve = False
+    app_ver = False
     if request.user.is_authenticated:
+        if contest.event.start_date > timezone.now().date() and timezone.now() > contest.event.registration_open:
+            owned_versions = Version.objects.filter(team__members__user=request.user)
+            applied = contest.registration_set.filter(version__in=owned_versions).exists()
+            if applied:
+                app_ver = contest.registration_set.get(version__in=owned_versions)
+                approved = contest.registration_set.filter(version__in=owned_versions, approved=True).exists()
+                reserve = contest.registration_set.filter(version__in=owned_versions, reserve=True).exists()
         can_change = contest.can_edit(request.user)
     else:
         can_change = False
     return render(request, "main/contest_detail.html",
                   {"contest": contest, "fights": fights, "applications": registrations,
-                   "future": contest.event.registration_open > timezone.now(), "can_change": can_change})
+                   "future": contest.event.registration_open > timezone.now(), "can_change": can_change,
+                   "applied": applied, "approved": approved, "reserve": reserve, "app_ver": app_ver})
+
+
+@login_required(login_url='/accounts/login/')
+def modify_registration_view(request, reg_id):
+    approval = request.GET.get("approval")
+    reserve = request.GET.get("reserve")
+    registration = Registration.objects.get(pk=reg_id)
+    if not registration.can_edit(request.user):
+        redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this registration."))
+
+    if approval == "true":
+        approval = True
+    elif approval == "false":
+        approval = False
+    else:
+        approval = registration.approved
+
+    if reserve == "true":
+        reserve = True
+    elif reserve == "false":
+        reserve = False
+    else:
+        reserve = registration.reserve
+
+    registration.approved = approval
+    registration.reserve = reserve
+    registration.save()
+    return redirect("main:contestDetail", registration.contest.id)
 
 
 @login_required(login_url='/accounts/login/')
@@ -857,4 +903,3 @@ def profile_view(request):
 
     return render(request, "registration/profile.html",
                   {"user": user, "person": me, "teams": teams, "franchises": frans})
-

@@ -43,6 +43,7 @@ urlpatterns = [
     path('account_public_details/<int:person_id>/edit', views.person_edit_view, name='editPerson'),
     path('accounts/register', views.register, name='register'),
     path('accounts/profile/', views.profile_view, name='profile'),
+    path('registration/<int:reg_id>/edit', views.modify_registration_view, name='editRegistration'),
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
 ]
