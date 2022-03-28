@@ -4,7 +4,7 @@ from . import views
 
 app_name = 'main'
 urlpatterns = [
-    path('', views.IndexView.as_view(), name='index'),
+    path('', views.index_view, name='index'),
     path('delete/<str:model>/<int:instance_id>/<int:next_id>', views.delete_view, name='delete'),
     path('delete/<str:model>/<int:instance_id>', views.delete_view, name='delete_noreturn'),
     path('robots', views.robot_index_view, name='robotIndex'),
@@ -47,7 +47,8 @@ urlpatterns = [
     path('accounts/register', views.register, name='register'),
     path('accounts/profile/', views.profile_view, name='profile'),
     path('registration/<int:reg_id>/edit', views.modify_registration_view, name='editRegistration'),
-    path('<str:obj_type>/add_member/<int:obj_id>',views.add_member_view,name="addMember"),
+    path('<str:obj_type>/add_member/<int:obj_id>', views.add_member_view, name="addMember"),
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
+    path('credits', views.credits_view, name='credits'),
 ]

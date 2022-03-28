@@ -1,13 +1,55 @@
 {% extends "base.html" %}
-
+{% load static %}
+{% block meta %}
+<title>Home - Roboteer's Tavern</title>
+{% endblock %}
 {% block content %}
+    <div class="main-content">
+    <h1>Roboteer's Tavern</h1>
+        <div class="other_nonsense" style="width: 48%; height: 100%; display: inline-flex; flex-direction: column">
+            <p>Welcome to roboteer's tavern, a site for management of events for robot combat.</p>
+            <a href="{% url "main:credits" %}">Asset Credits</a>
+        </div>
+
+
+
+        <div class="upcoming-events" style="width: 49%; display: inline-flex;flex-direction: column">
+        <h3>Next 5 upcoming events:</h3>
     {% if upcoming_event_list %}
-        <ul>
-            {% for event in upcoming_event_list %}
-                <li><a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a></li>
-            {% endfor %}
-        </ul>
+        {%for event in upcoming_event_list%}
+		<div class="hrz-index-result" style="height:7em">
+        <span class="hrz-index-image">
+        <img class="fit-image"
+             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             alt="Event Logo">
+        </span>
+            <div class="hrz-index-content" >
+                <span class="hrz-index-title">
+                <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
+                <a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a>
+            </span>
+                <div class="hrz-index-details">
+                    <span>{{ event.start_date|date:"jS F Y" }}</span>
+                    {% if event.available_weight_classes|length > 0 %}
+                        <span>Weight Classes:
+                        {% for class in event.available_weight_classes %}
+                            {{ class.weight_string }}
+                        {% endfor %}
+                    {% endif %}
+                    </span>
+                {% if reg_future %}<span> Registration Opens: {{ event.registration_open }}</span>
+                {% elif event.is_registration_open %}<span> Registration Open!</span>
+                {% endif %}
+                </div>
+                <span class="hrz-index-description">
+                    {{ event.description|truncatechars:650 }}
+                </span>
+            </div>
+        </div>
+    {%endfor%}
     {% else %}
-        <p>There are no upcoming events.</p>
     {% endif %}
+        <a href="{% url "main:eventIndex" %}">View More</a>
+    </div>
+    </div>
 {% endblock %}

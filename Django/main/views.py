@@ -14,7 +14,7 @@ from .forms import *
 from main import subdivisions
 
 
-# TODO: Email stuff (low prio),Fight edit cleanup, auto person merging, transfer versions, Home page, leaderboard still needs smol css
+# TODO: Email stuff (low prio),Fight edit cleanup, auto person merging, Home page, leaderboard still needs smol css
 
 @login_required(login_url='/accounts/login/')
 def delete_view(request, model, instance_id, next_id=None):
@@ -77,12 +77,10 @@ def delete_view(request, model, instance_id, next_id=None):
         return render(request, "main/delete.html", {"instance": instance, "model": model, "next_id": next_id})
 
 
-class IndexView(generic.ListView):
-    template_name = "main/index.html"
-    context_object_name = "upcoming_event_list"
-
-    def get_queryset(self):
-        return Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
+def index_view(request):
+    events = Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
+    random_robot = Robot.objects.order_by("?")[0]
+    return render(request, "main/index.html", {"upcoming_event_list": events,"r":random_robot})
 
 
 def event_index_view(request):
@@ -1006,3 +1004,7 @@ def robot_transfer_view(request, robot_id, team_id=None):
             return redirect("main:robotDetail", robot.id)
         else:
             return render(request, "main/transfer_robot.html", {"robot": robot, "team": team})
+
+
+def credits_view(request):
+    return render(request, "main/credits.html", {})
