@@ -8,12 +8,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views import generic
+from django.core.exceptions import ObjectDoesNotExist
 
 from .forms import *
 from main import subdivisions
 
 
-# TODO: Email stuff (low prio),Fight edit cleanup, auto person merging, transfer versions, ability to make weight classes, Adding People to/From Franchises, Removing People Too.
+# TODO: Email stuff (low prio),Fight edit cleanup, auto person merging, transfer versions, Home page, leaderboard still needs smol css
 
 @login_required(login_url='/accounts/login/')
 def delete_view(request, model, instance_id, next_id=None):
@@ -49,10 +50,12 @@ def delete_view(request, model, instance_id, next_id=None):
         next_url = reverse("main:eventDetail", args=[next_id])
     elif model == "person_team":
         instance = Person_Team.objects.get(pk=instance_id)
+        next_url = reverse("main:profile")
     elif model == "fight_version":
         instance = Fight_Version.objects.get(pk=instance_id)
     else:  # model == "person_franchise":
         instance = Person_Franchise.objects.get(pk=instance_id)
+        next_url = reverse("main:profile")
 
     if request.GET.get("confirm") == "on":
         if isinstance(instance, Registration):
@@ -177,7 +180,7 @@ def event_detail_view(request, event_id):
 @login_required(login_url='/accounts/login/')
 def new_event_view(request, franchise_id):
     fran = Franchise.objects.get(pk=franchise_id)  # TODO: Add verification
-    can_change = fran.is_member(request.user)
+    can_change = fran.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (
             reverse("main:message"), "You do not have permission to create a new event for this franchise."))
@@ -534,11 +537,17 @@ def new_version_view(request, robot_id):
 
 def team_detail_view(request, team_id):
     team = Team.objects.get(pk=team_id)
+    pt = None
     if request.user.is_authenticated:
         can_change = team.can_edit(request.user)
+        if can_change:
+            try:
+                pt = Person_Team.objects.get(team=team, person__user=request.user)
+            except ObjectDoesNotExist:
+                pass
     else:
         can_change = False
-    return render(request, "main/team_detail.html", {"team": team, "can_change": can_change})
+    return render(request, "main/team_detail.html", {"team": team, "can_change": can_change, "leave_id": pt.id or 1})
 
 
 def team_index_view(request):
@@ -614,10 +623,10 @@ def team_edit_view(request, team_id=None):
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this team."))
     if request.method == "POST":
         if team_id is None:
-            form = TeamForm(request.POST)
+            form = TeamForm(request.POST, request.FILES)
         else:
             team = Team.objects.get(pk=team_id)
-            form = TeamForm(request.POST, instance=team)
+            form = TeamForm(request.POST, request.FILES, instance=team)
         if form.is_valid():
             new = form.save()
             if team_id is None:
@@ -670,11 +679,18 @@ def franchise_modify_view(request, franchise_id=None):
 
 def franchise_detail_view(request, fran_id):
     fran = Franchise.objects.get(pk=fran_id)
+    pf = None
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
+        if can_change:
+            try:
+                pf = Person_Franchise.objects.get(franchise=fran, person__user=request.user)
+            except ObjectDoesNotExist:
+                pass
     else:
         can_change = False
-    return render(request, "main/franchise_detail.html", {"fran": fran, "can_change": can_change})
+    return render(request, "main/franchise_detail.html",
+                  {"fran": fran, "can_change": can_change, "leave_id": pf.id or 1})
 
 
 def franchise_index_view(request):
@@ -889,6 +905,18 @@ def search_view(request):
 
 
 @login_required(login_url='/accounts/login/')
+def new_weight_class_view(request, return_id):
+    if request.method == "POST":
+        form = WeightClassForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("main:newContest", return_id)
+    else:
+        form = WeightClassForm()
+    return render(request, "main/new_weight_class.html", {"form": form, "return_id": return_id})
+
+
+@login_required(login_url='/accounts/login/')
 def profile_view(request):
     user = request.user
     me = Person.objects.get(user=user)
@@ -903,3 +931,78 @@ def profile_view(request):
 
     return render(request, "registration/profile.html",
                   {"user": user, "person": me, "teams": teams, "franchises": frans})
+
+
+@login_required(login_url='/accounts/login/')
+def add_member_view(request, obj_type=None, obj_id=None):
+    if obj_type == "franchise":
+        obj = Franchise.objects.get(pk=obj_id)
+    else:  # obj is team
+        obj = Team.objects.get(pk=obj_id)
+
+    can_change = obj.can_edit(request.user)
+    if not can_change:
+        return redirect(
+            "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this franchise."))
+
+    username = request.GET.get("username") or ""
+    if username == "" or username is None:
+        return render(request, "main/add_member.html", {"error": False, "obj_type": obj_type, "obj_id": obj_id})
+
+    try:
+        new = Person.objects.get(user__username=username)
+        if obj_type == "franchise":
+            if Person_Franchise.objects.filter(franchise=obj, person=new).exists():  # No repeat members
+                return redirect("main:franchiseDetail", obj_id)
+            yes = Person_Franchise()
+            yes.franchise = obj
+        else:
+            if Person_Team.objects.filter(team=obj, person=new).exists():
+                return redirect("main:teamDetail", obj_id)
+            yes = Person_Team()
+            yes.team = obj
+
+        yes.person = new
+        yes.save()
+        if obj_type == "franchise":
+            return redirect("main:franchiseDetail", obj_id)
+        else:
+            return redirect("main:teamDetail", obj_id)
+    except:
+        return render(request, "main/add_member.html", {"error": True, "obj_type": obj_type, "obj_id": obj_id})
+
+
+def robot_transfer_view(request, robot_id, team_id=None):
+    if not team_id:
+        robot = Robot.objects.get(pk=robot_id)
+        can_change = robot.can_edit(request.user)
+        if not can_change:
+            return redirect(
+                "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this robot."))
+        if request.method == "POST":
+            form = TransferRobotForm(request.POST)
+            if form.is_valid():
+                team = form.save()
+                return redirect("main:transferRobot", robot_id, team.id)
+        else:
+            form = TransferRobotForm()
+        return render(request, "main/transfer_robot_form.html", {"form": form, "robot": robot})
+
+    else:
+        robot = Robot.objects.get(pk=robot_id)
+        team = Team.objects.get(pk=team_id)
+
+        can_change = robot.can_edit(request.user)
+        if not can_change:
+            return redirect(
+                "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this robot."))
+
+        if request.GET.get("confirm") == "on":
+            new_version = robot.version_set.last()
+            new_version.pk = None
+            new_version.team = team
+            new_version.description += "\nThis version has been transferred to " + team.__str__() + " Please edit it to match your version, but don't delete it or the robot will revert back to previous owners."
+            new_version.save()
+            return redirect("main:robotDetail", robot.id)
+        else:
+            return render(request, "main/transfer_robot.html", {"robot": robot, "team": team})

@@ -1,0 +1,16 @@
+{%extends "base.html"%}
+{% block meta %}
+<title>Transfer Robot - Roboteer's Tavern</title>
+{% endblock %}
+{%block content%}
+    <div class="main-content">
+        <h1>You're about to transfer {{ robot.version_set.last }} to {{ team }}, are you sure?</h1>
+        <form method="get" action="{% url "main:transferRobot" robot.id team.id %}" style="flex-direction: column">
+            <label> Confirm Transfer:
+                <input name="confirm" type="checkbox">
+            </label>
+            <br>
+            <input type="submit" value="Confirm">
+        </form>
+    </div>
+{% endblock %}

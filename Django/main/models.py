@@ -765,6 +765,9 @@ class Person_Team(models.Model):
     def can_edit(self, user):
         return self.team.can_edit(user)
 
+    def __str__(self):
+        return self.person.__str__() + "'s membership of " + self.team.__str__()
+
 
 class Person_Franchise(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
@@ -772,6 +775,9 @@ class Person_Franchise(models.Model):
 
     def can_edit(self, user):
         return self.franchise.can_edit(user)
+
+    def __str__(self):
+        return self.person.__str__() + "'s membership of " + self.franchise.__str__()
 
 
 class Fight_Version(models.Model):

@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from .models import *
 
@@ -184,3 +185,41 @@ class PersonForm(forms.ModelForm):
     class Meta:
         model = Person
         fields = ['name', 'email', 'public']
+
+
+class WeightClassForm(forms.Form):
+    name = forms.CharField(max_length=30, required=True)
+    weight_grams = forms.IntegerField(initial=0, min_value=0, required=True)
+
+    # Requires Javascript
+    # weight_kg = forms.IntegerField(initial=0, min_value=0)
+    # weight_lbs = forms.IntegerField(initial=0, min_value=0)
+
+    def save(self):
+        wc = Weight_Class()
+        wc.name = self.cleaned_data['name']
+        wc.weight_grams = self.cleaned_data['weight_grams']
+        wc.save()
+
+
+class TransferRobotForm(forms.Form):
+    team_name = forms.CharField(max_length=255, required=True)
+    team_id = forms.IntegerField(required=True)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        team_name = cleaned_data.get('team_name')
+        team_id = cleaned_data.get('team_id')
+        if team_name and team_id:
+            try:
+                Team.objects.get(name=team_name, pk=team_id)
+            except ObjectDoesNotExist:
+                raise ValidationError(
+                    "A team with these details could not be found."
+                )
+
+    def save(self):
+        team_name = self.cleaned_data.get('team_name')
+        team_id = self.cleaned_data.get('team_id')
+        new_team = Team.objects.get(name=team_name, pk=team_id)
+        return new_team

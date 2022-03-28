@@ -13,9 +13,20 @@
     display: none;
 }
 .version-header{
-    font-size: 32px;
+    font-size: 2em;
+    /*height:  calc(1em + 6px);*/
+    width: calc(100%);
     display:flex;
 }
+
+.version-header p{
+    margin: 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    display: inline;
+}
+
 .version-content {
     display: flex;
     height: calc(100% - 43px);

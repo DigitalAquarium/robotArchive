@@ -7,9 +7,9 @@
 {% block content %}
     <div class="main-content">
     {% if team_id %}
-        <form method="post" action="{% url 'main:editTeam' team_id %}">
+        <form method="post" enctype="multipart/form-data" action="{% url 'main:editTeam' team_id %}">
     {% else %}
-        <form method="post" action="{% url 'main:newTeam' %}">
+        <form method="post" enctype="multipart/form-data" action="{% url 'main:newTeam' %}">
     {% endif %}
         {% csrf_token %}
         <fieldset>

@@ -2,14 +2,15 @@
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags %}
 {% block meta %}
-    <title>Edit Contest - Roboteer's Tavern</title>
+    <title>Transfer Robot - Roboteer's Tavern</title>
 {% endblock %}
 {% block content %}
         <div class="main-content">
-        <form method="get" action="{% url 'main:addMember' obj_type obj_id %}">
+        <form method="post" action="{% url 'main:transferRobot_form' robot.id %}">
         <fieldset>
             <legend><h1>Transfer Robot</h1></legend>
              {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+        {% csrf_token %}
             {{form|crispy}}
             <input type="submit" value="Submit">
         </fieldset>

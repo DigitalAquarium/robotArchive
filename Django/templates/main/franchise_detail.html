@@ -14,6 +14,7 @@
                 <a class="delete-link" href="{% url 'main:delete_noreturn' 'franchise' fran.id %}">Delete Franchise</a>
             {% endif %}
         </div>
+        {% if can_change %}<a class="delete-link" href="{% url 'main:delete_noreturn' 'person_franchise' leave_id %}">Leave Franchise</a>{% endif %}
 
          {% if fran.logo %}
             <div class="franchise-logo-image">
@@ -21,7 +22,16 @@
             </div>
         {% endif %}
 
-        {{ fran.description }}
+        <P>{{ fran.description }}</P>
+
+        {% if fran.members.all|length > 0 %}
+            <h2>Members</h2> <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'franchise' fran.id %}">Add Member</a>
+            <p>
+        {% for member in fran.members.all %}
+            <span>{{ member }}</span>
+        {% endfor %}
+        </p>
+        {% endif %}
 
         <h2>Events</h2>
         {% if can_change %}

@@ -87,7 +87,7 @@
                 {% for app in applications %}
                     <tr>
                     <td><a href="{% url "main:versionDetail" app.version.id %}">{{ app.version }}</a></td>
-                    <td>{{ app.signee }}</td>
+                    <td>{{ app.signee.name }}</td>
                     <td>{{ app.signee.email|urlize }}</td>
                     <td>{{ app.signup_time }}</td>
                     <td>{%if app.approved %}

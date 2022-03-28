@@ -93,6 +93,11 @@ body {
   font-size: 24px;
   display: inline-flex;
 }
+.hrz-index-result .hrz-index-content .hrz-index-title a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .hrz-index-result .hrz-index-content .hrz-index-details {
   margin: 5px 5px;
 }
