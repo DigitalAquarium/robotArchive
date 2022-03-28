@@ -1,7 +1,7 @@
 {%extends "base.html"%}
 {% load crispy_forms_filters %}
 {% block meta %}
-    <title>Edit {{ fight }} - Roboteer's Tavern</title>
+    <title>Login - Roboteer's Tavern</title>
 {% endblock %}
 {%block content%}
     <div class="main-content">
@@ -17,12 +17,14 @@
 {%endif%}
 
 <form method="post" action="{%url 'login'%}">
+    <fieldset>
+            <legend><h1>Login</h1></legend>
 {%csrf_token%}
 {{ form|crispy }}
-<input type="submit" value="Register">
+<input type="submit" value="Login">
 <input type="hidden" name="next" value="{{next}}">
+        </fieldset>
 </form>
-
 <p><a href="{%url 'password_reset'%}">Reset password.</a></p>
 
 <p><a href="{%url 'main:register'%}">Don't have an account? Register here.</a></p>

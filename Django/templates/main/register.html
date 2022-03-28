@@ -5,15 +5,18 @@
 {% endblock %}
 {% block content %}
     <div id="main-content">
-    <h1>Register an Account</h1>
     {% load crispy_forms_tags %}
+        <form method="POST" class="form-group">
+    <fieldset style="text-align:left">
+            <legend><h1>Register an Account</h1></legend>
 
-    <form method="POST" class="form-group">
         {% csrf_token %}
         {{ form|crispy }}
         <label for="name" class="form-group">Full Name*</label><br>
         <input id="name" name="name" type=text class="nameinput form-control"><br>
         <button type="submit" class="btn btn-success">Register</button>
-    </form>
+
+    </fieldset>
+            </form>
     </div>
 {% endblock %}

@@ -13,7 +13,7 @@ from .forms import *
 from main import subdivisions
 
 
-# TODO: Email stuff (low prio), Add deleting stuff and change models (remove cascade where needed), Registration management, Fight edit cleanup, auto person merging, transfer versions, css for search, ability to make weight classe, Profile Bullshit
+# TODO: Email stuff (low prio), Registration management, Fight edit cleanup, auto person merging, transfer versions, css for search, ability to make weight classes
 
 @login_required(login_url='/accounts/login/')
 def delete_view(request, model, instance_id, next_id=None):
@@ -39,7 +39,7 @@ def delete_view(request, model, instance_id, next_id=None):
     elif model == "contest":
         instance = Contest.objects.get(pk=instance_id)
         next_url = reverse("main:eventDetail", args=[next_id])
-    elif model == "registration":  # TODO: Move this
+    elif model == "registration":
         instance = Registration.objects.get(pk=instance_id)
     elif model == "fight":
         instance = Fight.objects.get(pk=instance_id)
@@ -55,11 +55,20 @@ def delete_view(request, model, instance_id, next_id=None):
         instance = Person_Franchise.objects.get(pk=instance_id)
 
     if request.GET.get("confirm") == "on":
-        can_change = instance.can_edit(request.user)
+        if isinstance(instance, Registration):
+            can_change = instance.can_delete(request.user)
+        else:
+            can_change = instance.can_edit(request.user)
+
         if not can_change:
             return redirect("%s?m=%s" % (
                 reverse("main:message"), "You do not have permission to delete this."))
-        instance.delete()
+
+        if isinstance(instance, Person):
+            request.user.delete()
+        else:
+            instance.delete()
+
         return redirect(next_url)
     else:
         return render(request, "main/delete.html", {"instance": instance, "model": model, "next_id": next_id})
@@ -497,7 +506,6 @@ def team_index_view(request):
     except (ValueError, TypeError):
         page = 1
     team_list = Team.objects.all()
-    print(team_list)
 
     if country_code != "" and country_code is not None:
         country_code = country_code.upper()
@@ -777,6 +785,23 @@ def award_edit_view(request, award_id):
         return render(request, "main/edit_award.html", {"form": form, "award_id": award_id})
 
 
+@login_required(login_url='/accounts/login/')
+def person_edit_view(request, person_id):
+    person = Person.objects.get(pk=person_id)
+    can_change = person.can_edit(request.user)
+    if not can_change:
+        return redirect(
+            "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this account."))
+    if request.method == "POST":
+        form = PersonForm(request.POST, instance=person)
+        if form.is_valid():
+            form.save()
+            return redirect("main:profile")
+    else:
+        form = PersonForm(instance=person)
+    return render(request, "main/edit_person.html", {"form": form, "person": person})
+
+
 def message_view(request):
     if request.method == "GET":
         message = request.GET.get("m")
@@ -832,3 +857,4 @@ def profile_view(request):
 
     return render(request, "registration/profile.html",
                   {"user": user, "person": me, "teams": teams, "franchises": frans})
+

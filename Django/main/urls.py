@@ -40,6 +40,7 @@ urlpatterns = [
     path('events/<int:event_id>/awards', views.award_index_view, name='awardIndex'),
     path('awards/new/<int:event_id>', views.new_award_view, name='newAward'),
     path('awards/<int:award_id>/edit', views.award_edit_view, name='editAward'),
+    path('account_public_details/<int:person_id>/edit', views.person_edit_view, name='editPerson'),
     path('accounts/register', views.register, name='register'),
     path('accounts/profile/', views.profile_view, name='profile'),
     path('search', views.search_view, name="search"),

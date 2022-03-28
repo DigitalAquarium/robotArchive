@@ -178,3 +178,9 @@ class AwardForm(forms.ModelForm):
     class Meta:
         model = Award
         fields = ['name', 'award_type', 'contest', 'version']
+
+
+class PersonForm(forms.ModelForm):
+    class Meta:
+        model = Person
+        fields = ['name', 'email', 'public']
