@@ -4,29 +4,38 @@
 
 {% block meta %}
     <title>Robots - Roboteer's Tavern</title>
+    <style>.searchform label{display: inline-block; margin:0.3em;}</style>
 {% endblock %}
 
 {% block content %}
     <section class="search-params">
-        <form method="get" action="{% url "main:robotIndex" %}">
-            <label> a
+        <form class="search-form" method="get" style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" method="get" action="{% url "main:robotIndex" %}">
+            <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>
+        <label> Country:
             <select name="country">
                 {% for country in countries %}
                     <option value="{{ country|first }}" {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
                 {% endfor %}
             </select>
+        </label>
+        <label> Include Territories:
             <input name="regions" type="checkbox" checked>
+        </label>
+        <label> Standard Weight Class:
             <select name="weight">
                 {% for wc in weights %}
                     <option value="{{ wc|first }}" {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
                 {% endfor %}
             </select>
-            <input name="has_awards" type="checkbox" {% if has_awards %}checked{% endif %}>
+        </label>
+            {% comment %}<input name="has_awards" type="checkbox" {% if has_awards %}checked{% endif %}>{% endcomment %}
+        <label>Weapon Type:
             <input name="weapon" type="text" value={{ weapon }}>
+            </label>
             <br>
-            <input type="submit" value="Search">
+            <input style="margin: 0.2em" type="submit" value="Search">
         </form>
     </section>
     <div class="main-content">

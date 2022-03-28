@@ -2,10 +2,11 @@
 {% load static %}
 {% load bonus_filters %}
 {% block meta %}
-<title>Teams - Roboteer's Tavern</title>
+    <title>Teams - Roboteer's Tavern</title>
+        <style>.searchform label{display: inline-block;margin:0.3em;}</style>
 {% endblock %}
 {%block content%}
-    <form method="get" action="{% url "main:teamIndex" %}">
+    <form class="search-form" method="get" style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" action="{% url "main:teamIndex" %}">
             <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>
@@ -19,8 +20,11 @@
     <label>Include Territories:
             <input name="regions" type="checkbox" checked>
     </label>
-            <input type="submit" value="Search">
+            <input style="margin: 0.3em" type="submit" value="Search">
     </form>
+
+
+
     <div class="main-content">
         {%for team in team_list%}
 		<div class="hrz-index-result">

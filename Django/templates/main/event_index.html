@@ -3,9 +3,10 @@
 {% load bonus_filters %}
 {% block meta %}
 <title>Events - Roboteer's Tavern</title>
+    <style>.searchform label{display: inline-block;margin:0.3em;}</style>
 {% endblock %}
 {%block content%}
-    <form method="get" action="{% url "main:eventIndex" %}">
+    <form class="search-form" method="get" style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" action="{% url "main:eventIndex" %}">
             <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>
@@ -26,13 +27,13 @@
                 {% endfor %}
             </select>
     </label>
-    <label>Registration Open
+    {% comment %}<label>Registration Open
             <input name="reg_open" type="checkbox" {% if reg_open %}checked{% endif %}>
-    </label>
+    </label>{% endcomment %}
     <label> Include Past Events:
         <input name="past" type="checkbox" {% if past %}checked{% endif %}>
     </label>
-    <label for="distance">Distance: </label>
+    {% comment %}<label for="distance">Distance: </label>
             <select id="distance" name="distance">
                 <option value="0" {% if distance == 0 %}selected{% endif %}></option>
                 <option value="50" {% if distance == 50 %}selected{% endif %}>50 Km </option>
@@ -40,10 +41,15 @@
                 <option value="250" {% if distance == 250 %}selected{% endif %}>250 Km </option>
                 <option value="500" {% if distance == 500 %}selected{% endif %}>500 Km </option>
                 <option value="1000" {% if distance == 1000 %}selected{% endif %}>1000 Km </option>
-            </select>
-            <br>
-            <input type="submit" value="Search">
+            </select>{% endcomment %}
+    <br>
+            <input style="margin: 0.2em" type="submit" value="Search">
     </form>
+
+
+
+
+
     <div class="main-content">
 	{%for event in event_list%}
 		<div class="hrz-index-result">
@@ -59,7 +65,8 @@
             </span>
                 <div class="hrz-index-details">
                     <span>{{ event.start_date|date:"jS F Y" }}</span>
-                    {% if vent.available_weight_classes|length > 0 %}<span>Weight Classes:
+                    {% if event.available_weight_classes|length > 0 %}
+                        <span>Weight Classes:
                         {% for class in event.available_weight_classes %}
                             {{ class.weight_string }}
                         {% endfor %}

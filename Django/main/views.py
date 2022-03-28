@@ -13,7 +13,7 @@ from .forms import *
 from main import subdivisions
 
 
-# TODO: Email stuff (low prio), Registration management, Fight edit cleanup, auto person merging, transfer versions, css for search, ability to make weight classes, Adding People to/From Franchises, Removing People Too.
+# TODO: Email stuff (low prio),Fight edit cleanup, auto person merging, transfer versions, ability to make weight classes, Adding People to/From Franchises, Removing People Too.
 
 @login_required(login_url='/accounts/login/')
 def delete_view(request, model, instance_id, next_id=None):
