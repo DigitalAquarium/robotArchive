@@ -9,24 +9,15 @@
 {% block content %}
     <section class="search-params">
         <form method="get" action="{% url "main:leaderboard" %}">
-            <label> a
-                <input name="name" type="text" value={{ name }}>
-            </label>
-            <select name="country">
-                {% for country in countries %}
-                    <option value="{{ country|first }}" {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
-                {% endfor %}
-            </select>
-            <input name="regions" type="checkbox" checked>
+        <label>Weight Class:
             <select name="weight">
                 {% for wc in weights %}
                     <option value="{{ wc|first }}" {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
                 {% endfor %}
             </select>
-            <input name="has_awards" type="checkbox" {% if has_awards %}checked{% endif %}>
-            <input name="weapon" type="text" value={{ weapon }}>
+        </label>
             <br>
-            <input type="submit" value="Search">
+            <input type="submit" value="Go">
         </form>
     </section>
     <div class="main-content">

@@ -82,7 +82,7 @@
             </h2>
         {% endif %}
 
-        <p><a href="{% url "main:contestDetail" fight.contest.id %}">TODO: This save button does nothing</a></p>
+        <p><a class="editor-link" href="{% url "main:editWholeFight" fight.id %}?save=true">Save</a></p>
     {% else %}
         Something has gone wrong
     {% endif %}

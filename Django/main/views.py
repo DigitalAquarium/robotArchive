@@ -80,7 +80,7 @@ def delete_view(request, model, instance_id, next_id=None):
 def index_view(request):
     events = Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
     random_robot = Robot.objects.order_by("?")[0]
-    return render(request, "main/index.html", {"upcoming_event_list": events,"r":random_robot})
+    return render(request, "main/index.html", {"upcoming_event_list": events, "r": random_robot})
 
 
 def event_index_view(request):
@@ -756,10 +756,16 @@ def fight_editj_view(request, fight_id):  # Just the Fight
 
 @login_required(login_url='/accounts/login/')
 def fight_edith_view(request, fight_id):  # The fight and the robots and media etc
+
     fight = Fight.objects.get(pk=fight_id)
     can_change = fight.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
+
+    if request.GET.get("save") == "true":
+        fight.calculate(commit=True)
+        return redirect("main:contestDetail", fight.contest.id)
+
     return render(request, "main/edit_whole_fight.html", {"fight": fight})
 
 
