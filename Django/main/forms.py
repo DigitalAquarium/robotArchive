@@ -45,6 +45,7 @@ class AnonSignupForm(forms.Form):
         p.name = self.cleaned_data['name']
         p.email = self.cleaned_data['email']
         t = Team()
+        t.country = "XX"
         team_name = self.cleaned_data['team_name']
         if team_name is not None and team_name != "":
             t.name = team_name

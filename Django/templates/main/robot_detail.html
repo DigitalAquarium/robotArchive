@@ -29,7 +29,8 @@
                 <div class="version tabs">
                     {% for v in robot.version_set.all %}
                         <button class="tab-button{% if ver == v%} active{% elif not ver and forloop.last %} active{% endif %}" id="but-{{ v.id }}" onclick="viewRobot({{ v.id }},{{ robot.id }})">
-                            {% if v.robot_name == "" or v.robot_name == v.robot.name %}{{ v.version_name }}{% else %}{{ v.robot_name }}{% endif %}
+                            {% comment %}{% if v.robot_name == "" or v.robot_name == v.robot.name %}{{ v.version_name }}{% else %}{{ v.robot_name }}{% endif %}{% endcomment%}
+                            {{ v.get_full_name }}
 
                         </button>
                     {% endfor %}

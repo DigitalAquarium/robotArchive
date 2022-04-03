@@ -263,7 +263,7 @@ def contest_signup_view(response, contest_id):
                     # form was completed
                     return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
                 anon_form.save(contest)
-                return redirect("main:index")
+                return redirect("%s?m=%s" % (reverse("main:message"), "You've successfully signed up to " + contest.event.__str__() + " at " + contest.__str__() ))
         else:
             anon_form = AnonSignupForm()
         return render(response, "main/contest_signup.html", {"anon_form": anon_form, "contest": contest})
@@ -447,7 +447,7 @@ def leaderboard(request):
         weight = int(weight)
     except (ValueError, TypeError):
         weight = 100000
-    robot_list = Robot.get_leaderboard(weight, datetime.date(2001, 12, 31))
+    robot_list = Robot.get_leaderboard(weight)
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
                    "weights": [(0, "")] + Weight_Class.LEADERBOARD_VALID,
@@ -545,7 +545,7 @@ def team_detail_view(request, team_id):
                 pass
     else:
         can_change = False
-    return render(request, "main/team_detail.html", {"team": team, "can_change": can_change, "leave_id": pt.id or 1})
+    return render(request, "main/team_detail.html", {"team": team, "can_change": can_change, "leave_id": pt.id if pt else 1})
 
 
 def team_index_view(request):
