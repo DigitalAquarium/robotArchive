@@ -79,7 +79,10 @@ def delete_view(request, model, instance_id, next_id=None):
 
 def index_view(request):
     events = Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
-    random_robot = Robot.objects.order_by("?")[0]
+    try:
+        random_robot = Robot.objects.order_by("?")[0]
+    except:
+        random_robot = None
     return render(request, "main/index.html", {"upcoming_event_list": events, "r": random_robot})
 
 
@@ -324,7 +327,7 @@ def modify_registration_view(request, reg_id):
 
 @login_required(login_url='/accounts/login/')
 def new_contest_view(request, event_id):
-    event = Event.objects.get(pk=event_id)  # TODO: Add verification
+    event = Event.objects.get(pk=event_id)
     can_change = event.can_edit(request.user)
     if not can_change:
         return redirect(

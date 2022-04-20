@@ -537,7 +537,7 @@ class Fight(models.Model):
                     for i in range(len(tteams)):
                         q = 10 ** (tteamsAvg[i] / 400)
                         averageExpected = averageQ / (averageQ + q)
-                        change = (K * (1 - averageExpected)) / numBots
+                        change = (K * (1 - averageExpected)) / len(tteams)
                         pool += change
                         for fv in tteams[i]:
                             fv.version.robot.ranking -= change
@@ -807,9 +807,12 @@ try:
     w.id = 1
     w.save()
 except:
-    w = Weight_Class()
-    w.name = "unknown"
-    w.weight_grams = 0
-    w.recommended = False
-    w.id = 1
-    w.save()
+    try:
+        w = Weight_Class()
+        w.name = "unknown"
+        w.weight_grams = 0
+        w.recommended = False
+        w.id = 1
+        w.save()
+    except:
+        pass
