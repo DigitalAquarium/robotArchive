@@ -24,3 +24,6 @@ The simplest way to setup the project is to set it up using the default sqlite d
 	and accessed from the localhost ip in a webbrowser
 
 It also requires some data to be filled in in Django/EventManager/stuff.py
+
+
+Credits for assets used on the site can be found in Django/static/credits.txt or on the credits page of the website (accessible from the homepage)
