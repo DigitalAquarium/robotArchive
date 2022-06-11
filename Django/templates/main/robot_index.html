@@ -4,35 +4,42 @@
 
 {% block meta %}
     <title>Robots - Roboteer's Tavern</title>
-    <style>.searchform label{display: inline-block; margin:0.3em;}</style>
+    <style>.searchform label {
+        display: inline-block;
+        margin: 0.3em;
+    }</style>
 {% endblock %}
 
 {% block content %}
     <section class="search-params">
-        <form class="search-form" method="get" style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" method="get" action="{% url "main:robotIndex" %}">
+        <form class="search-form" method="get"
+              style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" method="get"
+              action="{% url "main:robotIndex" %}">
             <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>
-        <label> Country:
-            <select name="country">
-                {% for country in countries %}
-                    <option value="{{ country|first }}" {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <label> Include Territories:
-            <input name="regions" type="checkbox" checked>
-        </label>
-        <label> Standard Weight Class:
-            <select name="weight">
-                {% for wc in weights %}
-                    <option value="{{ wc|first }}" {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
-                {% endfor %}
-            </select>
-        </label>
+            <label> Country:
+                <select name="country">
+                    {% for country in countries %}
+                        <option value="{{ country|first }}"
+                                {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label> Include Territories:
+                <input name="regions" type="checkbox" checked>
+            </label>
+            <label> Standard Weight Class:
+                <select name="weight">
+                    {% for wc in weights %}
+                        <option value="{{ wc|first }}"
+                                {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
+                    {% endfor %}
+                </select>
+            </label>
             {% comment %}<input name="has_awards" type="checkbox" {% if has_awards %}checked{% endif %}>{% endcomment %}
-        <label>Weapon Type:
-            <input name="weapon" type="text" value={{ weapon }}>
+            <label>Weapon Type:
+                <input name="weapon" type="text" value={{ weapon }}>
             </label>
             <br>
             <input style="margin: 0.2em" type="submit" value="Search">
@@ -70,34 +77,38 @@
         {% endfor %}
         {% if pages > 1 %}
             <div class="page-nav">
-            {% url "main:robotIndex" as this %}
-            <ul class="page-select">
-                <li>{% if page > 1 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
-                {% endif %}</li>
+                {% url "main:robotIndex" as this %}
+                <ul class="page-select">
+                    <li>{% if page > 1 %}
+                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
+                    {% endif %}</li>
 
-                <li>{% if page > 5 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
-                {% endif %}</li>
+                    <li>{% if page > 5 %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page > 1 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
-                {% endif %}</li>
+                    <li>{% if page > 1 %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
+                    {% endif %}</li>
 
-                <li>{{ page }}</li>
+                    <li>{{ page }}</li>
 
-                <li>{% if page < pages %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
-                {% endif %}</li>
+                    <li>{% if page < pages %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page < pages|add:"-5" %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
-                {% endif %}</li>
+                    <li>{% if page < pages|add:"-5" %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page < pages %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
-                {% endif %}</li>
-            </ul>
+                    <li>{% if page < pages %}
+                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
+                    {% endif %}</li>
+                </ul>
             </div>
         {% endif %}
     </div>

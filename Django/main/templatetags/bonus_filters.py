@@ -1,6 +1,6 @@
-import re
 from django import template
 from django.template.defaultfilters import stringfilter
+
 from main.models import *
 
 register = template.Library()

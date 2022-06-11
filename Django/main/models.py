@@ -1,11 +1,10 @@
-from dateutil.relativedelta import relativedelta
-
-from django.utils import timezone
-
-from django.db import models
-from django.conf import settings
-import pycountry
 import re
+
+import pycountry
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.db import models
+from django.utils import timezone
 
 FULL_COMBAT = 'FC'
 SPORTSMAN = 'SP'
@@ -366,7 +365,7 @@ class Event(models.Model):
 class Contest(models.Model):
     name = models.CharField(max_length=255, blank=True)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES + [("MU", "Multiple Types")])
-    #auto_awards = models.BooleanField()
+    # auto_awards = models.BooleanField()
     entries = models.PositiveSmallIntegerField(default=0)
     reserves = models.PositiveSmallIntegerField(default=0, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
@@ -391,7 +390,7 @@ class Contest(models.Model):
         return self.event.franchise.can_edit(user)
 
 
-class Registration(models.Model): #  Idea for future: Add a team limit to reservations.
+class Registration(models.Model):  # Idea for future: Add a team limit to reservations.
     signup_time = models.DateTimeField(auto_now_add=True)
     approved = models.BooleanField(default=False)
     reserve = models.BooleanField(default=False)
@@ -793,7 +792,6 @@ class Fight_Version(models.Model):
 
     def __str__(self):
         return self.version.__str__() + " in |" + self.fight.__str__() + "|"
-
 
 
 try:

@@ -1,80 +1,90 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 {% load static %}
 {% load bonus_filters %}
 {% block meta %}
     <title>Teams - Roboteer's Tavern</title>
-        <style>.searchform label{display: inline-block;margin:0.3em;}</style>
+    <style>.searchform label {
+        display: inline-block;
+        margin: 0.3em;
+    }</style>
 {% endblock %}
-{%block content%}
-    <form class="search-form" method="get" style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" action="{% url "main:teamIndex" %}">
-            <label> Search Term:
-                <input name="name" type="text" value={{ name }}>
-            </label>
-    <label> Country:
+{% block content %}
+    <form class="search-form" method="get"
+          style="display:block; padding-left: 10%; padding-right: 10%; text-align: center"
+          action="{% url "main:teamIndex" %}">
+        <label> Search Term:
+            <input name="name" type="text" value={{ name }}>
+        </label>
+        <label> Country:
             <select name="country">
                 {% for country in countries %}
-                    <option value="{{ country|first }}" {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
+                    <option value="{{ country|first }}"
+                            {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
                 {% endfor %}
             </select>
-    </label>
-    <label>Include Territories:
+        </label>
+        <label>Include Territories:
             <input name="regions" type="checkbox" checked>
-    </label>
-            <input style="margin: 0.3em" type="submit" value="Search">
+        </label>
+        <input style="margin: 0.3em" type="submit" value="Search">
     </form>
 
 
 
     <div class="main-content">
-        {%for team in team_list%}
-		<div class="hrz-index-result">
+        {% for team in team_list %}
+            <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
              src="{% if team.logo %} {{ team.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
              alt="Team Logo">
         </span>
-            <div class="hrz-index-content">
+                <div class="hrz-index-content">
                 <span class="hrz-index-title">
                 <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
                 <a href="{% url 'main:teamDetail' team.id %}">{{ team.name }}</a>
             </span>
-                <span class="hrz-index-details">
-                    <span>{{team.website|urlize}}</span>
+                    <span class="hrz-index-details">
+                    <span>{{ team.website|urlize }}</span>
                 </span>
+                </div>
             </div>
-        </div>
-    {%endfor%}
-    {% if pages > 1 %}
+        {% endfor %}
+        {% if pages > 1 %}
             <div class="page-nav">
-            {% url "main:teamIndex" as this %}
-            <ul class="page-select">
-                <li>{% if page > 1 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
-                {% endif %}</li>
+                {% url "main:teamIndex" as this %}
+                <ul class="page-select">
+                    <li>{% if page > 1 %}
+                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
+                    {% endif %}</li>
 
-                <li>{% if page > 5 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
-                {% endif %}</li>
+                    <li>{% if page > 5 %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page > 1 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
-                {% endif %}</li>
+                    <li>{% if page > 1 %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
+                    {% endif %}</li>
 
-                <li>{{ page }}</li>
+                    <li>{{ page }}</li>
 
-                <li>{% if page < pages %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
-                {% endif %}</li>
+                    <li>{% if page < pages %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page < pages|add:"-5" %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
-                {% endif %}</li>
+                    <li>{% if page < pages|add:"-5" %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page < pages %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
-                {% endif %}</li>
-            </ul>
+                    <li>{% if page < pages %}
+                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
+                    {% endif %}</li>
+                </ul>
             </div>
-    {% endif %}
+        {% endif %}
     </div>
 {% endblock %}

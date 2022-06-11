@@ -1,18 +1,18 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 {% block meta %}
     <title>Add Member - Roboteer's Tavern</title>
 {% endblock %}
 {% block content %}
-        <div class="main-content">
+    <div class="main-content">
         <form method="get" action="{% url 'main:addMember' obj_type obj_id %}">
-        <fieldset>
-            <legend><h1>Add Member</h1></legend>
-            {% if error %}<p><strong>There is no user with that username.</strong></p>{% endif %}
+            <fieldset>
+                <legend><h1>Add Member</h1></legend>
+                {% if error %}<p><strong>There is no user with that username.</strong></p>{% endif %}
                 <label>Username:
                     <input name="username" type="text">
                 </label>
-            <input type="submit" value="Submit">
-        </fieldset>
-    </form>
-</div>
+                <input type="submit" value="Submit">
+            </fieldset>
+        </form>
+    </div>
 {% endblock %}

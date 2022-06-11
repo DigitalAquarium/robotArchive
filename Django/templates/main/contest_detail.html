@@ -7,130 +7,144 @@
     {% if contest %}
         <div class="main-content">
         <div class="heading">
-        <h1>{{ contest }}</h1>
-        {% if can_change %}
-            <a class="editor-link" href="{% url 'main:editContest' contest.id %}">Edit Contest</a>
-            <a class="delete-link" href="{% url 'main:delete' 'contest' contest.id contest.event.id %}">Delete Contest</a>
-        {% endif %}</div>
+            <h1>{{ contest }}</h1>
+            {% if can_change %}
+                <a class="editor-link" href="{% url 'main:editContest' contest.id %}">Edit Contest</a>
+                <a class="delete-link" href="{% url 'main:delete' 'contest' contest.id contest.event.id %}">Delete
+                    Contest</a>
+            {% endif %}</div>
 
         {% if future %}
             <h2>Registrations for this contest open {{ contest.event.registration_open }}</h2>
         {% else %}
             {% if applied %}
                 <h2>
-                {% if approved %}
-                    {% if reserve %} Your application has been approved as a reserve!
-                    {% else %} Your application has been approved!
+                    {% if approved %}
+                        {% if reserve %} Your application has been approved as a reserve!
+                        {% else %} Your application has been approved!
+                        {% endif %}
+                    {% else %} Your application is pending approval.
                     {% endif %}
-                {% else %} Your application is pending approval.
-                {% endif %}
-                    <a class="delete-link" href="{% url 'main:delete' "registration" app_ver.id contest.id %} ">Withdraw Application</a>
+                    <a class="delete-link" href="{% url 'main:delete' "registration" app_ver.id contest.id %} ">Withdraw
+                        Application</a>
                 </h2>
             {% endif %}
 
-            {% if can_change %}<a class="editor-link" href="{% url 'main:newFight' contest.id%}">Add Fight</a>{% endif %}
+            {% if can_change %}<a class="editor-link" href="{% url 'main:newFight' contest.id %}">Add Fight</a>
+            {% endif %}
             {% if contest.fight_set.all|length > 0 %}
                 <table>
-                <thead>
-                <tr>
-                <th>Fight</th>
-                <th>Type</th>
-                <th>Winners</th>
-                    {% if can_change %}
-                        <th>Edit Fight</th>
-                        <th>Delete Fight</th>
-                    {% endif %}
-                </tr>
-                </thead>
-                <tbody>
-                {% for fight in contest.fight_set.all %}
-                    <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
-                    <td><a href = "{% url "main:fightDetail" fight.id %}">{{ fight|truncatechars:55 }} </a></td>
-                    <td>{{ fight.get_fight_type_display }}</td>
-                    <td>
-                        {% if fight.winners|length > 0 %}
-                            {% if fight.winners|length == 1 %}
-                                {{ fight.winners|first }}
-                            {% elif fight.winners|length == 2 %}
-                                {{ fight.winners|first }} & {{ fight.winners|last }}
-                            {% else %}
-                                {{ fight.winners|first }}, {{ fight.winners|last }}, and {{ fight.winners|length|add:-2 }} more…
-                            {% endif %}
-                        {% else %}
-                            None
-                        {% endif %}
-                    </td>
-                    {% if can_change %}<td><a class="editor-link" href="{% url 'main:editWholeFight' fight.id %}">Edit</a></td>
-                    <td><a class="delete-link" href="{% url 'main:delete' "fight" fight.id contest.id %} ">Delete</a></td> {% endif %}
-                    </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-            {% endif %}
-
-        {% if applications %}
-            <h2>Applicants</h2>
-            {% if can_change %}
-                <table>
-                <thead>
-                <tr>
-                    <th>Robot Name</th>
-                    <th>Applicant Name</th>
-                    <th>Applicant Email</th>
-                    <th>Signup Time</th>
-                    <th>Application Approved</th>
-                    <th>Reserve</th>
-                    <th>Reject Application</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for app in applications %}
+                    <thead>
                     <tr>
-                    <td><a href="{% url "main:versionDetail" app.version.id %}">{{ app.version }}</a></td>
-                    <td>{{ app.signee.name }}</td>
-                    <td>{{ app.signee.email|urlize }}</td>
-                    <td>{{ app.signup_time }}</td>
-                    <td>{%if app.approved %}
-                        Yes <a class="editor-link" style="margin:0" href="{% url "main:editRegistration" app.id %}?approval=false">Withold</a>
-                    {% else %}
-                        No <a class="editor-link" style="margin:0" href="{% url "main:editRegistration" app.id %}?approval=true">Approve</a>
-                    {% endif %}</td>
-                    <td>{%if app.reserve %}
-                        Yes <a class="editor-link" style="margin:0" href="{% url "main:editRegistration" app.id %}?reserve=false">Make Competitor</a>
-                    {% else %}
-                        No <a class="editor-link" style="margin:0" href="{% url "main:editRegistration" app.id %}?reserve=true">Make Reserve</a>
-                    {% endif %}</td>
-                    <td style="text-align: center"><a class="delete-link" style="margin:0" href="{% url "main:delete" "registration" app.id contest.id %}">Reject</a></td>
+                        <th>Fight</th>
+                        <th>Type</th>
+                        <th>Winners</th>
+                        {% if can_change %}
+                            <th>Edit Fight</th>
+                            <th>Delete Fight</th>
+                        {% endif %}
                     </tr>
-                {% endfor %}
-                </tbody>
+                    </thead>
+                    <tbody>
+                    {% for fight in contest.fight_set.all %}
+                        <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
+                            <td><a href="{% url "main:fightDetail" fight.id %}">{{ fight|truncatechars:55 }} </a></td>
+                            <td>{{ fight.get_fight_type_display }}</td>
+                            <td>
+                                {% if fight.winners|length > 0 %}
+                                    {% if fight.winners|length == 1 %}
+                                        {{ fight.winners|first }}
+                                    {% elif fight.winners|length == 2 %}
+                                        {{ fight.winners|first }} & {{ fight.winners|last }}
+                                    {% else %}
+                                        {{ fight.winners|first }}, {{ fight.winners|last }}, and
+                                        {{ fight.winners|length|add:-2 }} more…
+                                    {% endif %}
+                                {% else %}
+                                    None
+                                {% endif %}
+                            </td>
+                            {% if can_change %}
+                                <td><a class="editor-link" href="{% url 'main:editWholeFight' fight.id %}">Edit</a></td>
+                                <td><a class="delete-link" href="{% url 'main:delete' "fight" fight.id contest.id %} ">Delete</a>
+                                </td> {% endif %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
                 </table>
-
-            {% else %}
-                <div class="gridview-row">
-            {% for app in applications %}
-                <div class="gridview-square">
-                    <div class="gridview-title">
-                        <img class="flag-image" src="{{ app.version.get_flag }}" alt="Flag">
-                        <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
-                    </div>
-                    <div class="gridview-image-container">
-                        <img class="fit-image" src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
-                                 alt="Robot Image">
-                    </div>
-                </div>
-                {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                    </div>
-                    <div class="gridview-row">
-                {% endif %}
-            {% endfor %}
-            </div>
-                {% for app in applications %}
-
-                {% endfor %}
             {% endif %}
-        {% endif %}
+
+            {% if applications %}
+                <h2>Applicants</h2>
+                {% if can_change %}
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Robot Name</th>
+                            <th>Applicant Name</th>
+                            <th>Applicant Email</th>
+                            <th>Signup Time</th>
+                            <th>Application Approved</th>
+                            <th>Reserve</th>
+                            <th>Reject Application</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for app in applications %}
+                            <tr>
+                                <td><a href="{% url "main:versionDetail" app.version.id %}">{{ app.version }}</a></td>
+                                <td>{{ app.signee.name }}</td>
+                                <td>{{ app.signee.email|urlize }}</td>
+                                <td>{{ app.signup_time }}</td>
+                                <td>{% if app.approved %}
+                                    Yes<a class="editor-link" style="margin:0"
+                                          href="{% url "main:editRegistration" app.id %}?approval=false">Withold</a>
+                                {% else %}
+                                    No<a class="editor-link" style="margin:0"
+                                         href="{% url "main:editRegistration" app.id %}?approval=true">Approve</a>
+                                {% endif %}</td>
+                                <td>{% if app.reserve %}
+                                    Yes<a class="editor-link" style="margin:0"
+                                          href="{% url "main:editRegistration" app.id %}?reserve=false">Make
+                                        Competitor</a>
+                                {% else %}
+                                    No<a class="editor-link" style="margin:0"
+                                         href="{% url "main:editRegistration" app.id %}?reserve=true">Make Reserve</a>
+                                {% endif %}</td>
+                                <td style="text-align: center"><a class="delete-link" style="margin:0"
+                                                                  href="{% url "main:delete" "registration" app.id contest.id %}">Reject</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                {% else %}
+                    <div class="gridview-row">
+                        {% for app in applications %}
+                            <div class="gridview-square">
+                                <div class="gridview-title">
+                                    <img class="flag-image" src="{{ app.version.get_flag }}" alt="Flag">
+                                    <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
+                                </div>
+                                <div class="gridview-image-container">
+                                    <img class="fit-image"
+                                         src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                                         alt="Robot Image">
+                                </div>
+                            </div>
+                            {% if forloop.counter|divisibleby:5 and not forloop.last %}
+                                </div>
+                                <div class="gridview-row">
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+                    {% for app in applications %}
+
+                    {% endfor %}
+                {% endif %}
+            {% endif %}
         {% endif %}
     {% endif %}
-    </div>
+</div>
 {% endblock %}

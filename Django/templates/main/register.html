@@ -5,18 +5,18 @@
 {% endblock %}
 {% block content %}
     <div id="main-content">
-    {% load crispy_forms_tags %}
+        {% load crispy_forms_tags %}
         <form method="POST" class="form-group">
-    <fieldset style="text-align:left">
-            <legend><h1>Register an Account</h1></legend>
+            <fieldset style="text-align:left">
+                <legend><h1>Register an Account</h1></legend>
 
-        {% csrf_token %}
-        {{ form|crispy }}
-        <label for="name" class="form-group">Full Name*</label><br>
-        <input id="name" name="name" type=text class="nameinput form-control"><br>
-        <button type="submit" class="btn btn-success">Register</button>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <label for="name" class="form-group">Full Name*</label><br>
+                <input id="name" name="name" type=text class="nameinput form-control"><br>
+                <button type="submit" class="btn btn-success">Register</button>
 
-    </fieldset>
-            </form>
+            </fieldset>
+        </form>
     </div>
 {% endblock %}

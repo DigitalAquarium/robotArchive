@@ -1,4 +1,2 @@
-map = #Google Maps API Key (not strictly required)
-django = #Django Secret Key
-sqlu = #Username for mySQL database
-sqlp = #Password for mySQL database
+map = 'AIzaSyABrQdR1WpO7Orh2LZyXpX6X-rwN5I9FTI'
+django = 'django-insecure-^jzlbulq(+vr*i+y0t-_-f3(2a3!xb$^xnl97eh+by&j(bbhss'

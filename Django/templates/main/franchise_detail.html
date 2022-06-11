@@ -14,9 +14,11 @@
                 <a class="delete-link" href="{% url 'main:delete_noreturn' 'franchise' fran.id %}">Delete Franchise</a>
             {% endif %}
         </div>
-        {% if can_change %}<a class="delete-link" href="{% url 'main:delete_noreturn' 'person_franchise' leave_id %}">Leave Franchise</a>{% endif %}
+        {% if can_change %}
+            <a class="delete-link" href="{% url 'main:delete_noreturn' 'person_franchise' leave_id %}">Leave
+                Franchise</a>{% endif %}
 
-         {% if fran.logo %}
+        {% if fran.logo %}
             <div class="franchise-logo-image">
                 <img class="fit-image" src="{{ fran.logo.url }}" alt="logo">
             </div>
@@ -25,12 +27,14 @@
         <P>{{ fran.description }}</P>
 
         {% if fran.members.all|length > 0 %}
-            <h2>Members</h2> <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'franchise' fran.id %}">Add Member</a>
+            <h2>Members</h2>
+            <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'franchise' fran.id %}">Add
+                Member</a>
             <p>
-        {% for member in fran.members.all %}
-            <span>{{ member }}</span>
-        {% endfor %}
-        </p>
+                {% for member in fran.members.all %}
+                    <span>{{ member }}</span>
+                {% endfor %}
+            </p>
         {% endif %}
 
         <h2>Events</h2>
@@ -38,26 +42,27 @@
             <a class="editor-link" href="{% url 'main:newEvent' fran.id %}">New Event</a>
         {% endif %}
         <table>
-        <thead>
-        <th>Event Name</th>
-        <th>Event Date</th>
-         {% if can_change %}
-             <th> Edit Event </th>
-             <th> Delete Event </th>
-         {% endif %}
-        </thead>
-        <tbody>
+            <thead>
+            <th>Event Name</th>
+            <th>Event Date</th>
+            {% if can_change %}
+                <th> Edit Event</th>
+                <th> Delete Event</th>
+            {% endif %}
+            </thead>
+            <tbody>
             {% for event in fran.event_set.all %}
                 <tr>
                     <td><a href="{% url 'main:eventDetail' event.id %}">{{ event }}</a></td>
                     <td>{{ event.start_date|date:"d M Y" }}</td>
                     {% if can_change %}
                         <td><a class="editor-link" href="{% url 'main:editEvent' event.id %}"> Edit </a></td>
-                        <td><a class="delete-link" href="{% url 'main:delete_noreturn' 'event' event.id %}"> Delete </a></td>
+                        <td><a class="delete-link" href="{% url 'main:delete_noreturn' 'event' event.id %}"> Delete </a>
+                        </td>
                     {% endif %}
                 </tr>
             {% endfor %}
-        </tbody>
+            </tbody>
         </table>
     {% else %}
         Something has gone wrong.

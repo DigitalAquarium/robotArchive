@@ -10,9 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-from pathlib import Path
-from EventManager import stuff
 import os
+from pathlib import Path
+
+from EventManager import stuff
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -77,12 +78,8 @@ WSGI_APPLICATION = 'EventManager.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'robot_event_manager',
-        'USER': stuff.sqlu,
-        'PASSWORD': stuff.sqlp,
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'robotArchive.sqlite3',
     }
 }
 

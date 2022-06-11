@@ -1,17 +1,13 @@
 import datetime
 
-from django.urls import reverse
-
-from EventManager import stuff
-
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.views import generic
-from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 
-from .forms import *
+from EventManager import stuff
 from main import subdivisions
+from .forms import *
 
 
 # TODO: Email stuff (low prio),Fight edit cleanup, auto person merging, Home page, leaderboard still needs smol css
@@ -266,7 +262,8 @@ def contest_signup_view(response, contest_id):
                     # form was completed
                     return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
                 anon_form.save(contest)
-                return redirect("%s?m=%s" % (reverse("main:message"), "You've successfully signed up to " + contest.event.__str__() + " at " + contest.__str__() ))
+                return redirect("%s?m=%s" % (reverse("main:message"),
+                                             "You've successfully signed up to " + contest.event.__str__() + " at " + contest.__str__()))
         else:
             anon_form = AnonSignupForm()
         return render(response, "main/contest_signup.html", {"anon_form": anon_form, "contest": contest})
@@ -548,7 +545,8 @@ def team_detail_view(request, team_id):
                 pass
     else:
         can_change = False
-    return render(request, "main/team_detail.html", {"team": team, "can_change": can_change, "leave_id": pt.id if pt else 1})
+    return render(request, "main/team_detail.html",
+                  {"team": team, "can_change": can_change, "leave_id": pt.id if pt else 1})
 
 
 def team_index_view(request):

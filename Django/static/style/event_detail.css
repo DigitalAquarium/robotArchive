@@ -1,9 +1,9 @@
-.event-logo-image{
+.event-logo-image {
     text-align: center;
     max-height: 700px;
 }
 
-#no-contest-warn{
+#no-contest-warn {
     color: red;
 }
 
@@ -13,12 +13,12 @@
     justify-content: center;
 }*/
 
-table, th, td{
+table, th, td {
     text-align: center;
 }
 
-iframe{
-    border:0;
-    width:100%;
-    height:500px;
+iframe {
+    border: 0;
+    width: 100%;
+    height: 500px;
 }

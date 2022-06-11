@@ -1,39 +1,46 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 {% load static %}
 {% load bonus_filters %}
 {% block meta %}
-<title>Events - Roboteer's Tavern</title>
-    <style>.searchform label{display: inline-block;margin:0.3em;}</style>
+    <title>Events - Roboteer's Tavern</title>
+    <style>.searchform label {
+        display: inline-block;
+        margin: 0.3em;
+    }</style>
 {% endblock %}
-{%block content%}
-    <form class="search-form" method="get" style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" action="{% url "main:eventIndex" %}">
-            <label> Search Term:
-                <input name="name" type="text" value={{ name }}>
-            </label>
-    <label> Country:
+{% block content %}
+    <form class="search-form" method="get"
+          style="display:block; padding-left: 10%; padding-right: 10%; text-align: center"
+          action="{% url "main:eventIndex" %}">
+        <label> Search Term:
+            <input name="name" type="text" value={{ name }}>
+        </label>
+        <label> Country:
             <select name="country">
                 {% for country in countries %}
-                    <option value="{{ country|first }}" {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
+                    <option value="{{ country|first }}"
+                            {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
                 {% endfor %}
             </select>
-    </label>
-    <label>Include Territories:
+        </label>
+        <label>Include Territories:
             <input name="regions" type="checkbox" checked>
-    </label>
-    <label> Standard Weight Class:
+        </label>
+        <label> Standard Weight Class:
             <select name="weight">
                 {% for wc in weights %}
-                    <option value="{{ wc|first }}" {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
+                    <option value="{{ wc|first }}"
+                            {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
                 {% endfor %}
             </select>
-    </label>
-    {% comment %}<label>Registration Open
+        </label>
+        {% comment %}<label>Registration Open
             <input name="reg_open" type="checkbox" {% if reg_open %}checked{% endif %}>
     </label>{% endcomment %}
-    <label> Include Past Events:
-        <input name="past" type="checkbox" {% if past %}checked{% endif %}>
-    </label>
-    {% comment %}<label for="distance">Distance: </label>
+        <label> Include Past Events:
+            <input name="past" type="checkbox" {% if past %}checked{% endif %}>
+        </label>
+        {% comment %}<label for="distance">Distance: </label>
             <select id="distance" name="distance">
                 <option value="0" {% if distance == 0 %}selected{% endif %}></option>
                 <option value="50" {% if distance == 50 %}selected{% endif %}>50 Km </option>
@@ -42,8 +49,8 @@
                 <option value="500" {% if distance == 500 %}selected{% endif %}>500 Km </option>
                 <option value="1000" {% if distance == 1000 %}selected{% endif %}>1000 Km </option>
             </select>{% endcomment %}
-    <br>
-            <input style="margin: 0.2em" type="submit" value="Search">
+        <br>
+        <input style="margin: 0.2em" type="submit" value="Search">
     </form>
 
 
@@ -51,68 +58,72 @@
 
 
     <div class="main-content">
-	{%for event in event_list%}
-		<div class="hrz-index-result">
+        {% for event in event_list %}
+            <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
              src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
              alt="Event Logo">
         </span>
-            <div class="hrz-index-content">
+                <div class="hrz-index-content">
                 <span class="hrz-index-title">
                 <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
                 <a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a>
             </span>
-                <div class="hrz-index-details">
-                    <span>{{ event.start_date|date:"jS F Y" }}</span>
-                    {% if event.available_weight_classes|length > 0 %}
-                        <span>Weight Classes:
-                        {% for class in event.available_weight_classes %}
-                            {{ class.weight_string }}
-                        {% endfor %}
-                    {% endif %}
-                    </span>
-                {% if reg_future %}<span> Registration Opens: {{ event.registration_open }}</span>
-                {% elif event.is_registration_open %}<span> Registration Open!</span>
-                {% endif %}
-                </div>
-                <span class="hrz-index-description">
+                    <div class="hrz-index-details">
+                        <span>{{ event.start_date|date:"jS F Y" }}</span>
+                        {% if event.available_weight_classes|length > 0 %}
+                            <span>Weight Classes:
+                            {% for class in event.available_weight_classes %}
+                                {{ class.weight_string }}
+                            {% endfor %}
+                        {% endif %}
+                        </span>
+                        {% if reg_future %}<span> Registration Opens: {{ event.registration_open }}</span>
+                        {% elif event.is_registration_open %}<span> Registration Open!</span>
+                        {% endif %}
+                    </div>
+                    <span class="hrz-index-description">
                     {{ event.description|truncatechars:650 }}
                 </span>
+                </div>
             </div>
-        </div>
-    {%endfor%}
-    {% if pages > 1 %}
+        {% endfor %}
+        {% if pages > 1 %}
             <div class="page-nav">
-            {% url "main:eventIndex" as this %}
-            <ul class="page-select">
-                <li>{% if page > 1 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
-                {% endif %}</li>
+                {% url "main:eventIndex" as this %}
+                <ul class="page-select">
+                    <li>{% if page > 1 %}
+                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
+                    {% endif %}</li>
 
-                <li>{% if page > 5 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
-                {% endif %}</li>
+                    <li>{% if page > 5 %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page > 1 %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
-                {% endif %}</li>
+                    <li>{% if page > 1 %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
+                    {% endif %}</li>
 
-                <li>{{ page }}</li>
+                    <li>{{ page }}</li>
 
-                <li>{% if page < pages %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
-                {% endif %}</li>
+                    <li>{% if page < pages %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page < pages|add:"-5" %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
-                {% endif %}</li>
+                    <li>{% if page < pages|add:"-5" %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
+                    {% endif %}</li>
 
-                <li>{% if page < pages %}
-                    <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
-                {% endif %}</li>
-            </ul>
+                    <li>{% if page < pages %}
+                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
+                    {% endif %}</li>
+                </ul>
             </div>
-    {% endif %}
+        {% endif %}
     </div>
-{%endblock%}
+{% endblock %}

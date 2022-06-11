@@ -7,7 +7,7 @@
 {% block content %}
     <div class="main-content">
         <div class="heading">
-        <h1>View Profile</h1>
+            <h1>View Profile</h1>
             <a class="delete-link" href="{% url 'main:delete_noreturn' 'person'  person.id %}">Delete Account</a>
         </div>
         <div class="data-block">
@@ -24,64 +24,68 @@
             <a class="editor-link" href="{% url 'main:editPerson' person.id %}">Edit</a>
         </div>
 
-    {% with teams|length as team_count %}
-    {% with franchises|length as fran_count %}
-    {% if team_count == 0 %}
-        <h2 style="color: red">You do not have a team, please add one if you would like to create a robot.</h2>
-        <a class="editor-link" href="{% url 'main:newTeam' %}">Create Team</a>
-    {% endif %}
-    {% if fran_count == 0 %}
-        <a class="editor-link" href="{% url 'main:newFranchise' %}">Create Event Franchise</a>
-    {% endif %}
+        {% with teams|length as team_count %}
+            {% with franchises|length as fran_count %}
+                {% if team_count == 0 %}
+                    <h2 style="color: red">You do not have a team, please add one if you would like to create a
+                        robot.</h2>
+                    <a class="editor-link" href="{% url 'main:newTeam' %}">Create Team</a>
+                {% endif %}
+                {% if fran_count == 0 %}
+                    <a class="editor-link" href="{% url 'main:newFranchise' %}">Create Event Franchise</a>
+                {% endif %}
 
-    {% if fran_count != 0 %}
-    <div class="tf-divider">
-        <h3>My Franchises</h3> <a class="editor-link" href="{% url 'main:newFranchise' %}">Create Event Franchise</a>
-        <div class="gridview-row">
-            {% for franchise in franchises %}
-                <div class="gridview-square">
-                    <div class="gridview-title">
-                        <a href="{% url 'main:franchiseDetail' franchise.id %}">{{ franchise }}</a>
+                {% if fran_count != 0 %}
+                    <div class="tf-divider">
+                        <h3>My Franchises</h3> <a class="editor-link" href="{% url 'main:newFranchise' %}">Create Event
+                        Franchise</a>
+                        <div class="gridview-row">
+                            {% for franchise in franchises %}
+                                <div class="gridview-square">
+                                    <div class="gridview-title">
+                                        <a href="{% url 'main:franchiseDetail' franchise.id %}">{{ franchise }}</a>
+                                    </div>
+                                    <div class="gridview-image-container">
+                                        <img class="fit-image" src="
+
+                                                {% if franchise.logo %}{{ franchise.logo.url }} {% else %}{% static "unknown.png" %}{% endif %}"
+                                             alt="Franchise Image">
+                                    </div>
+                                </div>
+                                {% if forloop.counter|divisibleby:2 and not forloop.last %}
+                                    </div>
+                                    <div class="gridview-row">
+                                {% endif %}
+                            {% endfor %}
+                            </div>
                     </div>
-                    <div class="gridview-image-container">
-                        <img class="fit-image" src="
-                                   {% if franchise.logo %}{{ franchise.logo.url }} {% else %}{% static "unknown.png" %}{% endif %}"
-                                 alt="Franchise Image">
-                    </div>
-                </div>
-                {% if forloop.counter|divisibleby:2 and not forloop.last %}
-                    </div>
-                    <div class="gridview-row">
                 {% endif %}
-            {% endfor %}
-            </div>
-    </div>
-    {% endif %}
-    {% if team_count != 0 %}
-    <div class="tf-divider">
-        <h3>My Teams</h3><a class="editor-link" href="{% url 'main:newTeam' %}">Create Team</a>
-        <div class="gridview-row">
-            {% for team in teams %}
-                <div class="gridview-square">
-                    <div class="gridview-title">
-                        <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
-                        <a href="{% url 'main:teamDetail' team.id %}">{{ team }}</a>
+                {% if team_count != 0 %}
+                    <div class="tf-divider">
+                        <h3>My Teams</h3><a class="editor-link" href="{% url 'main:newTeam' %}">Create Team</a>
+                        <div class="gridview-row">
+                            {% for team in teams %}
+                                <div class="gridview-square">
+                                    <div class="gridview-title">
+                                        <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+                                        <a href="{% url 'main:teamDetail' team.id %}">{{ team }}</a>
+                                    </div>
+                                    <div class="gridview-image-container">
+                                        <img class="fit-image" src="
+
+                                                {% if team.logo %}{{ team.logo.url }} {% else %}{% static "unknown.png" %}{% endif %}"
+                                             alt="Franchise Image">
+                                    </div>
+                                </div>
+                                {% if forloop.counter|divisibleby:2 and not forloop.last %}
+                                    </div>
+                                    <div class="gridview-row">
+                                {% endif %}
+                            {% endfor %}
+                            </div>
                     </div>
-                    <div class="gridview-image-container">
-                        <img class="fit-image" src="
-                                   {% if team.logo %}{{ team.logo.url }} {% else %}{% static "unknown.png" %}{% endif %}"
-                                 alt="Franchise Image">
-                    </div>
-                </div>
-                {% if forloop.counter|divisibleby:2 and not forloop.last %}
-                    </div>
-                    <div class="gridview-row">
                 {% endif %}
-            {% endfor %}
-            </div>
-    </div>
-    {% endif %}
-    {% endwith %}
-    {% endwith %}
+            {% endwith %}
+        {% endwith %}
     </div>
 {% endblock %}

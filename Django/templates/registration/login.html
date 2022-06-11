@@ -1,32 +1,32 @@
-{%extends "base.html"%}
+{% extends "base.html" %}
 {% load crispy_forms_filters %}
 {% block meta %}
     <title>Login - Roboteer's Tavern</title>
 {% endblock %}
-{%block content%}
+{% block content %}
     <div class="main-content">
-{%if form.errors%}
-	Something has gone wrong.
-{%endif%}
-{%if next%}
-	{%if user.is_authenticated%}
-	You're already logged in, would you like to login to a different account? 
-	{%else%}
-	Log In.
-	{%endif%}
-{%endif%}
+        {% if form.errors %}
+            Something has gone wrong.
+        {% endif %}
+        {% if next %}
+            {% if user.is_authenticated %}
+                You're already logged in, would you like to login to a different account?
+            {% else %}
+                Log In.
+            {% endif %}
+        {% endif %}
 
-<form method="post" action="{%url 'login'%}">
-    <fieldset>
-            <legend><h1>Login</h1></legend>
-{%csrf_token%}
-{{ form|crispy }}
-<input type="submit" value="Login">
-<input type="hidden" name="next" value="{{next}}">
-        </fieldset>
-</form>
-<p><a href="{%url 'password_reset'%}">Reset password.</a></p>
+        <form method="post" action="{% url 'login' %}">
+            <fieldset>
+                <legend><h1>Login</h1></legend>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <input type="submit" value="Login">
+                <input type="hidden" name="next" value="{{ next }}">
+            </fieldset>
+        </form>
+        <p><a href="{% url 'password_reset' %}">Reset password.</a></p>
 
-<p><a href="{%url 'main:register'%}">Don't have an account? Register here.</a></p>
+        <p><a href="{% url 'main:register' %}">Don't have an account? Register here.</a></p>
     </div>
-{%endblock%}
+{% endblock %}
