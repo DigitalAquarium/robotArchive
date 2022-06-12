@@ -14,7 +14,7 @@
                 {% if can_change %}
                     <a class="editor-link" href="{% url 'main:editRobot' robot.id %}">Edit Robot</a>
                     <a class="delete-link"
-                       href="{% url 'main:delete' 'robot' robot.id robot.version_set.last.team.id %}">Delete Robot</a>
+                       href="{% url 'main:delete' 'robot' robot.id 0%}">Delete Robot</a>
                 {% endif %}
             </div>
             {% if can_change %}
@@ -32,7 +32,7 @@
                     {% for v in robot.version_set.all %}
                         <button class="tab-button{% if ver == v %} active{% elif not ver and forloop.last %} active{% endif %}"
                                 id="but-{{ v.id }}" onclick="viewRobot({{ v.id }},{{ robot.id }})">
-                            {% comment %}{% if v.robot_name == "" or v.robot_name == v.robot.name %}{{ v.version_name }}{% else %}{{ v.robot_name }}{% endif %}{% endcomment%}
+                            {% comment %}{% if v.robot_name == "" or v.robot_name == v.robot.name %}{{ v.name }}{% else %}{{ v.robot_name }}{% endif %}{% endcomment%}
                             {{ v.get_full_name }}
 
                         </button>
@@ -59,7 +59,9 @@
                                     <span>Time Competing: {{ v.first_fought|date:"F Y" }}
                                             {% if v.first_fought != v.last_fought %} -
                                                 {{ v.last_fought|date:"F Y" }}{% endif %}</span>
+                                {% if v.team %}
                                     <span>Team : <a href="{% url "main:teamDetail" v.team.id %}">{{ v.team }}</a></span>
+                                {% endif %}
                                 </div>
                                 <div class="version-description">
                                     <p>{{ v.description }}</p>

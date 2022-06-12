@@ -51,4 +51,5 @@ urlpatterns = [
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
     path('credits', views.credits_view, name='credits'),
+    #path('import', views.importView, name='import'),
 ]

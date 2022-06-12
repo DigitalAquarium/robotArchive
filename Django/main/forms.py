@@ -54,7 +54,7 @@ class AnonSignupForm(forms.Form):
         r = Robot()
         r.name = self.cleaned_data['robot_name']
         v = Version()
-        v.version_name = "v1"
+        v.name = "v1"
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = weight
         v.team = t
@@ -112,7 +112,7 @@ class NewVersionForm(forms.Form):
         v = Version()
         v.robot = robot
         v.robot_name = self.cleaned_data['robot_name']
-        v.version_name = self.cleaned_data['version_name']
+        v.name = self.cleaned_data['name']
         v.image = self.cleaned_data['img']
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']
@@ -130,7 +130,7 @@ class RobotForm(forms.ModelForm):
 class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
-        fields = ["robot_name", "version_name", "description", "image", "weapon_type", "weight_class"]
+        fields = ["robot_name", "name", "description", "image", "weapon_type", "weight_class"]
 
 
 class TeamForm(forms.ModelForm):

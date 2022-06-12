@@ -168,11 +168,17 @@ class Weight_Class(models.Model):
 class Robot(models.Model):
     RANKING_DEFAULT = 1000
     name = models.CharField(max_length=255)
+    name_alphanum = models.CharField(max_length=255, blank=True)
+    requires_translation = models.BooleanField(default=False)
+
+    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES)
     description = models.TextField(blank=True)
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
     ranking = models.FloatField(default=RANKING_DEFAULT)
     opt_out = models.BooleanField(default=False)  # for opting out of rankings
+    first_fought = models.DateField()
+    last_fought = models.DateField()
 
     def __str__(self):
         return self.name
@@ -217,6 +223,11 @@ class Robot(models.Model):
         # robs = robs.order_by("-ranking")
         return robs
 
+    def set_alphanum(self, commit=True):
+        self.name_alphanum = asciify(self.name, "Robot", self.id)
+        if commit:
+            self.save()
+
     def remove_rank_from(self, date):
         fvs = Fight_Version.objects.filter(version__robot=self, fight__contest__event__start_date__gte=date)
         for fv in fvs:
@@ -234,17 +245,6 @@ class Robot(models.Model):
             awards += Award.objects.filter(version=ver)
         return awards
 
-    def first_fought(self):
-        first = self.version_set.all().first()
-        return first.first_fought()
-
-    def last_fought(self):
-        last = self.version_set.all().last()
-        try:
-            return last.last_fought()
-        except AttributeError:
-            return None
-
     def can_edit(self, user):
         last = self.version_set.all().last()
         return last.can_edit(user) or user.is_staff
@@ -252,30 +252,31 @@ class Robot(models.Model):
 
 class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)
-    version_name = models.CharField(max_length=255)
+    robot_name_alphanum = models.CharField(max_length=255, blank=True)
+    name = models.CharField(max_length=255)
+    name_alphanum = models.CharField(max_length=255, blank=True)
+    requires_translation = models.BooleanField(default=False)
+
+    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='robot_images/%Y/', blank=True)
     weapon_type = models.CharField(max_length=20)
+    first_fought = models.DateField()
+    last_fought = models.DateField()
+
     robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    owner = models.ForeignKey(Person, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, blank=True, null=True)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(1))
 
+    def set_alphanum(self, commit=True):
+        self.name_alphanum = asciify(self.name, "Version", self.id)
+        self.robot_name_alphanum = asciify(self.robot_name, "Version", self.id)
+        if commit:
+            self.save()
+
     def get_flag(self):
-        return get_flag(self.team.country)
-
-    def first_fought(self):
-        try:
-            reg = self.fight_set.order_by("contest__event__start_date").first()
-            return reg.contest.event.start_date
-        except AttributeError:
-            return None
-
-    def last_fought(self):
-        try:
-            reg = self.fight_set.order_by("contest__event__start_date").last()
-            return reg.contest.event.start_date
-        except AttributeError:
-            return None
+        return get_flag(self.country)
 
     def __str__(self):
         if self.robot_name != "":
@@ -286,12 +287,12 @@ class Version(models.Model):
     def get_full_name(self):
         # TODO: check where __str__ is used and should use this instead
         if self.robot_name != "":
-            return self.robot_name + " " + self.version_name
+            return self.robot_name + " " + self.name
         else:
-            return self.robot.name + " " + self.version_name
+            return self.robot.name + " " + self.name
 
     def can_edit(self, user):
-        return self.team.can_edit(user) or self.robot.version_set.last().team.can_edit(user)
+        return self.owner.can_edit(user) or self.robot.version_set.last().owner.can_edit(user)
 
 
 class Franchise(models.Model):
@@ -422,22 +423,26 @@ class Fight(models.Model):
         ("NM", "Method not Declared"),
         ("OT", "Other Win Method")
     ]
-    # Media Types:
-    # LI: Local Image
-    # EI: External Image
-    # LV: Local Video
-    # IF: Iframe embed Such as YouTube or Vimeo
-    # IG: Instagram
-    # TW: Twitter
-    # TT: Tiktok
-    # FB: Facebook
-    # UN: unknown
+    MEDIA_CHOICES = [
+        ("XX", "No Media / Error"),
+        ("LI", "Local Image"),
+        ("EI", "External Image"),
+        ("LV", "Local Video"),
+        ("IF", "Iframe embed"),  # Such as YouTube or Vimeo
+        ("IG", "Instagram"),
+        ("TW", "Twitter"),
+        ("TT", "Tiktok"),
+        ("FB", "Facebook"),
+        ("UN", "Unknown"),
+    ]
+
     method = models.CharField(max_length=2, choices=METHOD_CHOICES, default="NM")
     name = models.CharField(max_length=255, blank=True)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES)
     number = models.IntegerField()
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE)
     competitors = models.ManyToManyField(Version, through="Fight_Version")
+    media_type = models.CharField(max_length=2, choices=MEDIA_CHOICES, default="UN")
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
 
@@ -581,42 +586,43 @@ class Fight(models.Model):
         elif "twitch.tv/" in self.external_media:
             get_data = self.external_media[25:]
 
-    def get_media_type(self):
+    def set_media_type(self):
+        self.media_type = "XX"
+        self.save()
         if bool(self.internal_media):
             # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Containers
             if self.internal_media.url[-4:] == ".mp4" or self.internal_media.url[-4:] == ".ogg":
-                return "LV"
+                self.media_type = "LV"
             elif self.internal_media.url[-5:] == ".webm":
-                return "LV"
+                self.media_type = "LV"
             else:
                 # Local Image
-                return "LI"
+                self.media_type = "LI"
 
         elif self.external_media is not None:
             if "twitter" in self.external_media:
-                return "TW"
+                self.media_type = "TW"
             elif "tiktok" in self.external_media:
-                return "TT"
+                self.media_type = "TT"
             elif "instagram" in self.external_media:
-                return "IG"
+                self.media_type = "IG"
             elif "facebook" in self.external_media:
-                return "FB"
+                self.media_type = "FB"
             elif re.search("youtu\.?be", self.external_media) is not None:
-                return "IF"
+                self.media_type = "IF"
             # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
             elif self.external_media[-4:] in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
-                return "EI"
+                self.media_type = "EI"
             elif self.external_media[-5:] in [".jpeg", ".jfif", ".webp"]:
-                return "EI"
+                self.media_type = "EI"
             elif self.external_media[-6:] == ".pjpeg":
-                return "EI"
+                self.media_type = "EI"
             else:
-                "UN"
-        else:
-            "Error"
+                self.media_type = "UN"
+        self.save()
 
     def has_video(self):
-        return self.get_media_type() in ["LV", "IF", "IG", "TW", "TT", "FB"]
+        return self.media_type in ["LV", "IF", "IG", "TW", "TT", "FB"]
 
     def get_tt_id(self):
         # https: // www.tiktok.com / @ battlebots / video / 7060864801462963502 - Example video
@@ -792,6 +798,73 @@ class Fight_Version(models.Model):
 
     def __str__(self):
         return self.version.__str__() + " in |" + self.fight.__str__() + "|"
+
+
+# TODO: This should maybe be another module, requires database but idk how to like, do it otherwise.
+class Ascii_Lookup(models.Model):
+    old_char = models.CharField(max_length=1)
+    new_char = models.CharField(max_length=10,blank=True)
+    requires_translation = models.BooleanField(default=False)
+
+
+class Ascii_Attention(models.Model):
+    word = models.TextField()
+    bad_char = models.CharField(max_length=1)
+    model = models.CharField(max_length=50)
+    model_id = models.IntegerField()
+
+
+def asciify(text, model="none", model_id=0):
+    valid = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
+    lookups = Ascii_Lookup.objects.all()
+    lookup = {}
+    for look in lookups:
+        lookup[look.old_char] = look.new_char
+    new = ""
+    for i in range(len(text)):
+        if text[i] not in valid:
+            try:
+                # Checks for Special Cases
+                if text[i] == "-":
+                    # Convert " - " to one space
+                    try:
+                        if text[i - 1] == " " and text[i + 1] == " ":
+                            new = new[0:-1]
+                            continue
+                    except IndexError:
+                        pass
+
+                new += lookup[text[i]]
+
+            except KeyError:
+                # Checks for Special Cases
+                if text[i] == ".":
+                    try:
+                        if text[i - 1] in "0123456789" and text[i + 1] in "0123456789":
+                            new += "."
+                    except IndexError:
+                        pass  # Do Nothing
+                    continue
+                if text[i] == "%":
+                    try:
+                        if text[i - 1] in "0123456789":
+                            new += "%"
+                    except IndexError:
+                        pass  # Do Nothing
+                    continue
+
+                # General Case
+                if model_id is None:
+                    model_id = 0
+                asc = Ascii_Attention(word=text, bad_char=text[i], model=model, model_id=model_id)
+                asc.save()
+                new += text[i]
+        else:
+            new += text[i]
+    if new != text:
+        return new
+    else:
+        return ""
 
 
 try:
