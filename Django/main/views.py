@@ -206,7 +206,7 @@ def modify_event_view(request, event_id):
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this event."))
     if request.method == "POST":
-        form = EventForm(request.POST, instance=event)
+        form = EventForm(request.POST, request.FILES, instance=event)
         if form.is_valid():
             new = form.save()
             return redirect("main:eventDetail", new.id)
@@ -754,7 +754,10 @@ def fight_editj_view(request, fight_id):  # Just the Fight
     if request.method == "POST":
         form = FightForm(request.POST, request.FILES, instance=fight)
         if form.is_valid():
-            form.save()
+            f = form.save()
+            f.format_external_media()
+            f.set_media_type()
+
             return redirect("main:editWholeFight", fight_id)
     else:
         form = FightForm(instance=fight)

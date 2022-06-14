@@ -254,7 +254,6 @@ class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)
     robot_name_alphanum = models.CharField(max_length=255, blank=True)
     name = models.CharField(max_length=255)
-    name_alphanum = models.CharField(max_length=255, blank=True)
     requires_translation = models.BooleanField(default=False)
 
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES)
@@ -274,6 +273,12 @@ class Version(models.Model):
         self.robot_name_alphanum = asciify(self.robot_name, "Version", self.id)
         if commit:
             self.save()
+
+    def get_alphanum(self):
+        if self.robot_name != "":
+            return self.robot_name_alphanum
+        else:
+            return self.robot.name_alphanum
 
     def get_flag(self):
         return get_flag(self.country)

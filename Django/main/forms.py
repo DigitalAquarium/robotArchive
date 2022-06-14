@@ -170,6 +170,7 @@ class FightForm(forms.ModelForm):
         fields = ["name", "fight_type", "method", "internal_media", "external_media"]
 
 
+
 class RobotFightForm(forms.ModelForm):
     class Meta:
         model = Fight_Version

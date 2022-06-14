@@ -10,7 +10,7 @@
     <div class="main-content">
         {% if robot %}
             <div class="heading">
-                <h1>{{ robot.name }} </h1>
+                <h1>{{ robot.name }} {% if robot.requires_translation %} <span class="alphanum">({{ robot.name_alphanum }})</span> {% endif %} </h1>
                 {% if can_change %}
                     <a class="editor-link" href="{% url 'main:editRobot' robot.id %}">Edit Robot</a>
                     <a class="delete-link"
@@ -43,7 +43,7 @@
                          {% elif not ver and forloop.last %}style="display:block"{% endif %}>
                         <div class="version-header">
                             <img class="flag-image" src="{{ v.get_flag }}" alt="Flag">
-                            <p>{{ v }}</p>
+                            <p>{{ v }} {% if v.requires_translation %}<span class="alphanum">({{ v.get_alphanum }})</span> {% endif %}</p>
                         </div>
 
                         <div class="version-content">
@@ -113,8 +113,8 @@
             {% endif %}
 
             {% if fights|length > 0 %}
-                <h2>{{ robot }} has fought {{ fights|length }} {% if fights|length == 1 %}fight. {% else %}
-                    fights.{% endif %}</h2>
+                <h2>{% if robot.requires_translation %} {{ robot.name_alphanum }} {% else %}{{ robot }} {% endif %}
+                    has fought {{ fights|length }} {% if fights|length == 1 %}fight. {% else %}fights.{% endif %}</h2>
                 <table>
                     <thead>
                     <tr>
