@@ -18,16 +18,16 @@
         </ul>
         {% if fight.internal_media or fight.external_media %}
             <h3>Fight Media</h3>
-            {% if fight.get_media_type == "LI" %}
+            {% if fight.media_type == "LI" %}
                 <img src="{{ fight.internal_media.url }}" alt="This Image is Broken, please change it.">
 
-            {% elif fight.get_media_type == "EI" %}
+            {% elif fight.media_type == "EI" %}
                 <img src="{{ fight.external_media }}" alt="This Image is Broken, please change it.">
 
-            {% elif fight.get_media_type == "LV" %}
+            {% elif fight.media_type == "LV" %}
                 <video src="{{ fight.internal_media.url }}" width="800" height="450" controls></video>
 
-            {% elif fight.get_media_type == "FB" %}
+            {% elif fight.media_type == "FB" %}
                 <div id="fb-root"></div>
                 <script async defer crossorigin="anonymous"
                         src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v13.0" nonce="DsgXG9yz"></script>
@@ -37,10 +37,10 @@
                     </blockquote>
                 </div>
 
-            {% elif fight.get_media_type == "IF" %}
+            {% elif fight.media_type == "IF" %}
                 <iframe src="{{ fight.external_media }}" title="Fight Video" allowfullscreen></iframe>
 
-            {% elif fight.get_media_type == "IG" %}
+            {% elif fight.media_type == "IG" %}
                 <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.external_media }}"
                             data-instgrm-version="14"
                             style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
@@ -48,12 +48,12 @@
                 </blockquote>
                 <script async src="http://www.instagram.com/embed.js"></script>
 
-            {% elif fight.get_media_type == "TW" %}
+            {% elif fight.media_type == "TW" %}
                 <blockquote class="twitter-tweet"><a href="{{ fight.external_media }}">Fight video on Twitter.</a>
                 </blockquote>
                 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
-            {% elif fight.get_media_type == "TT" %}
+            {% elif fight.media_type == "TT" %}
                 <blockquote class="tiktok-embed" cite="{{ fight.external_media }}"
                             data-video-id="{{ fight.get_tt_id }}">
                     <section></section> <!--This section tag is required, embed will fail without it. -->

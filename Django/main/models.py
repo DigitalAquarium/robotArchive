@@ -199,7 +199,9 @@ class Robot(models.Model):
         robs = robs.filter(opt_out=False)
         if last_event is None:
             last_event = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date
-        bad = []
+        robs.filter(last_fought__gte=last_event - relativedelta(years=5))
+        robs.filter(first_fought__lte=last_event)
+        '''bad = []
         for robot in robs:  # Should really build last fought stuff into the database to stop this from being
             # horrifically and painfully slow.
             try:
@@ -215,7 +217,7 @@ class Robot(models.Model):
                     bad.append(robot.id)
             except:
                 bad.append(robot.id)
-        robs = robs.exclude(id__in=bad)
+        robs = robs.exclude(id__in=bad)'''
         for robot in robs:
             robot.remove_rank_from(last_event)
         robs = robs[:]  # list cast

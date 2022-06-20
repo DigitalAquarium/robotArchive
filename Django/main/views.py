@@ -136,9 +136,6 @@ def event_index_view(request):
             event_list.filter(contest__name__icontains=name)).union(
             event_list.filter(franchise__name__icontains=name))
 
-    if past != "on":
-        event_list = event_list.filter(start_date__gt=timezone.now())
-
     if reg_open == "on":
         bad = []
         for event in event_list:
@@ -408,13 +405,13 @@ def robot_index_view(request):
         country_code = country_code.upper()
         if regions == "on":
             try:
-                robot_list = robot_list.filter(version__team__country__in=subdivisions.subs[country_code]).distinct()
+                robot_list = robot_list.filter(version__country__in=subdivisions.subs[country_code]).distinct()
             except KeyError:
-                robot_list = robot_list.filter(version__team__country=country_code).distinct()
+                robot_list = robot_list.filter(version__country=country_code).distinct()
         elif country_code == "GB":
-            robot_list = robot_list.filter(version__team__country__in=subdivisions.uk).distinct()
+            robot_list = robot_list.filter(version__country__in=subdivisions.uk).distinct()
         else:
-            robot_list = robot_list.filter(version__team__country=country_code).distinct()
+            robot_list = robot_list.filter(version__country=country_code).distinct()
 
     if name != "" and name is not None:
         robot_list = robot_list.filter(name__icontains=name).union(

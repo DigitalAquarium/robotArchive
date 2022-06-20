@@ -7,6 +7,9 @@
         display: inline-block;
         margin: 0.3em;
     }</style>
+    <script>
+
+    </script>
 {% endblock %}
 {% block content %}
     <form class="search-form" method="get"
@@ -16,12 +19,13 @@
             <input name="name" type="text" value={{ name }}>
         </label>
         <label> Country:
-            <select name="country">
+        <input list="country" name="country">
+            <datalist id="country">
                 {% for country in countries %}
                     <option value="{{ country|first }}"
                             {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
                 {% endfor %}
-            </select>
+            </datalist>
         </label>
         <label>Include Territories:
             <input name="regions" type="checkbox" checked>
@@ -37,9 +41,6 @@
         {% comment %}<label>Registration Open
             <input name="reg_open" type="checkbox" {% if reg_open %}checked{% endif %}>
     </label>{% endcomment %}
-        <label> Include Past Events:
-            <input name="past" type="checkbox" {% if past %}checked{% endif %}>
-        </label>
         {% comment %}<label for="distance">Distance: </label>
             <select id="distance" name="distance">
                 <option value="0" {% if distance == 0 %}selected{% endif %}></option>
