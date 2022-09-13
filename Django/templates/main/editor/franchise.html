@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load bonus_filters %}
+{% load static %}
+
+{% block meta %}
+    <title>Editor Home - Roboteer's Tavern</title>
+{% endblock %}
+
+{% block content %}
+    <section class="search-params">
+        <form class="search-form" method="get"
+          action="{% url "main:edtSelectFran" %}">
+             <label> Search Term:
+                <input name="name" type="text" value={{ name }}>
+            </label>
+            <br>
+            <input type="submit" value="Search">
+        </form>
+    </section>
+    <div class="main-content">
+     <br><a class="editor-link" href="{% url 'main:newFranchise' %}?redirect=/editor/newEvent">New Franchise</a><br>
+        <table>
+            <thead>
+            <tr>
+                <th>Logo</th>
+                <th>Franchise</th>
+                <th>Detail</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for fran in fran_list %}
+                <tr id="row-{{ fran.id }}" {% if forloop.counter|divisibleby:2 %}
+                    style="background-color: #eeeeee"{% endif %}>
+                    <td style="text-align: center; padding: 1px 0 0 1px;">
+                        <img class="franchise logo" style="width: 4em; height:2.5em; margin:0"
+                             src="{% if fran.logo %} {{ fran.logo.url }} {% else %} {% static "unknown.png" %}{% endif %}" alt="{{ fran.name }} logo"></td>
+                    <td><a href="{% url "main:edtNewEvent" %}?franchise={{ fran.id }}">{{ fran }}</a></td>
+                <td><a href="{% url "main:franchiseDetail" fran.id %}">Details</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -16,7 +16,75 @@ from main import subdivisions
 from .forms import *
 
 
-# TODO: Email stuff (low prio),Fight edit cleanup, auto person merging, Home page, leaderboard still needs smol css
+# to do for the old uni system Email stuff (low prio),Fight edit cleanup, auto person merging, Home page, leaderboard still needs smol css
+@login_required(login_url='/accounts/login/')
+def edt_home_view(request):
+    name = request.GET.get("name") or ""
+
+    event_list = Event.objects.all()
+
+    if name != "" and name is not None:
+        event_list = event_list.filter(name__icontains=name).union(
+            event_list.filter(contest__name__icontains=name)).union(
+            event_list.filter(franchise__name__icontains=name))
+
+    event_list = event_list.order_by("name").order_by("-start_date")
+
+    return render(request, "main/editor/home.html",
+                  {"event_list": event_list,
+                   "name": name,
+                   })
+
+
+@login_required(login_url='/accounts/login/')
+def edt_new_event_view(request):
+    # TODO: Add verification
+    fran_id = request.GET.get("franchise") or ""
+    if fran_id:
+        fran_id = int(fran_id)
+        fran = Franchise.objects.get(pk=fran_id)
+        if request.method == "POST":
+            form = NewEventFormEDT(request.POST)
+            if form.is_valid():
+                event = form.save(fran)
+                return redirect("main:edtEvent", event.id)
+        else:
+            form = NewEventFormEDT()
+    else:
+        fran = None
+        form = NewEventFormEDT()
+    return render(request, "main/editor/new_event.html", {"form": form, "fran": fran})
+
+def edt_event_view(request, event_id):
+    event = Event.objects.get(pk=event_id)
+    return render(request, "main/editor/edit_event.html",
+                  {"event": event})
+
+
+
+@login_required(login_url='/accounts/login/')
+def edt_fran_view(request):
+    name = request.GET.get("name") or ""
+
+    fran_list = Franchise.objects.all()
+
+    if name != "" and name is not None:
+        fran_list = fran_list.filter(name__icontains=name)
+
+    fran_list = fran_list.order_by("name")
+
+    return render(request, "main/editor/franchise.html",
+                  {"fran_list": fran_list,
+                   "name": name,
+                   })
+
+def edt_contest_view(request, contest_id):
+    contest = Contest.objects.get(pk=contest_id)
+    fights = Fight.objects.filter(contest=contest)
+    registrations = contest.registration_set.all().order_by("signup_time")
+    return render(request, "main/editor/contest.html",
+                  {"contest": contest, "fights": fights, "applications": registrations})
+
 
 @login_required(login_url='/accounts/login/')
 def delete_view(request, model, instance_id, next_id=None):
@@ -179,7 +247,7 @@ def event_detail_view(request, event_id):
 
 @login_required(login_url='/accounts/login/')
 def new_event_view(request, franchise_id):
-    fran = Franchise.objects.get(pk=franchise_id)  # TODO: Add verification
+    fran = Franchise.objects.get(pk=franchise_id)
     can_change = fran.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (
@@ -681,7 +749,7 @@ def franchise_modify_view(request, franchise_id=None):
 
 def franchise_detail_view(request, fran_id):
     fran = Franchise.objects.get(pk=fran_id)
-    pf = None
+    '''pf = None
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
         if can_change:
@@ -690,9 +758,10 @@ def franchise_detail_view(request, fran_id):
             except ObjectDoesNotExist:
                 pass
     else:
-        can_change = False
+        can_change = False'''
+    can_change = True  # TODO: lol
     return render(request, "main/franchise_detail.html",
-                  {"fran": fran, "can_change": can_change, "leave_id": pf.id or 1})
+                  {"fran": fran, "can_change": can_change, "leave_id": 1})  # pf.id or 1}) #TODO: lol
 
 
 def franchise_index_view(request):

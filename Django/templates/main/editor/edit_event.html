@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load bonus_filters %}
+{% load static %}
+{% block meta %}
+    <title>{{ event }} - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static "style/robot_detail.css" %}">
+{% endblock %}
+{% block content %}
+    <div class="main-content">
+        {% if event %}
+            <div class="version-block" style="display:block">
+                <div class="version-header">
+                    <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
+                    <p>{{ event }}</p>
+                </div>
+
+                <div class="version-content">
+                    <div class="version-image">
+                        <img class="fit-image"
+                             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %} {% endif %}"
+                             alt="Event Image">
+                    </div>
+                    <div class="version-text">
+                        <div class="version-mini-head">
+                            <span>Franchise : <a
+                                    href="{% url "main:franchiseDetail" event.franchise.id %}">{{ event.franchise }}</a></span>
+                            <span>Start Date: {{ event.start_date|date:"d F Y" }}</span>
+                            <span>End Date: {{ event.end_date|date:"d F Y" }}</span>
+                        </div>
+                        <div class="version-description">
+                            <p>{{ event.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Contests</h2>
+            <br><a class="editor-link" href="{% url 'main:newContest' event.id %}">New Contest</a><br>
+            {% if event.contest_set.all|length !=  0 %}
+                <div class="contest-table">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Contest Name</th>
+                            <th>Weight Class</th>
+                            <th>Fight Type</th>
+                        </tr>
+                        </thead>
+                        {% for contest in event.contest_set.all %}
+                            <tr>
+                                <td><a href="{% url 'main:edtContest' contest.id %}">{{ contest }}</a></td>
+                                <td>{{ contest.weight_class.weight_string }}</td>
+                                <td>{{ contest.get_fight_type_display }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% else %}
+                {% if can_change %}
+                    <h2 id="no-contest-warn">Warning: This event has no contests, please add one.</h2>
+                {% endif %}
+            {% endif %}
+
+               <p>There
+                {% if event.award_set.all|length == 1 %}
+                    was <a href="{% url "main:awardIndex" event.id %}">{{ event.award_set.all|length }} award</a>
+                {% else %}
+                    were <a href="{% url "main:awardIndex" event.id %}">{{ event.award_set.all|length }} awards</a>
+                {% endif %}
+                given out at this event</p>
+            <a class="editor-link" href="{% url 'main:newAward' event.id %}">Add Award</a>
+            {% if event.award_set.all|length > 0 %}
+                <table>
+                    <thead>
+                    <tr>
+                        <th></th>
+                        <th>Award Name</th>
+                        <th>Robot</th>
+                    </tr>
+                    </thead>
+                    {% for award in event.award_set.all %}
+                        <tr>
+                            <td><img class="award-icon" src="{{ award.get_icon }}" alt="award icon"></td>
+                            <td>{{ award }}</td>
+                            <td>{{ award.version }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+
+        {% else %}
+            Something appears to have gone wrong
+        {% endif %}
+    </div>
+{% endblock %}

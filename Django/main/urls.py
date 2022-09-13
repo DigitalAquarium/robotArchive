@@ -51,5 +51,14 @@ urlpatterns = [
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
     path('credits', views.credits_view, name='credits'),
+
+    path('editor/home', views.edt_home_view, name='edtHome'),
+    path('editor/newEvent', views.edt_new_event_view, name='edtNewEvent'),
+    path('editor/event/<int:event_id>', views.edt_event_view, name='edtEvent'),
+    path('editor/contest/<int:contest_id>', views.edt_contest_view, name='edtContest'),
+    path('editor/selectFranchise', views.edt_fran_view, name='edtSelectFran'),
+    path('editor/fight/', views.fight_edith_view, name='edtFightOverview'),
+    path('editor/fights/<int:fight_id>/details', views.fight_editj_view, name='edtFightDetails'),
+    path('editor/fights/<int:fight_id>/addRobot', views.modify_fight_version_view, name='edtFV'),
     #path('import', views.importView, name='import'),
 ]

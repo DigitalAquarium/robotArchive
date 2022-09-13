@@ -1,7 +1,15 @@
+import datetime
+import urllib
+import time
+from io import BytesIO
+from PIL import Image
+from django.core.files import File
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Max
 
 from .models import *
 
@@ -170,7 +178,6 @@ class FightForm(forms.ModelForm):
         fields = ["name", "fight_type", "method", "internal_media", "external_media"]
 
 
-
 class RobotFightForm(forms.ModelForm):
     class Meta:
         model = Fight_Version
@@ -225,3 +232,76 @@ class TransferRobotForm(forms.Form):
         team_id = self.cleaned_data.get('team_id')
         new_team = Team.objects.get(name=team_name, pk=team_id)
         return new_team
+
+
+class NewEventFormEDT(forms.Form):
+    name = forms.CharField(max_length=255, required=False)
+    description = forms.CharField(widget=forms.Textarea, required=False)
+    logo_img = forms.ImageField(required=False)
+    logo_txt = forms.URLField(required=False)
+    start_date = forms.DateField(required=True)
+    end_date = forms.DateField(required=False)
+    country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=True)
+    latitude = forms.FloatField(required=True)
+    longitude = forms.FloatField(required=True)
+    start_time = forms.TimeField(required=False)
+    end_time = forms.TimeField(required=False)
+
+    def save(self, franchise):
+        e = Event()
+        e.name = self.cleaned_data['name']
+        e.description = self.cleaned_data['description']
+        e.start_date = self.cleaned_data['start_date']
+        if not self.cleaned_data['end_date']:
+            e.end_date = self.cleaned_data['start_date']
+        else:
+            e.end_date = self.cleaned_data['end_date']
+        e.country = self.cleaned_data['country']
+        e.latitude = self.cleaned_data['latitude']
+        e.longitude = self.cleaned_data['longitude']
+        if not self.cleaned_data['start_time']:
+            e.start_time = datetime.time.fromisoformat("00:00")
+        else:
+            e.start_time = self.cleaned_data['start_time']
+        if not self.cleaned_data['end_time']:
+            e.end_time = datetime.time.fromisoformat("00:00")
+        else:
+            e.end_time = self.cleaned_data['end_time']
+        e.franchise = franchise
+
+        e.registration_open = e.registration_open = e.registration_close = datetime.datetime.strptime(
+            e.start_date.strftime("%Y-%m-%d"), "%Y-%m-%d")
+
+        if not self.cleaned_data['logo_img'] and not self.cleaned_data['logo_txt']:
+            pass
+        elif not self.cleaned_data['logo_img']:
+            save_img(self.cleaned_data['logo_txt'], e.logo, e.name)
+        else:
+            e.logo = self.cleaned_data['logo_img']
+
+        e.save()
+        return e
+
+
+def save_img(img_link, var, file_name):
+    az = re.compile("[^a-zA-Z0-9]")
+    l = 0
+    while True:
+        if l > 10:
+            break
+        try:
+            urllib.request.urlretrieve(img_link, "downloadImage")
+            break
+        except:
+            print("failed to save image:", img_link, "attempt:", l + 1)
+            time.sleep(2)
+            l += 1
+    if l > 10:
+        print("IMAGE FAILED TO SAVE: " + file_name)
+    img = Image.open("downloadImage")
+    rawData = BytesIO()
+    img.save(rawData, img.format)
+    fname = re.sub(az, "", file_name)
+    if len(fname) > 25:
+        fname = fname[:25]
+    var.save(fname + "." + img.format.lower(), File(rawData))
