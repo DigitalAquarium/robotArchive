@@ -55,11 +55,11 @@ def edt_new_event_view(request):
         form = NewEventFormEDT()
     return render(request, "main/editor/new_event.html", {"form": form, "fran": fran})
 
+
 def edt_event_view(request, event_id):
     event = Event.objects.get(pk=event_id)
     return render(request, "main/editor/edit_event.html",
                   {"event": event})
-
 
 
 @login_required(login_url='/accounts/login/')
@@ -78,12 +78,39 @@ def edt_fran_view(request):
                    "name": name,
                    })
 
+
 def edt_contest_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
     fights = Fight.objects.filter(contest=contest)
     registrations = contest.registration_set.all().order_by("signup_time")
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "fights": fights, "applications": registrations})
+
+
+def edt_fight_view(request, fight_id):
+    fight = Fight.objects.get(pk=fight_id)
+    has_winner = False
+    for fv in fight.fight_version_set.all():
+        if fv.won:
+            has_winner = True
+            break
+    can_change = fight.can_edit(request.user)
+    if not can_change:
+        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
+    if request.GET.get("save") == "true":
+        fight.calculate(commit=True)
+        return redirect("main:contestDetail", fight.contest.id)
+    if request.method == "POST":
+        form = FightForm(request.POST, request.FILES, instance=fight)
+        if form.is_valid():
+            f = form.save()
+            f.format_external_media()
+            f.set_media_type()
+
+            return redirect("main:editWholeFight", fight_id)
+    else:
+        form = FightForm(instance=fight)
+        return render(request, "main/editor/fight.html", {"form": form, "has_winner": has_winner, "fight": fight})
 
 
 @login_required(login_url='/accounts/login/')

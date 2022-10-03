@@ -176,6 +176,7 @@ class Robot(models.Model):
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
     ranking = models.FloatField(default=RANKING_DEFAULT)
+    lb_rank = models.IntegerField(default=0)
     opt_out = models.BooleanField(default=False)  # for opting out of rankings
     first_fought = models.DateField()
     last_fought = models.DateField()

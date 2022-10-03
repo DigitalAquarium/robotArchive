@@ -45,6 +45,7 @@
             <input style="margin: 0.2em" type="submit" value="Search">
         </form>
     </section>
+
     <div class="main-content">
         {% for robot in robot_list %}
             <div class="hrz-index-result">
@@ -55,8 +56,18 @@
                 </span>
                 <div class="hrz-index-content">
                     <span class="hrz-index-title">
+                    <a style="display:flex; color:inherit" href="{% url 'main:robotDetail' robot.id %}">
                         <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                        <a href="{% url 'main:robotDetail' robot.id %}">{{ robot.name }}</a>
+                        <span>
+                            {%if robot.lb_rank != 0%}<span style="font-weight: bold;font-style: italic;
+                                    color:  {% if robot.lb_rank == 1 %}gold
+                                            {% elif robot.lb_rank == 2 %}silver
+                                            {% elif robot.lb_rank == 3 %}darkgoldenrod
+                                            {%else%}purple{% endif %};">#{{ robot.lb_rank }}</span>{% endif %}
+                            <span>{{ robot.name }}</span>
+                            {% if robot.requires_translation %} <span class="alphanum">({{ robot.name_alphanum }})</span>{% endif %}
+                        </span>
+                    </a>
                     </span>
                     <span class="hrz-index-details">
                         {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
@@ -72,6 +83,7 @@
                             {{ robot.version_set.last.description }}
                         {% endif %}
                     </span>
+
                 </div>
             </div>
         {% endfor %}

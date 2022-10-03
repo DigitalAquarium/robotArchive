@@ -2,3 +2,5 @@ Question Mark Icon: <a href="https://www.flaticon.com/free-icons/question" title
 Flags: https://github.com/lipis/flag-icons
 Medal Icon: <a href="https://www.flaticon.com/free-icons/trophy" title="trophy icons">Trophy icons created by Freepik - Flaticon</a> : https://www.flaticon.com/premium-icon/medal_3113054
 Trophy Icon: <a href="https://www.flaticon.com/free-icons/trophy" title="trophy icons">Trophy icons created by Pixel perfect - Flaticon</a> : https://www.flaticon.com/free-icon/trophy_889518#
+Bin Icon: <a href="https://www.flaticon.com/free-icons/trash-can" title="trash can icons">Trash can icons created by IYAHICON - Flaticon</a> : https://www.flaticon.com/free-icon/trash-bin_5028066?term=bin&page=1&position=17&page=1&position=17&related_id=5028066&origin=tag
+Edit Icon: <a href="https://www.flaticon.com/free-icons/edit" title="edit icons">Edit icons created by Pixel perfect - Flaticon</a> : https://www.flaticon.com/free-icon/edit_1828270?term=edit&page=1&position=22&page=1&position=22&related_id=1828270&origin=style
