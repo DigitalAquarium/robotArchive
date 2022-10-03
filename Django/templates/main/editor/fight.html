@@ -11,7 +11,8 @@
     {% if fight %}
         <div class="main-content">
         <h1> {{ fight }}</h1>
-        <form method="post" enctype="multipart/form-data" action="{% url 'main:editJustFight' fight.id %}">
+        <h2>{{ fight.get_fight_type_display }}, {{ fight.get_method_display }}</h2>
+        <form method="post" enctype="multipart/form-data" action="{% url 'main:edtFightOverview' fight.id %}">
             {% csrf_token %}
             <fieldset>
                 <legend><h1>Edit Fight</h1></legend>
@@ -20,14 +21,18 @@
                 <input type="submit" value="Submit">
             </fieldset>
         </form>
+        <div style="text-align: center">
+        <a class="editor-link" href="{% url 'main:newFightVersion' fight.id %}">Add New Robot</a>
+        </div>
             <div class="gridview-row competitor-row">
                 {% for fv in fight.fight_version_set.all %}
                     <div class="gridview-square competitor-square" {% if has_winner %}style="background:{% if fv.won %}lightgreen{% else %}indianred{% endif %}{% endif %};" >
                         <div class="gridview-title">
+
                             <img class="flag-image" src="{{ fv.version.get_flag }}" alt="Flag">
                             <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
-                            <img class="flag-image" src="{% static "edit.png" %}" alt="Flag">
-                            <img class="flag-image" src="{% static "bin.png" %}" alt="Flag">
+                            <a href="{% url 'main:editFightVersion' fight.id fv.id %}"><img class="inline-image" src="{% static "edit.png" %}" alt="Flag"></a>
+                            <a href="{% url 'main:delete_noreturn' "fight_version" fv.id%}?redirect={% url 'main:edtFightOverview' fight.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Flag"></a>
                         </div>
                     {% if fv.tag_team != 0 %}
                         <div class="gridview-title team{{ fv.tag_team }}">Team {{ fv.tag_team }}</div>

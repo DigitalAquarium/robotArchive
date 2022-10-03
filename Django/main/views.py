@@ -107,15 +107,37 @@ def edt_fight_view(request, fight_id):
             f.format_external_media()
             f.set_media_type()
 
-            return redirect("main:editWholeFight", fight_id)
+            return redirect("main:edtFightOverview", fight_id)
     else:
         form = FightForm(instance=fight)
         return render(request, "main/editor/fight.html", {"form": form, "has_winner": has_winner, "fight": fight})
 
 
+def edt_select_robot_view(request,fight_id):
+    name = request.GET.get("name") or ""
+
+    robot_list = Robot.objects.all()
+
+    if name != "" and name is not None:
+        robot_list = robot_list.filter(name__icontains=name).union(
+            robot_list.filter(version__name__icontains=name)).union(
+            robot_list.filter(version__team__name__icontains=name))
+
+    robot_list = robot_list.order_by("name")[:50]
+
+    return render(request, "main/editor/select_robot.html",
+                  {"robot_list": robot_list,
+                   "name": name, "fight_id": fight_id
+                   })
+
+
 @login_required(login_url='/accounts/login/')
-def delete_view(request, model, instance_id, next_id=None):
-    next_url = reverse("main:index")
+def delete_view(request, model, instance_id=None, next_id=None):
+    redir = request.GET.get("redirect")
+    if redir != "" and redir is not None:
+        next_url = redir
+    else:
+        next_url = reverse("main:index")
 
     if model == "person":
         instance = Person.objects.get(pk=instance_id)
@@ -171,7 +193,8 @@ def delete_view(request, model, instance_id, next_id=None):
 
         return redirect(next_url)
     else:
-        return render(request, "main/delete.html", {"instance": instance, "model": model, "next_id": next_id})
+        return render(request, "main/delete.html",
+                      {"instance": instance, "model": model, "next_id": next_id, "redirect": redir})
 
 
 def index_view(request):
@@ -881,13 +904,17 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
     return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/accounts/login/')  # Still Being Used
 def modify_fight_version_view(request, fight_id, vf_id=None):
+    editor = request.GET.get("editor") or ""
     fight = Fight.objects.get(pk=fight_id)
+    editor = editor.lower() == "true"
+
     can_change = fight.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
     registered = Version.objects.filter(registration__contest=fight.contest.id)
+
     if vf_id is not None:
         vf = Fight_Version.objects.get(pk=vf_id)
     else:
@@ -896,11 +923,14 @@ def modify_fight_version_view(request, fight_id, vf_id=None):
     form = RobotFightForm(request.POST or None, instance=vf)
     if form.is_valid():
         form.save()
-        return redirect("main:editWholeFight", fight_id)
+        if editor:
+            return redirect("main:edtFightOverview")
+        else:
+            return redirect("main:editWholeFight", fight_id)
     form.fields['version'].queryset = registered
 
     return render(request, "main/modify_fight_version.html",
-                  {"form": form, "fight_id": fight_id, "fight_version_id": vf_id})
+                  {"form": form, "fight_id": fight_id, "fight_version_id": vf_id, "editor": editor})
     # TODO: This is basically identical to modify_fight and probably many more
 
 

@@ -1,14 +1,18 @@
 .team1{
-    background:yellow;
+    text-decoration: underline;
+    text-decoration-color:yellow;
 }
 .team2{
-    background:mediumpurple;
+    text-decoration: underline;
+    text-decoration-color:mediumpurple;
 }
 .team3{
-    background:cornflowerblue;
+    text-decoration: underline;
+    text-decoration-color:deepskyblue;
 }
 .team4{
-    background:lawngreen;
+    text-decoration: underline;
+    text-decoration-color:lime;
 }
 .has-tag-team{
     height:80%;

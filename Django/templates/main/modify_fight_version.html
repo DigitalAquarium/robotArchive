@@ -16,6 +16,11 @@
         <input type="submit" value="Submit">
     </fieldset>
     </form>
+        {% if editor %}
+            <div style="text-align: center">
+            <a class="editor-link" href="{% url 'main:edtSelectRobot' fight_id %}">Sign up new robot</a>
+            </div>
+        {% endif %}
     {% else %}
         Something has gone wrong
     {% endif %}
