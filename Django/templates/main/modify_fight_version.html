@@ -3,24 +3,24 @@
 {% load crispy_forms_tags %}
 {% block content %}
     {% if fight_id %}
-        {% if fight_version_id %}
-            <form method="post" action="{% url 'main:editFightVersion' fight_id fight_version_id %}">
-        {% else %}
-            <form method="post" action="{% url 'main:newFightVersion' fight_id %}">
-        {% endif %}
-    {% csrf_token %}
-    <fieldset>
-        <legend><h1>Edit Competitor</h1></legend>
-        {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-            {{ form | crispy }}
-        <input type="submit" value="Submit">
-    </fieldset>
-    </form>
         {% if editor %}
             <div style="text-align: center">
             <a class="editor-link" href="{% url 'main:edtSelectRobot' fight_id %}">Sign up new robot</a>
             </div>
         {% endif %}
+        {% if fight_version_id %}
+            <form method="post" action="{% url 'main:editFightVersion' fight_id fight_version_id %}?editor={{ editor }}">
+        {% else %}
+            <form method="post" action="{% url 'main:newFightVersion' fight_id %}?editor={{ editor }}">
+        {% endif %}
+    {% csrf_token %}
+    <fieldset>
+        <legend><h1>{% if fight_version_id %}Edit{% else %}Add{% endif %} Competitor</h1></legend>
+        {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            {{ form | crispy }}
+        <input type="submit" value="Submit">
+    </fieldset>
+    </form>
     {% else %}
         Something has gone wrong
     {% endif %}

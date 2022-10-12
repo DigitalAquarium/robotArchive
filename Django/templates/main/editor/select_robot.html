@@ -35,14 +35,14 @@
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
                              src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ robot.name }} image"></td>
                     <td style="text-align: center"><img class="flag-image" src="{{ robot.get_flag }}" alt="{{ robot.version_set.last.country|upper }} Flag"></td>
-                    <td><a href="{% url "main:edtEvent" robot.id %}">{{ robot }}</a></td>
+                    <td><a href="{% url "main:edtSelectVersion" fight_id robot.id %}">{{ robot }}</a></td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
-    {% if pages > 1 %}
+    {% comment %}{% if pages > 1 %}{% endcomment %}
             <div class="page-nav">
-                {% url "main:robotIndex" as this %}
+                {% url "main:edtSelectRobot" fight_id as this %}
                 <ul class="page-select">
                     <li>{% if page > 1 %}
                         <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
@@ -75,6 +75,6 @@
                     {% endif %}</li>
                 </ul>
             </div>
-        {% endif %}
+        {% comment %}{% endif %}{% endcomment %}
     </div>
 {% endblock %}

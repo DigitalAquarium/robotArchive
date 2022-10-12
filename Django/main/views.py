@@ -113,22 +113,66 @@ def edt_fight_view(request, fight_id):
         return render(request, "main/editor/fight.html", {"form": form, "has_winner": has_winner, "fight": fight})
 
 
-def edt_select_robot_view(request,fight_id):
+def edt_select_robot_view(request, fight_id):
     name = request.GET.get("name") or ""
+    ignore_wc = request.GET.get("nowc")
+    page = request.GET.get("page")
+    try:
+        page = int(page)
+    except (ValueError, TypeError):
+        page = 1
+    try:
+        ignore_wc = bool(ignore_wc)
+    except (ValueError, TypeError):
+        ignore_wc = False
 
-    robot_list = Robot.objects.all()
+    if ignore_wc:
+        robot_list = Robot.objects.all()
+    else:
+        fight = Fight.objects.get(id=fight_id)
+        wclass = fight.contest.weight_class.weight_grams
+        robot_list = Robot.get_by_rough_weight(wclass)
 
     if name != "" and name is not None:
         robot_list = robot_list.filter(name__icontains=name).union(
             robot_list.filter(version__name__icontains=name)).union(
             robot_list.filter(version__team__name__icontains=name))
 
-    robot_list = robot_list.order_by("name")[:50]
+    robot_list = robot_list.order_by("name")
+    num = 50
+    results = len(robot_list)
+    robot_list = robot_list[num * (page - 1):num * page]
 
     return render(request, "main/editor/select_robot.html",
                   {"robot_list": robot_list,
-                   "name": name, "fight_id": fight_id
+                   "name": name, "fight_id": fight_id, "page": page,
+                   "pages": results // num if results % num == 0 else results // num + 1
                    })
+
+
+def edt_select_version_view(request, fight_id, robot_id):
+    robot = Robot.objects.get(id=robot_id)
+    return render(request, "main/editor/select_version.html",
+                  {"robot": robot, "fight_id": fight_id})
+
+
+def edt_signup_version_view(request, fight_id, version_id):
+    fight = Fight.objects.get(id=fight_id)
+    version = Version.objects.get(id=version_id)
+    contest = fight.contest
+    fv = Fight_Version()
+    fv.fight = fight
+    fv.version = version
+    fv.won = False
+    fv.save()
+
+    reg = Registration()
+    reg.contest = contest
+    reg.version = version
+    reg.approved = True
+    reg.signee = version.owner
+    reg.save()
+    return redirect("%s?editor=True" % reverse("main:editFightVersion", args=[fight_id, fv.id]))
 
 
 @login_required(login_url='/accounts/login/')
@@ -924,14 +968,14 @@ def modify_fight_version_view(request, fight_id, vf_id=None):
     if form.is_valid():
         form.save()
         if editor:
-            return redirect("main:edtFightOverview")
+            return redirect("main:edtFightOverview", fight.id)
         else:
             return redirect("main:editWholeFight", fight_id)
     form.fields['version'].queryset = registered
 
     return render(request, "main/modify_fight_version.html",
                   {"form": form, "fight_id": fight_id, "fight_version_id": vf_id, "editor": editor})
-    # TODO: This is basically identical to modify_fight and probably many more
+    # TODO: This is basically identical to modify_fight and probably many more (maybe not anymore?)
 
 
 def award_index_view(request, event_id):

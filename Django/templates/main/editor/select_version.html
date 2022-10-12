@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+{% block meta %}
+    <title> Roboteer's Tavern </title>
+    <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'style/edit_fight.css' %}">
+{% endblock %}
+{% block content %}
+    {% if robot %}
+        <div class="main-content">
+        <h1> {{ robot }}</h1>
+        <div style="text-align: center">
+        <a class="editor-link" href="{% url 'main:newFightVersion' fight_id %}?editor=true">Add New Version</a>
+        </div>
+            <div class="gridview-row competitor-row">
+                {% for version in robot.version_set.all %}
+                    <div class="gridview-square competitor-square">
+                        <div class="gridview-title">
+
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
+                            <a href="{% url 'main:edtSignupVersion' fight_id version.id %}">{{ version }}</a>
+                        </div>
+                    <div class="gridview-image-container">
+                            <img class="fit-image" src="
+                                    {% if version.image %}{{ version.image.url }} {% else %}{% static "unknown.png" %}{% endif %}"
+                                 alt="Robot Image">
+                        </div>
+                    </div>
+
+                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                        </div>
+                        <div class="gridview-row">
+                    {% endif %}
+                {% endfor %}
+                </div>
+    {% else %}
+        something has gone wrong
+    {% endif %}
+</div>
+{% endblock %}
