@@ -6,7 +6,7 @@
 {% endblock %}
 {% block content %}
     <div class="main-content">
-        <form method="post" enctype="multipart/form-data" action="{% url 'main:newRobot' team.id %}">
+        <form method="post" enctype="multipart/form-data" action="{% url 'main:newRobot' %}?team={{ team }}{% if not fight_id == 0 %}&fight={{ fight }}{% endif %}">
             {% csrf_token %}
             <fieldset>
                 <legend><h1>Create New Robot</h1></legend>

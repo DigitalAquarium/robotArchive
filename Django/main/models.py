@@ -178,8 +178,8 @@ class Robot(models.Model):
     ranking = models.FloatField(default=RANKING_DEFAULT)
     lb_rank = models.IntegerField(default=0)
     opt_out = models.BooleanField(default=False)  # for opting out of rankings
-    first_fought = models.DateField()
-    last_fought = models.DateField()
+    first_fought = models.DateField(blank=True, null=True)
+    last_fought = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -263,8 +263,8 @@ class Version(models.Model):
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='robot_images/%Y/', blank=True)
     weapon_type = models.CharField(max_length=20)
-    first_fought = models.DateField()
-    last_fought = models.DateField()
+    first_fought = models.DateField(blank=True, null=True)
+    last_fought = models.DateField(blank=True, null=True)
 
     robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
     owner = models.ForeignKey(Person, on_delete=models.CASCADE)
@@ -811,7 +811,7 @@ class Fight_Version(models.Model):
 # TODO: This should maybe be another module, requires database but idk how to like, do it otherwise.
 class Ascii_Lookup(models.Model):
     old_char = models.CharField(max_length=1)
-    new_char = models.CharField(max_length=10,blank=True)
+    new_char = models.CharField(max_length=10, blank=True)
     requires_translation = models.BooleanField(default=False)
 
 

@@ -12,7 +12,7 @@
         <div class="main-content">
         <h1> {{ robot }}</h1>
         <div style="text-align: center">
-        <a class="editor-link" href="{% url 'main:newFightVersion' fight_id %}?editor=true">Add New Version</a>
+        <a class="editor-link" href="{% url 'main:newVersion' robot.id %}?fight_id={{ fight_id }}">Add New Version</a>
         </div>
             <div class="gridview-row competitor-row">
                 {% for version in robot.version_set.all %}

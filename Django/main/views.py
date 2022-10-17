@@ -677,25 +677,33 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
 
 @login_required(login_url='/accounts/login/')
 def new_version_view(request, robot_id):
+    fight_id = request.GET.get("fight_id") # If not 0, is editor.
+    try:
+        fight_id = int(fight_id)
+    except (ValueError, TypeError):
+        fight_id = 0
     robot = Robot.objects.get(pk=robot_id)
     can_change = robot.can_edit(request.user)
-    # if request.is_staff:
-    #    valid_teams = Team.objects.all()
-    # else:
-    valid_teams = Team.objects.filter(members__user=request.user)
     if not can_change:
         return redirect(
             "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this robot."))
+    valid_teams = Team.objects.filter(members__user=request.user)
+    if fight_id != 0:
+        valid_teams = Team.objects.filter(version__in=Version.objects.filter(robot=robot)).distinct()
     if request.method == "POST":
         form = NewVersionForm(request.POST, request.FILES)
         form.fields['team'].queryset = valid_teams
         if form.is_valid():
-            version = form.save(robot)
-            return redirect("main:versionDetail", version.id)
+            version = form.save(robot, Person.objects.get(user=request.user))
+            if fight_id != 0:
+                return redirect("main:edtSignupVersion", fight_id, version.id)
+            else:
+                return redirect("main:versionDetail", version.id)
     else:
         form = NewVersionForm()
         form.fields['team'].queryset = valid_teams
-    return render(request, "main/edit_version.html", {"form": form, "robot": robot, "new": True})
+    return render(request, "main/edit_version.html",
+                  {"form": form, "robot": robot, "new": True, "fight_id": fight_id})
 
 
 def team_detail_view(request, team_id):
@@ -754,21 +762,30 @@ def team_index_view(request):
                    })
 
 
-@login_required(login_url='/accounts/login/')
-def new_robot_view(request, team_id):
-    team = Team.objects.get(pk=team_id)
-    can_change = team.can_edit(request.user)
-    if not can_change:
-        return redirect(
-            "%s?m=%s" % (reverse("main:message"), "You do not have permission to create a new robot for this team."))
+@login_required(login_url='/accounts/login/') #TODO: No validation anymore
+def new_robot_view(request):
+    fight = request.GET.get("fight")
+    team = request.GET.get("team")
+    try:
+        fight = int(fight)
+    except (ValueError, TypeError):
+        fight = 0
+    try:
+        team = int(team)
+    except (ValueError, TypeError):
+        team = 0
+
     if request.method == "POST":
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save(team)
-            return redirect("main:index")
+            v = form.save(team, Person.objects.get(user=request.user))[1]
+            if fight != 0:
+                return redirect("main:edtSignupVersion", fight, v.id)
+            else:
+                return redirect("main:index")
     else:
         form = NewRobotForm()
-    return render(request, "main/new_robot.html", {"form": form, "team": team})
+    return render(request, "main/new_robot.html", {"form": form, "team": team, "fight": fight})
 
 
 def version_detail_view(request, version_id):

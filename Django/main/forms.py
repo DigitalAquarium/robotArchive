@@ -84,6 +84,7 @@ class AnonSignupForm(forms.Form):
 
 class NewRobotForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
+    country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
     img = forms.ImageField(required=False)
     weapon_type = forms.CharField(max_length=20, required=True)
@@ -91,40 +92,51 @@ class NewRobotForm(forms.Form):
                                           required=True)
     opt_out = forms.BooleanField(required=False)
 
-    def save(self, team):
+    def save(self, team,owner):
         r = Robot()
         v = Version()
         r.name = self.cleaned_data['name']
+        r.country = self.cleaned_data['country']
+        v.country = self.cleaned_data['country']
         r.description = self.cleaned_data['description']
         r.opt_out = self.cleaned_data['opt_out']
         v.robot = r
         v.image = self.cleaned_data['img']
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']
-        v.team = team
+        v.owner = owner
+        if team != 0:
+            v.team = team
         r.save()
         v.save()
+        return r, v
 
 
 class NewVersionForm(forms.Form):
     robot_name = forms.CharField(max_length=255, required=False)
-    version_name = forms.CharField(max_length=255, required=True)
+    version_name = forms.CharField(max_length=255, required=False)
+    country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
     img = forms.ImageField(required=False)
     weapon_type = forms.CharField(max_length=20, required=True)
     weight_class = forms.ModelChoiceField(queryset=Weight_Class.objects.all().order_by("-recommended", "weight_grams"),
                                           required=True)
-    team = forms.ModelChoiceField(queryset=None, required=True)
+    team = forms.ModelChoiceField(queryset=None, required=False)
 
-    def save(self, robot):
+    def save(self, robot, owner):
         v = Version()
         v.robot = robot
+        if self.cleaned_data['country'] and self.cleaned_data['country'] != "XX":
+            v.country = self.cleaned_data['country']
+        else:
+            v.country = robot.country
         v.robot_name = self.cleaned_data['robot_name']
-        v.name = self.cleaned_data['name']
+        v.version_name = self.cleaned_data['version_name']
         v.image = self.cleaned_data['img']
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']
         v.team = self.cleaned_data['team']
+        v.owner = owner
         v.save()
         return v
 
