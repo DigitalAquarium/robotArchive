@@ -39,7 +39,7 @@
             {% endif %}
             <h2>Robots:</h2>
             {% if can_change %}
-                <a class="editor-link" href="{% url 'main:newRobot' team.id %}">New Robot</a>
+                <a class="editor-link" href="{% url 'main:newRobot'%}?team=team.id">New Robot</a>
             {% endif %}
             <div class="gridview-row">
                 {% for robot in team.robots %}

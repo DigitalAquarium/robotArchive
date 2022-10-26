@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load bonus_filters %}
+{% load static %}
+
+{% block meta %}
+    <title>Select Team - Roboteer's Tavern</title>
+{% endblock %}
+
+{% block content %}
+    <section class="search-params">
+        <form class="search-form" method="get"
+          action="{% url "main:edtSelectTeam" fight_id %}">
+             <label> Search Term:
+                <input name="name" type="text" value={{ name }}>
+            </label>
+            <br>
+            <input type="submit" value="Search">
+        </form>
+    </section>
+    <div class="main-content">
+     <br><a class="editor-link" href="{% url 'main:newTeam' %}?fight={{ fight_id }}">New Team</a><br>
+        <table>
+            <thead>
+            <tr>
+                <th>Image</th>
+                <th></th>
+                <th>Team</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for team in team_list %}
+                <tr id="row-{{ event.id }}" {% if forloop.counter|divisibleby:2 %}
+                    style="background-color: #eeeeee"{% endif %}>
+                    <td style="text-align: center; padding: 1px 0 0 1px;">
+                        <img class="event logo" style="width: 4em; height:2.5em; margin:0"
+                             src="{% if team.logo %} {{ team.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ team.name }} image"></td>
+                    <td style="text-align: center"><img class="flag-image" src="{{ team.get_flag }}" alt="{{ team.country|upper }} Flag"></td>
+                    <td><a href="{% url "main:edtSelectTeam" fight_id %}?team={{team.id}}">{{ team }}</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% if pages > 1 %}
+            <div class="page-nav">
+                {% url "main:edtSelectTeam" fight_id as this %}
+                <ul class="page-select">
+                    <li>{% if page > 1 %}
+                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
+                    {% endif %}</li>
+
+                    <li>{% if page > 5 %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
+                    {% endif %}</li>
+
+                    <li>{% if page > 1 %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
+                    {% endif %}</li>
+
+                    <li>{{ page }}</li>
+
+                    <li>{% if page < pages %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
+                    {% endif %}</li>
+
+                    <li>{% if page < pages|add:"-5" %}
+                        <a href="
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
+                    {% endif %}</li>
+
+                    <li>{% if page < pages %}
+                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
+                    {% endif %}</li>
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

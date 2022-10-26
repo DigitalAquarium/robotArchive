@@ -6,14 +6,18 @@
 {% endblock %}
 {% block content %}
     <div class="main-content">
-        <form method="post" enctype="multipart/form-data" action="{% url 'main:newRobot' %}?team={{ team }}{% if not fight_id == 0 %}&fight={{ fight }}{% endif %}">
+        <form method="post" enctype="multipart/form-data" action="{% url 'main:newRobot' %}?team={% if team %}{{ team.id }}{% else %}None{% endif %}{% if not fight_id == 0 %}&fight={{ fight_id }}{% endif %}">
             {% csrf_token %}
             <fieldset>
                 <legend><h1>Create New Robot</h1></legend>
                 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
                 {{ form|crispy }}
+                {% if team %} {{ team }}<br>{% endif %}
                 <input type="submit" value="Create">
             </fieldset>
         </form>
+    {% if not fight_id == 0 %}
+        <a class="editor-link" href="{% url 'main:edtSelectTeam' fight_id %}">Select Team</a>
+    {% endif %}
     </div>
 {% endblock %}

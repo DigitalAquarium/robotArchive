@@ -97,17 +97,19 @@ def edt_fight_view(request, fight_id):
     can_change = fight.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
-    if request.GET.get("save") == "true":
-        fight.calculate(commit=True)
-        return redirect("main:contestDetail", fight.contest.id)
+
     if request.method == "POST":
+        print(request.POST)
         form = FightForm(request.POST, request.FILES, instance=fight)
         if form.is_valid():
             f = form.save()
             f.format_external_media()
             f.set_media_type()
-
-            return redirect("main:edtFightOverview", fight_id)
+            if "save" in request.POST:
+                fight.calculate(commit=True)
+                return redirect("main:edtContest", fight.contest.id)
+            else:
+                return redirect("main:edtFightOverview", fight_id)
     else:
         form = FightForm(instance=fight)
         return render(request, "main/editor/fight.html", {"form": form, "has_winner": has_winner, "fight": fight})
@@ -145,6 +147,36 @@ def edt_select_robot_view(request, fight_id):
 
     return render(request, "main/editor/select_robot.html",
                   {"robot_list": robot_list,
+                   "name": name, "fight_id": fight_id, "page": page,
+                   "pages": results // num if results % num == 0 else results // num + 1
+                   })
+
+
+def edt_select_team_view(request, fight_id):
+    name = request.GET.get("name") or ""
+    page = request.GET.get("page")
+    selected_team = request.GET.get("team")
+    try:
+        page = int(page)
+    except (ValueError, TypeError):
+        page = 1
+    try:
+        selected_team = int(selected_team)
+        return redirect("%s?team=%s&fight=%s" % (reverse("main:newRobot"), selected_team, fight_id))
+    except (ValueError, TypeError):
+        pass
+
+    team_list = Team.objects.all()
+    if name != "" and name is not None:
+        team_list = team_list.filter(name__icontains=name)
+
+    team_list = team_list.order_by("name")
+    num = 50
+    results = len(team_list)
+    team_list = team_list[num * (page - 1):num * page]
+
+    return render(request, "main/editor/select_team.html",
+                  {"team_list": team_list,
                    "name": name, "fight_id": fight_id, "page": page,
                    "pages": results // num if results % num == 0 else results // num + 1
                    })
@@ -677,7 +709,7 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
 
 @login_required(login_url='/accounts/login/')
 def new_version_view(request, robot_id):
-    fight_id = request.GET.get("fight_id") # If not 0, is editor.
+    fight_id = request.GET.get("fight_id")  # If not 0, is editor.
     try:
         fight_id = int(fight_id)
     except (ValueError, TypeError):
@@ -762,30 +794,31 @@ def team_index_view(request):
                    })
 
 
-@login_required(login_url='/accounts/login/') #TODO: No validation anymore
+@login_required(login_url='/accounts/login/')  # TODO: No validation anymore
 def new_robot_view(request):
-    fight = request.GET.get("fight")
-    team = request.GET.get("team")
+    fight_id = request.GET.get("fight")
+    team_id = request.GET.get("team")
     try:
-        fight = int(fight)
+        fight_id = int(fight_id)
     except (ValueError, TypeError):
-        fight = 0
+        fight_id = 0
     try:
-        team = int(team)
+        team_id = int(team_id)
+        team = Team.objects.get(id=team_id)
     except (ValueError, TypeError):
-        team = 0
+        team = None
 
     if request.method == "POST":
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
             v = form.save(team, Person.objects.get(user=request.user))[1]
-            if fight != 0:
-                return redirect("main:edtSignupVersion", fight, v.id)
+            if fight_id != 0:
+                return redirect("main:edtSignupVersion", fight_id, v.id)
             else:
                 return redirect("main:index")
     else:
         form = NewRobotForm()
-    return render(request, "main/new_robot.html", {"form": form, "team": team, "fight": fight})
+    return render(request, "main/new_robot.html", {"form": form, "team": team, "fight_id": fight_id})
 
 
 def version_detail_view(request, version_id):
@@ -796,12 +829,19 @@ def version_detail_view(request, version_id):
 
 @login_required(login_url='/accounts/login/')
 def team_edit_view(request, team_id=None):
+    fight_id = request.GET.get("fight")
+    try:
+        fight_id = int(fight_id)
+    except (ValueError, TypeError):
+        fight_id = 0
+
     can_change = True
     if team_id is not None:
         team = Team.objects.get(pk=team_id)
         can_change = team.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this team."))
+
     if request.method == "POST":
         if team_id is None:
             form = TeamForm(request.POST, request.FILES)
@@ -810,6 +850,10 @@ def team_edit_view(request, team_id=None):
             form = TeamForm(request.POST, request.FILES, instance=team)
         if form.is_valid():
             new = form.save()
+            if fight_id:
+                # person = Person.objects.get(id=1)
+                # Person_Team.objects.create(team=new, person=person)
+                return redirect("%s?team=%s" % (reverse("main:edtSelectTeam", args=[fight_id]), new.id))
             if team_id is None:
                 person = Person.objects.get(user=request.user)
                 Person_Team.objects.create(team=new, person=person)
@@ -821,7 +865,7 @@ def team_edit_view(request, team_id=None):
             team = Team.objects.get(pk=team_id)
             form = TeamForm(instance=team)
     if team_id is None:
-        return render(request, "main/edit_team.html", {"form": form, "team_id": team_id})
+        return render(request, "main/edit_team.html", {"form": form, "team_id": team_id,"fight_id":fight_id})
     else:
         return render(request, "main/edit_team.html", {"form": form, "team_id": team_id})
 
@@ -915,11 +959,17 @@ def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the sa
             f.number = prevFight.number + 1
     if contest.fight_type == "MU":
         f.save()
-        return redirect("main:editJustFight", f.id)
+        if request.GET.get("editor") == "true":
+            return redirect("main:edtFightOverview", f.id)
+        else:
+            return redirect("main:editJustFight", f.id)
     else:
         f.fight_type = contest.fight_type
         f.save()
-        return redirect("main:editWholeFight", f.id)
+        if request.GET.get("editor") == "true":
+            return redirect("main:edtFightOverview", f.id)
+        else:
+            return redirect("main:editWholeFight", f.id)
 
 
 @login_required(login_url='/accounts/login/')

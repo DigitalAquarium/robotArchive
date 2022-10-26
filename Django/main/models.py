@@ -57,7 +57,7 @@ class Team(models.Model):
     name = models.CharField(max_length=255)
     logo = models.ImageField(upload_to='team_logos/%Y/', blank=True)
     website = models.URLField(blank=True)
-    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES)
+    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     members = models.ManyToManyField(Person, through="Person_Team")
 
     def __str__(self):
@@ -171,7 +171,7 @@ class Robot(models.Model):
     name_alphanum = models.CharField(max_length=255, blank=True)
     requires_translation = models.BooleanField(default=False)
 
-    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES)
+    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     description = models.TextField(blank=True)
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
@@ -259,7 +259,7 @@ class Version(models.Model):
     name = models.CharField(max_length=255)
     requires_translation = models.BooleanField(default=False)
 
-    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES)
+    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='robot_images/%Y/', blank=True)
     weapon_type = models.CharField(max_length=20)
@@ -331,7 +331,7 @@ class Event(models.Model):
     end_time = models.TimeField()
     registration_open = models.DateTimeField()
     registration_close = models.DateTimeField()
-    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES)
+    country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     latitude = models.FloatField()
     longitude = models.FloatField()
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
@@ -566,8 +566,21 @@ class Fight(models.Model):
                     fv.version.robot.wins += 1
                 else:
                     fv.version.robot.losses += 1
+
+        #Update when fought
+        vupdateFlag = False
+        for fv in fvs:
+            if not fv.version.first_fought or fv.version.first_fought > fv.fight.contest.event.start_date:
+                fv.version.first_fought = fv.fight.contest.event.start_date
+                vupdateFlag = True
+            if not fv.version.last_fought or fv.version.last_fought < fv.fight.contest.event.end_date:
+                fv.version.last_fought = fv.fight.contest.event.end_date
+                vupdateFlag = True
+
         if commit:
             for fv in fvs:
+                if vupdateFlag:
+                    fv.version.save()
                 fv.version.robot.save()
                 fv.save()
         return fvs

@@ -84,6 +84,7 @@ class AnonSignupForm(forms.Form):
 
 class NewRobotForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
+    vname = forms.CharField(max_length=255, required=False, label="Name of first version if different from main name")
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
     img = forms.ImageField(required=False)
@@ -96,6 +97,7 @@ class NewRobotForm(forms.Form):
         r = Robot()
         v = Version()
         r.name = self.cleaned_data['name']
+        v.robot_name = self.cleaned_data['vname']
         r.country = self.cleaned_data['country']
         v.country = self.cleaned_data['country']
         r.description = self.cleaned_data['description']
