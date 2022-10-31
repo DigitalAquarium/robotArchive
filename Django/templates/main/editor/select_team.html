@@ -9,7 +9,7 @@
 {% block content %}
     <section class="search-params">
         <form class="search-form" method="get"
-          action="{% url "main:edtSelectTeam" fight_id %}">
+          action="{% url "main:edtSelectTeam" fight_id %}&v={{ v }}">
              <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>
@@ -18,7 +18,7 @@
         </form>
     </section>
     <div class="main-content">
-     <br><a class="editor-link" href="{% url 'main:newTeam' %}?fight={{ fight_id }}">New Team</a><br>
+     <br><a class="editor-link" href="{% url 'main:newTeam' %}?fight={{ fight_id }}&v={{ v }}">New Team</a><br>
         <table>
             <thead>
             <tr>
@@ -33,9 +33,9 @@
                     style="background-color: #eeeeee"{% endif %}>
                     <td style="text-align: center; padding: 1px 0 0 1px;">
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
-                             src="{% if team.logo %} {{ team.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ team.name }} image"></td>
+                             src="{% if team.logo %} {{ team.logo.url }} {% elif team.version_set.first %} {{ team.version_set.last.image.url}} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ team.name }} image"></td>
                     <td style="text-align: center"><img class="flag-image" src="{{ team.get_flag }}" alt="{{ team.country|upper }} Flag"></td>
-                    <td><a href="{% url "main:edtSelectTeam" fight_id %}?team={{team.id}}">{{ team }}</a></td>
+                    <td><a href="{% url "main:edtSelectTeam" fight_id %}?team={{team.id}}&v={{ v }}">{{ team }}</a></td>
                 </tr>
             {% endfor %}
             </tbody>

@@ -9,7 +9,8 @@
         <div class="heading">
         <h1>{{ contest }}</h1>
         </div>
-
+        <br>
+        <a href="{% url "main:edtEvent" contest.event.id %}">Back</a>
         <br>
         <a class="editor-link" href="{% url 'main:newFight' contest.id %}?editor=true">Add Fight</a>
         <br>

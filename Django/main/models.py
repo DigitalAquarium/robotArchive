@@ -237,10 +237,7 @@ class Robot(models.Model):
             self.ranking -= fv.ranking_change
 
     def get_flag(self):
-        try:
-            return self.version_set.last().get_flag()
-        except:
-            return get_flag("xx")
+        return get_flag(self.country)
 
     def awards(self):
         awards = []
@@ -567,7 +564,7 @@ class Fight(models.Model):
                 else:
                     fv.version.robot.losses += 1
 
-        #Update when fought
+        # Update when fought
         vupdateFlag = False
         for fv in fvs:
             if not fv.version.first_fought or fv.version.first_fought > fv.fight.contest.event.start_date:
@@ -726,17 +723,36 @@ class Fight(models.Model):
         try:
             if self.name is not None and self.name != "":
                 return self.name
-            elif self.competitors.count() >= 2:  # TODO: Fix this for team stuff
+            elif self.competitors.count() >= 2:
                 ret = ""
-                for version in self.competitors.all():
-                    if version.robot_name != "" and version.robot_name is not None:
-                        ret += " vs " + version.robot_name  # __str__()
-                    else:
-                        ret += " vs " + version.robot.name
-                return ret[4:]
+                if self.fight_version_set.first().tag_team != 0:
+                    tags = {}
+                    for fv in self.fight_version_set.all():
+                        try:
+                            tags[fv.tag_team].append(fv.version)
+                        except KeyError:
+                            tags[fv.tag_team] = [fv.version]
+                    for tt in tags.values():
+                        teamname = ""
+                        for version in tt:
+                            if version.robot_name != "" and version.robot_name is not None:
+                                teamname += " & " + version.robot_name  # __str__()
+                            else:
+                                teamname += " & " + version.robot.name
+                        ret += teamname[3:] + " vs "
+                    return ret[:-4]
+
+                else:
+                    for version in self.competitors.all():
+                        if version.robot_name != "" and version.robot_name is not None:
+                            ret += " vs " + version.robot_name  # __str__()
+                        else:
+                            ret += " vs " + version.robot.name
+                    return ret[4:]
             else:
                 return "A fight with less than two robots"
-        except:
+        except Exception as e:
+            print(e)
             return "Trying to name this fight is causing errors (Oh no!)"
 
     def can_edit(self, user):

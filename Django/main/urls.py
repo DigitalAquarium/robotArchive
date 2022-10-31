@@ -58,7 +58,6 @@ urlpatterns = [
     path('editor/contest/<int:contest_id>', views.edt_contest_view, name='edtContest'),
     path('editor/selectFranchise', views.edt_fran_view, name='edtSelectFran'),
     path('editor/fight/<int:fight_id>', views.edt_fight_view, name='edtFightOverview'),
-    #path('editor/fight/<int:fight_id>/addRobot', views.modify_fight_version_view, name='edtFV'),
     path('editor/fight/<int:fight_id>/selectRobot', views.edt_select_robot_view, name='edtSelectRobot'), # Modifyfightversion
     path('editor/fight/<int:fight_id>/selectVersion/<int:robot_id>', views.edt_select_version_view, name='edtSelectVersion'),
     path('editor/fight/<int:fight_id>/signupVersion/<int:version_id>', views.edt_signup_version_view, name='edtSignupVersion'),

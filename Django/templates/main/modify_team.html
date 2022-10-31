@@ -9,7 +9,7 @@
         {% if team_id %}
             <form method="post" enctype="multipart/form-data" action="{% url 'main:editTeam' team_id %}">
         {% else %}
-            <form method="post" enctype="multipart/form-data" action="{% url 'main:newTeam' %}{% if not fight_id == 0 %}?fight={{ fight_id }}{% endif %}">
+            <form method="post" enctype="multipart/form-data" action="{% url 'main:newTeam' %}{% if not fight_id == 0 %}?fight={{ fight_id }}&v={{ v }}{% endif %}">
         {% endif %}
         {% csrf_token %}
         <fieldset>

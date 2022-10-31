@@ -8,7 +8,7 @@
     <div class="main-content">
         {% if new and robot or not new and version %}
             <form method="post" enctype="multipart/form-data" action="{% if new %}
-                                                                            {% url 'main:newVersion' robot.id %}{% if not fight_id == 0 %}?fight_id={{ fight_id }}{% endif %}
+                                                                            {% url 'main:newVersion' robot.id %}{% if not fight_id == 0 %}?fight_id={{ fight_id }}&team_id={{ team_id }}{% endif %}
                                                                   {% else %}
                                                                             {% url 'main:editVersion' version.id %}
                                                                   {% endif %}">
@@ -20,6 +20,9 @@
                     <input type="submit" value="Submit">
                 </fieldset>
             </form>
+            {% if not fight_id == 0 %}
+                <a class="editor-link" href="{% url 'main:edtSelectTeam' fight_id %}?v={{ robot.id }}">Add a team</a>
+            {% endif %}
         {% else %}
             Something has gone wrong
         {% endif %}
