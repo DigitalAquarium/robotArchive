@@ -57,10 +57,10 @@
         <div class="fight-media">
             {% if fight.internal_media or fight.external_media %}
                 {% if fight.media_type == "LI" %}
-                    <img src="{{ fight.internal_media.url }}" alt="This Image is Broken, please change it.">
+                    <img class="fight-image" src="{{ fight.internal_media.url }}" alt="This Image is Broken, please change it.">
 
                 {% elif fight.media_type == "EI" %}
-                    <img src="{{ fight.external_media }}" alt="This Image is Broken, please change it.">
+                    <img class="fight-image" src="{{ fight.external_media }}" alt="This Image is Broken, please change it.">
 
                 {% elif fight.media_type == "LV" %}
                     <video src="{{ fight.internal_media.url }}" width="800" height="450" controls></video>

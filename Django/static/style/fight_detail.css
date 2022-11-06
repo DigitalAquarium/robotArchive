@@ -42,6 +42,9 @@ h1 {
 .fight-media {
     text-align: center
 }
+.fight-image {
+    max-width: 100%;
+}
 
 .instagram-media {
     background: #FFF;

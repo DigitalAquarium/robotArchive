@@ -116,16 +116,14 @@ def edt_fight_view(request, fight_id):
 
 def edt_select_robot_view(request, fight_id):
     name = request.GET.get("name") or ""
-    ignore_wc = request.GET.get("nowc")
+    ignore_wc = request.GET.get("nowc") or ""
     page = request.GET.get("page")
     try:
         page = int(page)
     except (ValueError, TypeError):
         page = 1
-    try:
-        ignore_wc = bool(ignore_wc)
-    except (ValueError, TypeError):
-        ignore_wc = False
+    ignore_wc = ignore_wc.lower()
+    ignore_wc = True if ignore_wc == "1" or ignore_wc == "on" or ignore_wc == "true" else False
 
     if ignore_wc:
         robot_list = Robot.objects.all()
@@ -159,7 +157,7 @@ def edt_select_team_view(request, fight_id):
     try:
         robot_id = int(robot_id)
     except (ValueError, TypeError):
-        robot_id= 0
+        robot_id = 0
     try:
         page = int(page)
     except (ValueError, TypeError):
@@ -167,7 +165,8 @@ def edt_select_team_view(request, fight_id):
     try:
         selected_team = int(selected_team)
         if robot_id != 0:
-            return redirect("%s?team_id=%s&fight_id=%s" % (reverse("main:newVersion", args=[robot_id]), selected_team, fight_id))
+            return redirect(
+                "%s?team_id=%s&fight_id=%s" % (reverse("main:newVersion", args=[robot_id]), selected_team, fight_id))
         else:
             return redirect("%s?team=%s&fight=%s" % (reverse("main:newRobot"), selected_team, fight_id))
     except (ValueError, TypeError):
@@ -191,9 +190,9 @@ def edt_select_team_view(request, fight_id):
 
 def edt_select_version_view(request, fight_id, robot_id):
     robot = Robot.objects.get(id=robot_id)
-    #if robot.version_set.count() == 1:
+    # if robot.version_set.count() == 1:
     #    return redirect("main:edtSignupVersion", fight_id, robot.version_set.first().id)
-    #else:
+    # else:
     return render(request, "main/editor/select_version.html",
                   {"robot": robot, "fight_id": fight_id})
 
@@ -654,7 +653,7 @@ def leaderboard(request):
         weight = int(weight)
     except (ValueError, TypeError):
         weight = 100000
-    robot_list = Robot.get_leaderboard(weight)
+    robot_list = Robot.get_leaderboard(weight, update=True)
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
                    "weights": [(0, "")] + Weight_Class.LEADERBOARD_VALID,
@@ -677,7 +676,7 @@ def robot_detail_view(request, robot_id):
             v = Version.objects.get(pk=version_id)
         except (ValueError, TypeError):
             v = None
-    fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date","contest__id", "number")
+    fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "contest__id", "number")
     awards = Award.objects.filter(version__robot=r)
     return render(request, "main/robot_detail.html",
                   {"robot": r, "fights": fights, "awards": awards, "ver": v, "can_change": can_change})
@@ -702,6 +701,17 @@ def robot_edit_view(request, robot_id):
 
 @login_required(login_url='/accounts/login/')
 def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RIGHT HERE
+    fight_id = request.GET.get("fight_id")  # If not 0, is editor.
+    team_id = request.GET.get("team_id")
+    try:
+        fight_id = int(fight_id)
+    except (ValueError, TypeError):
+        fight_id = 0
+    try:
+        team_id = int(team_id)
+    except (ValueError, TypeError):
+        team_id = 0
+
     version = Version.objects.get(pk=version_id)
     can_change = version.can_edit(request.user)
     if not can_change:
@@ -714,7 +724,8 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
             return redirect("main:versionDetail", version.id)
     else:
         form = VersionForm(instance=version)
-    return render(request, "main/modify_version.html", {"form": form, "version": version, "new": False})
+    return render(request, "main/modify_version.html", {"form": form, "version": version, "new": False,
+                                                        "fight_id": fight_id, "team_id": team_id})
 
 
 @login_required(login_url='/accounts/login/')
@@ -903,7 +914,8 @@ def team_edit_view(request, team_id=None):
             team = Team.objects.get(pk=team_id)
             form = TeamForm(instance=team)
     if team_id is None:
-        return render(request, "main/modify_team.html", {"form": form, "team_id": team_id, "fight_id": fight_id, "v": v})
+        return render(request, "main/modify_team.html",
+                      {"form": form, "team_id": team_id, "fight_id": fight_id, "v": v})
     else:
         return render(request, "main/modify_team.html", {"form": form, "team_id": team_id})
 
@@ -1062,7 +1074,7 @@ def modify_fight_version_view(request, fight_id, vf_id=None):
     can_change = fight.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
-    registered = Version.objects.filter(registration__contest=fight.contest.id)
+    registered = Version.objects.filter(registration__contest=fight.contest.id).order_by("name", "robot__name")
 
     if vf_id is not None:
         vf = Fight_Version.objects.get(pk=vf_id)
@@ -1109,7 +1121,8 @@ def new_award_view(request, event_id):
     else:
         form = AwardForm()
         form.fields['contest'].queryset = Contest.objects.filter(event=event)
-        form.fields['version'].queryset = Version.objects.filter(registration__contest__in=event.contest_set.all())
+        form.fields['version'].queryset = Version.objects.filter(
+            registration__contest__in=event.contest_set.all()).order_by("name", "robot__name")
         return render(request, "main/new_award.html", {"form": form, "event_id": event_id})
 
 
@@ -1484,3 +1497,18 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
     versionDict[versionQ[0]] = ver
     return ver
 """
+
+
+def recalc_all(request):
+    Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0)
+
+    fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
+                                          "contest__weight_class__weight_grams", "contest_id", "number")
+    contest_cache = None
+    for fight in fights:
+        if contest_cache != fight.contest:
+            contest_cache = fight.contest
+            print("Saving:", contest_cache, fight.contest.event)
+        fight.calculate(True)
+
+    return render(request, "main/credits.html", {})

@@ -152,7 +152,7 @@ class RobotForm(forms.ModelForm):
 class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
-        fields = ["robot_name", "name", "description", "image", "weapon_type", "weight_class"]
+        fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "weight_class"]
 
 
 class TeamForm(forms.ModelForm):

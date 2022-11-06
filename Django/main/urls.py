@@ -62,5 +62,6 @@ urlpatterns = [
     path('editor/fight/<int:fight_id>/selectVersion/<int:robot_id>', views.edt_select_version_view, name='edtSelectVersion'),
     path('editor/fight/<int:fight_id>/signupVersion/<int:version_id>', views.edt_signup_version_view, name='edtSignupVersion'),
     path('editor/fight/<int:fight_id>/selectTeam', views.edt_select_team_view, name='edtSelectTeam'),
+    #path('editor/recalculate', views.recalc_all, name='recalculateAll'),
     #path('import', views.importView, name='import'),
 ]

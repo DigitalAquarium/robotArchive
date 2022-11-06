@@ -20,7 +20,7 @@
                     <input type="submit" value="Submit">
                 </fieldset>
             </form>
-            {% if not fight_id == 0 %}
+            {% if fight_id != 0 %}
                 <a class="editor-link" href="{% url 'main:edtSelectTeam' fight_id %}?v={{ robot.id }}">Add a team</a>
             {% endif %}
         {% else %}

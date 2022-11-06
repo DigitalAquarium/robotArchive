@@ -85,9 +85,13 @@ class Weight_Class(models.Model):
                          (100000, "Heavyweight"),
                          (154221, "Super Heavyweight"),
                          ]
+    LEADERBOARD_VALID_GRAMS = [x[0] for x in LEADERBOARD_VALID]
     name = models.CharField(max_length=30)
     weight_grams = models.PositiveIntegerField()
     recommended = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-recommended", "weight_grams"]
 
     def __str__(self):
         return self.name + ": " + self.weight_string()
@@ -186,44 +190,42 @@ class Robot(models.Model):
 
     @staticmethod
     def get_by_rough_weight(wc):
-        upper_bound = wc + (wc * 0.21)
-        lower_bound = wc - (wc * 0.21)
+        BOUNDARY_AMOUNT = 0.21
+        upper_bound = wc + (wc * BOUNDARY_AMOUNT)
+        lower_bound = wc - (wc * BOUNDARY_AMOUNT)
         classes = Weight_Class.objects.filter(weight_grams__lte=upper_bound, weight_grams__gte=lower_bound)
         robs = Robot.objects.filter(version__weight_class__in=classes).distinct()
         return robs
 
     @staticmethod
-    def get_leaderboard(wc, last_event=None):
-        upper_bound = wc + (wc * 0.21)
-        lower_bound = wc - (wc * 0.21)
+    def get_leaderboard(wc, last_event=None, update=False):
+        # TODO: Ensure robots appear on one and only one leaderboard
         robs = Robot.get_by_rough_weight(wc)
+        old_lb = robs.filter(lb_rank__gt=0).order_by("lb_rank")
         robs = robs.filter(opt_out=False)
         if last_event is None:
             last_event = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date
-        robs.filter(last_fought__gte=last_event - relativedelta(years=5))
-        robs.filter(first_fought__lte=last_event)
-        '''bad = []
-        for robot in robs:  # Should really build last fought stuff into the database to stop this from being
-            # horrifically and painfully slow.
-            try:
-                last_ver = robot.version_set.first()
-                for ver in robot.version_set.all():
-                    if ver.last_fought() > last_ver.last_fought() < last_event:
-                        last_ver = ver
-                if not (upper_bound >= last_ver.weight_class >= lower_bound):
-                    # This doesn't qutie work as intended as it needs last version that fought before the correct
-                    # time. not just the last version
-                    bad.append(robot.id)
-                elif last_ver.last_fought() < last_event - relativedelta(years=5) or robot.first_fought() > last_event:
-                    bad.append(robot.id)
-            except:
-                bad.append(robot.id)
-        robs = robs.exclude(id__in=bad)'''
-        for robot in robs:
-            robot.remove_rank_from(last_event)
-        robs = robs[:]  # list cast
-        robs.sort(key=lambda x: -x.ranking)
-        # robs = robs.order_by("-ranking")
+        robs = robs.filter(first_fought__lte=last_event, last_fought__gte=last_event - relativedelta(years=5))
+        # for robot in robs:
+        #    robot.remove_rank_from(last_event)
+        # robs = robs[:]  # list cast
+        # robs.sort(key=lambda x: -x.ranking)
+        robs = robs.order_by("-ranking")
+        if update and wc in Weight_Class.LEADERBOARD_VALID_GRAMS and list(old_lb) != list(robs[:len(old_lb)]):
+            old_lb.update(lb_rank=0)
+            i = 0
+            for r in robs:
+                if r.ranking <= Robot.RANKING_DEFAULT:
+                    # This Prevents robots that are at the base line or below from gaining a ranking, to prevent
+                    # the leaderboard numbers from just being a list of every robot in weight classes with a small
+                    # number of competitors.
+                    break
+                else:
+                    r.lb_rank = i + 1
+                i += 1
+                if i == 50:
+                    break
+            Robot.objects.bulk_update(robs[:i], ["lb_rank"])
         return robs
 
     def set_alphanum(self, commit=True):
@@ -570,9 +572,14 @@ class Fight(models.Model):
             if not fv.version.first_fought or fv.version.first_fought > fv.fight.contest.event.start_date:
                 fv.version.first_fought = fv.fight.contest.event.start_date
                 vupdateFlag = True
+            if not fv.version.robot.first_fought or fv.version.robot.first_fought > fv.fight.contest.event.start_date:
+                fv.version.robot.first_fought = fv.fight.contest.event.start_date
+
             if not fv.version.last_fought or fv.version.last_fought < fv.fight.contest.event.end_date:
                 fv.version.last_fought = fv.fight.contest.event.end_date
                 vupdateFlag = True
+            if not fv.version.robot.last_fought or fv.version.robot.last_fought < fv.fight.contest.event.end_date:
+                fv.version.robot.last_fought = fv.fight.contest.event.end_date
 
         if commit:
             for fv in fvs:
@@ -626,6 +633,8 @@ class Fight(models.Model):
                 self.media_type = "IG"
             elif "facebook" in self.external_media:
                 self.media_type = "FB"
+            elif "archive.org" in self.external_media and "web.archive.org" not in self.external_media:
+                self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "IF"
             # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
