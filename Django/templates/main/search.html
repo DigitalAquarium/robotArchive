@@ -83,7 +83,7 @@
                 <a href="{% url 'main:teamDetail' team.id %}">{{ team.name }}</a>
             </span>
                     <span class="hrz-index-details">
-                    <span>{{ team.website|urlize }}</span>
+                    <span>{{ team.web_link_set.first.link|urlize }}</span>
                 </span>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                 <a href="{% url 'main:franchiseDetail' franchise.id %}">{{ franchise.name }}</a>
             </span>
                     <span class="hrz-index-details">
-                    <span>{{ franchise.website|urlize }}</span>
+                    <span>{{ franchise.web_link_set.firs.link|urlize }}</span>
                 </span>
                     <span class="hrz-index-description">
                     {{ franchise.description|truncatechars:650 }}

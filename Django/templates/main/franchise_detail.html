@@ -3,6 +3,7 @@
 {% block meta %}
     <title>{{ fran }} - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/franchise_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'style/web_links.css' %}">
 {% endblock %}
 {% block content %}
     {% if fran %}
@@ -26,6 +27,20 @@
 
         <P>{{ fran.description }}</P>
 
+        {% if fran.web_link_set.all|length > 0 %}
+        <div class="web-links">
+        {% for web in fran.web_link_set.all %}
+            <span>
+            <a href="{{ web.link }}">
+                <img  src="{{ web.get_logo }}" alt="{{ web }}">
+                <span class="spacer"></span>
+                {% if web.type == "WW" %}{{ web.link }}{% else %}{{ web.get_type_display }}{% endif %}
+            </a>
+            </span>
+        {% endfor %}
+        </div>
+        {% endif %}
+
         {% if fran.members.all|length > 0 %}
             <h2>Members</h2>
             <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'franchise' fran.id %}">Add
@@ -36,6 +51,8 @@
                 {% endfor %}
             </p>
         {% endif %}
+
+
 
         <h2>Events</h2>
         {% if can_change %}

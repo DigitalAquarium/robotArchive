@@ -3,6 +3,7 @@
 {% block meta %}
     <title>{{ team }} - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'style/web_links.css' %}">
 {% endblock %}
 {% block content %}
     {% if team %}
@@ -24,7 +25,20 @@
                     <img class="fit-image" src="{{ team.logo.url }}" alt="logo">
                 </div>
             {% endif %}
-            <p>Website: {{ team.website|urlize }}</p>
+
+        {% if team.web_link_set.all|length > 0 %}
+        <div class="web-links">
+        {% for web in team.web_link_set.all %}
+            <span>
+            <a href="{{ web.link }}">
+                <img  src="{{ web.get_logo }}" alt="{{ web }}">
+                <span class="spacer"></span>
+                {% if web.type == "WW" %}{{ web.link }}{% else %}{{ web.get_type_display }}{% endif %}
+            </a>
+            </span>
+        {% endfor %}
+        </div>
+        {% endif %}
 
             {% if team.members.all|length > 0 %}
                 <h2>Members</h2>

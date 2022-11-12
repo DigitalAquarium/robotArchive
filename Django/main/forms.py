@@ -155,16 +155,16 @@ class VersionForm(forms.ModelForm):
         fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "weight_class"]
 
 
-class TeamForm(forms.ModelForm):
+class TeamForm(forms.ModelForm):#TODO: Add web links
     class Meta:
         model = Team
-        fields = ['name', 'logo', 'country', 'website']
+        fields = ['name', 'logo', 'country']
 
 
-class FranchiseForm(forms.ModelForm):
+class FranchiseForm(forms.ModelForm): #TODO: Add Web Links
     class Meta:
         model = Franchise
-        fields = ['name', 'description', 'logo', 'website']
+        fields = ['name', 'description', 'logo']
 
 
 class EventForm(forms.ModelForm):

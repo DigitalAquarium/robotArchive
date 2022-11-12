@@ -1,12 +1,10 @@
 import re
-
 import pycountry
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
-
 from django.utils import timezone
 
 FULL_COMBAT = 'FC'
@@ -59,7 +57,6 @@ class Person(models.Model):
 class Team(models.Model):
     name = models.CharField(max_length=255)
     logo = models.ImageField(upload_to='team_logos/%Y/', blank=True)
-    website = models.URLField(blank=True)
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     members = models.ManyToManyField(Person, through="Person_Team")
 
@@ -308,7 +305,6 @@ class Version(models.Model):
 class Franchise(models.Model):
     name = models.CharField(max_length=50)
     logo = models.ImageField(upload_to='franchise_logos/%Y/', blank=True)
-    website = models.URLField(blank=True)
     description = models.TextField(blank=True)
     members = models.ManyToManyField(Person, through="Person_Franchise")
 
@@ -886,6 +882,9 @@ class Web_Link(models.Model):
             raise ValidationError("A Web link may be tied to a franchise or team, not both")
         if not self.franchise and not self.team:
             raise ValidationError("A Web link must be attached to a franchise or team")
+
+    def get_logo(self):
+        return settings.STATIC_URL + "web_logos/" + self.type + ".png"
 
     def __str__(self):
         if self.franchise:

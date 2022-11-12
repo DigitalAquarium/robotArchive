@@ -1,0 +1,18 @@
+.web-links {
+  display: inline-flex;
+  width: 100%;
+  justify-content: space-evenly;
+}
+.web-links a {
+  align-items: center;
+  display: inline-flex;
+}
+.web-links a .spacer {
+  width: 0.5em;
+}
+.web-links a img {
+  width: 2em;
+  height: 2em;
+}
+
+/*# sourceMappingURL=web_links.css.map */
