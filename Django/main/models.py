@@ -3,7 +3,10 @@ import re
 import pycountry
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
+
 from django.utils import timezone
 
 FULL_COMBAT = 'FC'
@@ -638,11 +641,11 @@ class Fight(models.Model):
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "IF"
             # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
-            elif self.external_media[-4:] in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
+            elif self.external_media[-4:].lower() in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
                 self.media_type = "EI"
-            elif self.external_media[-5:] in [".jpeg", ".jfif", ".webp"]:
+            elif self.external_media[-5:].lower() in [".jpeg", ".jfif", ".webp"]:
                 self.media_type = "EI"
-            elif self.external_media[-6:] == ".pjpeg":
+            elif self.external_media[-6:].lower() == ".pjpeg":
                 self.media_type = "EI"
             else:
                 self.media_type = "UN"
@@ -844,6 +847,62 @@ class Fight_Version(models.Model):
 
     def __str__(self):
         return self.version.__str__() + " in |" + self.fight.__str__() + "|"
+
+
+class Web_Link(models.Model):
+    LINK_CHOICES = [
+        ("WW", "Website"),
+        ("WA", "Archived Website"),
+        ("FB", "Facebook"),
+        ("TW", "Twitter"),
+        ("IG", "Instagram"),
+        ("TT", "TikTok"),
+        ("DC", "Discord"),
+        ("YT", "YouTube"),
+        ("WC", "WeChat"),
+        ("SW", "Sina Weibo"),
+    ]
+    type = models.CharField(max_length=2, choices=LINK_CHOICES, default="WW")
+    link = models.URLField()
+    franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, blank=True, null=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                              Q(franchise__isnull=True) &
+                              Q(team__isnull=False)
+                      ) | (
+                              Q(team__isnull=True) &
+                              Q(franchise__isnull=False)
+                      ),
+                name='team_xor_franchise',
+            )
+        ]
+
+    def clean(self):
+        if self.franchise and self.team:
+            raise ValidationError("A Web link may be tied to a franchise or team, not both")
+        if not self.franchise and not self.team:
+            raise ValidationError("A Web link must be attached to a franchise or team")
+
+    def __str__(self):
+        if self.franchise:
+            return self.franchise.name + " " + self.get_type_display()
+        else:
+            return self.team.name + " " + self.get_type_display()
+
+
+class Source(models.Model):
+    name = models.CharField(max_length=255)
+    link = models.URLField()
+    archived = models.BooleanField()
+    last_accessed = models.DateField(default=timezone.now)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 
 # TODO: This should maybe be another module, requires database but idk how to like, do it otherwise.
