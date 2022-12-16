@@ -857,6 +857,7 @@ class Web_Link(models.Model):
         ("YT", "YouTube"),
         ("WC", "WeChat"),
         ("SW", "Sina Weibo"),
+        ("TV", "Twitch")
     ]
     type = models.CharField(max_length=2, choices=LINK_CHOICES, default="WW")
     link = models.URLField()
@@ -884,7 +885,10 @@ class Web_Link(models.Model):
             raise ValidationError("A Web link must be attached to a franchise or team")
 
     def get_logo(self):
-        return settings.STATIC_URL + "web_logos/" + self.type + ".png"
+        if self.type == "TV":
+            return settings.STATIC_URL + "web_logos/" + "TwitchGlitchPurple.svg"
+        else:
+            return settings.STATIC_URL + "web_logos/" + self.type + ".png"
 
     @staticmethod
     def classify(link):
@@ -907,6 +911,8 @@ class Web_Link(models.Model):
             return "SW"
         if "wechat.com/" in link or "wechat.cn/" in link:
             return "WC"
+        if "twitch.tv/" in link:
+            return "TV"
         return "WW"
 
     def __str__(self):
