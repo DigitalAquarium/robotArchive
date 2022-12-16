@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load crispy_forms_filters %}
+{% load static %}
+{% block meta %}
+    <title>{{ team }} - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'style/web_links.css' %}">
+    <style>
+    table, td, tr {border:None}
+    </style>
+{% endblock %}
+{% block content %}
+    {% if team %}
+        <div class="main-content">
+            <div class="team-heading">
+                <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+                <h1>{{ team }}</h1>
+                    <a class="editor-link" href="{% url 'main:editTeam' team.id %}">Edit Team</a>
+                    <a class="delete-link" href="{% url 'main:delete_noreturn' 'team' team.id %}">Delete Team</a>
+            </div>
+            {% if team.logo %}
+                <div class="team-logo-image">
+                    <img class="fit-image" src="{{ team.logo.url }}" alt="logo">
+                </div>
+            {% endif %}
+
+            <h2>Web Links:</h2>
+            <form method="post" style="display:block">
+            {% csrf_token %}
+            <table>
+             {% for web in team.web_link_set.all %}
+                <tr>
+                    <td><label for="link{{ forloop.counter0 }}">
+                        <a href="{{ web.link }}"><img src="{{ web.get_logo }}" alt="{{ web }}" width="25px" height="25px"></a>
+                    </label></td>
+                    <td style="width: 750px">
+                        <input type="text" id="link{{ forloop.counter0 }}" name="link{{ forloop.counter0 }}" value="{{ web.link }}" style="width: 100%">
+                    </td>
+                <td>
+                    <a href="{% url 'main:delete_noreturn' "web_link" web.id%}?redirect={% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Delete Link"></a>
+                </td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td><label for="new-link">
+                    New:
+                </label></td>
+                <td style="width: 750px">
+                    <input type="text" id="new-link" name="new-link" style="width: 100%">
+                </td>
+            </tr>
+            </table>
+            <button class="editor-link" name="save" value="save">Save</button>
+            </form>
+
+        <h2>Members:</h2>
+        <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'team' team.id %}">Add Member</a>
+        {% if team.members.all|length > 0 %}
+                <p>
+                    {% for member in team.members.all %}
+                        <span>{{ member }}</span>
+                    {% endfor %}
+                </p>
+        {% endif %}
+
+        <h2>Robots:</h2>
+        <a class="editor-link" href="{% url 'main:newRobot'%}?team=team_id">Add New Robot</a>
+        <a class="editor-link" href="{% url 'main:edtSelectRobot'%}">Add Existing Robot</a>
+        <div class="gridview-row">
+            {% for robot in team.robots %}
+                <div class="gridview-square">
+                    <div class="gridview-title">
+                        <a href="{% url 'main:robotDetail' robot.id %}">{{ robot }}</a>
+                    </div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image"
+                             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                             alt="Robot Image">
+                    </div>
+                </div>
+                {% if forloop.counter|divisibleby:5 and not forloop.last %}
+                   </div>
+                   <div class="gridview-row">
+                {% endif %}
+           {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        Something has gone wrong.
+    {% endif %}
+{% endblock %}

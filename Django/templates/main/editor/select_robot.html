@@ -9,7 +9,7 @@
 {% block content %}
     <section class="search-params">
         <form class="search-form" method="get"
-          action="{% url "main:edtSelectRobot" fight_id %}">
+          action="{% url "main:edtSelectRobot" %}">
              <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>
@@ -21,7 +21,9 @@
         </form>
     </section>
     <div class="main-content">
-     <br><a class="editor-link" href="{% url 'main:newRobot' %}?fight={{ fight_id }}">New Robot</a><br>
+    {% if obj_type == "fight" %}
+     <br><a class="editor-link" href="{% url 'main:newRobot' %}?fight={{ obj_id }}">New Robot</a><br>
+    {% endif %}
         <table>
             <thead>
             <tr>
@@ -38,14 +40,18 @@
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
                              src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ robot.name }} image"></td>
                     <td style="text-align: center"><img class="flag-image" src="{{ robot.get_flag }}" alt="{{ robot.version_set.last.country|upper }} Flag"></td>
-                    <td><a href="{% url "main:edtSelectVersion" fight_id robot.id %}">{{ robot }}</a></td>
+                    {% if obj_type == "fight" %}
+                        <td><a href="{% url "main:edtSelectVersion" fight_id robot.id %}">{{ robot }}</a></td>
+                    {% else %}
+                        <td><a href="{% url "main:edtSelectRobot" %}?selected_robot={{ robot.id }}">{{ robot }}</a></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     {% if pages > 1 %}
             <div class="page-nav">
-                {% url "main:edtSelectRobot" fight_id as this %}
+                {% url "main:edtSelectRobot" as this %}
                 <ul class="page-select">
                     <li>{% if page > 1 %}
                         <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>

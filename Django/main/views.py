@@ -7,6 +7,8 @@ from PIL import Image
 from django.core.files import File
 
 from django.contrib.auth.decorators import login_required
+from django.core.validators import URLValidator
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -15,8 +17,10 @@ from EventManager import stuff
 from main import subdivisions
 from .forms import *
 
-
 # to do for the old uni system Email stuff (low prio),Fight edit cleanup, auto person merging, Home page, leaderboard still needs smol css
+ONE_HOUR_TIMER = 3600
+
+
 @login_required(login_url='/accounts/login/')
 def edt_home_view(request):
     name = request.GET.get("name") or ""
@@ -98,6 +102,9 @@ def edt_fight_view(request, fight_id):
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
 
+    response = HttpResponse()
+    response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
+
     if request.method == "POST":
         form = FightForm(request.POST, request.FILES, instance=fight)
         if form.is_valid():
@@ -106,15 +113,17 @@ def edt_fight_view(request, fight_id):
             f.set_media_type()
             if "save" in request.POST:
                 fight.calculate(commit=True)
+                response.delete_cookie("editing_fight")
                 return redirect("main:edtContest", fight.contest.id)
             else:
+                response.delete_cookie("editing_fight")
                 return redirect("main:edtFightOverview", fight_id)
     else:
         form = FightForm(instance=fight)
         return render(request, "main/editor/fight.html", {"form": form, "has_winner": has_winner, "fight": fight})
 
 
-def edt_select_robot_view(request, fight_id):
+def edt_select_robot_view(request):
     name = request.GET.get("name") or ""
     ignore_wc = request.GET.get("nowc") or ""
     page = request.GET.get("page")
@@ -122,13 +131,21 @@ def edt_select_robot_view(request, fight_id):
         page = int(page)
     except (ValueError, TypeError):
         page = 1
+
+    if request.COOKIES.get("editing_team"):
+        obj_type = "team"
+        obj_id = request.COOKIES.get("editing_team")
+    else:
+        obj_type = "fight"
+        obj_id = request.COOKIES.get("editing_fight")
+
     ignore_wc = ignore_wc.lower()
     ignore_wc = True if ignore_wc == "1" or ignore_wc == "on" or ignore_wc == "true" else False
 
-    if ignore_wc:
+    if ignore_wc or obj_type == "team":
         robot_list = Robot.objects.all()
     else:
-        fight = Fight.objects.get(id=fight_id)
+        fight = Fight.objects.get(id=obj_id)
         wclass = fight.contest.weight_class.weight_grams
         robot_list = Robot.get_by_rough_weight(wclass)
 
@@ -144,9 +161,52 @@ def edt_select_robot_view(request, fight_id):
 
     return render(request, "main/editor/select_robot.html",
                   {"robot_list": robot_list,
-                   "name": name, "fight_id": fight_id, "page": page,
+                   "name": name, "obj_id": obj_id, "page": page,
                    "pages": results // num if results % num == 0 else results // num + 1
                    })
+
+
+def edt_team_view(request, team_id):
+    team = Team.objects.get(pk=team_id)
+    is_version = request.GET.get("is_version") is True
+    rv_id = request.GET.get("rv_id")
+    fight_id = request.COOKIES.get("editing_fight") or 0
+    try:
+        fight_id = int(fight_id)
+    except (ValueError, TypeError):
+        fight_id = 0
+
+    if request.method == "POST":
+        print(request.POST)
+        web_links = team.web_link_set.all()
+        for i in range(len(web_links)):
+            updated_url = request.POST["link"+str(i)]
+            current = web_links[i]
+            if updated_url != current.link:
+                validator = URLValidator()
+                try:
+                    validator(updated_url)
+                    current.link = updated_url
+                    current.type = Web_Link.classify(updated_url)
+                    current.save()
+                except ValidationError:
+                    pass
+
+        new_link = request.POST["new-link"]
+        if new_link != "" and new_link is not None:
+            validator = URLValidator()
+            wb = Web_Link()
+            try:
+                validator(new_link)
+                wb.link = new_link
+                wb.type = Web_Link.classify(new_link)
+                wb.team = team
+                wb.save()
+            except ValidationError:
+                pass
+
+    return render(request, "main/editor/team.html",
+                  {"team": team, "is_version": is_version, "rv_id": rv_id, })
 
 
 def edt_select_team_view(request, fight_id):
@@ -701,7 +761,7 @@ def robot_edit_view(request, robot_id):
 
 @login_required(login_url='/accounts/login/')
 def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RIGHT HERE
-    fight_id = request.GET.get("fight_id")  # If not 0, is editor.
+    fight_id = request.COOKIES.get("editing_fight")  # If not 0, is editor.
     team_id = request.GET.get("team_id")
     try:
         fight_id = int(fight_id)
@@ -711,7 +771,6 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
         team_id = int(team_id)
     except (ValueError, TypeError):
         team_id = 0
-
     version = Version.objects.get(pk=version_id)
     can_change = version.can_edit(request.user)
     if not can_change:
@@ -730,16 +789,15 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
 
 @login_required(login_url='/accounts/login/')
 def new_version_view(request, robot_id):
-    fight_id = request.GET.get("fight_id")  # If not 0, is editor.
+    fight_id = request.COOKIES.get("editing_fight")  # If not 0, is editor.
     team_id = request.GET.get("team_id")
-    try:
-        fight_id = int(fight_id)
-    except (ValueError, TypeError):
-        fight_id = 0
     try:
         team_id = int(team_id)
     except (ValueError, TypeError):
         team_id = 0
+
+    response = HttpResponse()
+    response.set_cookie("robot_or_version", "version", ONE_HOUR_TIMER)
     robot = Robot.objects.get(pk=robot_id)
     can_change = robot.can_edit(request.user)
     if not can_change:
@@ -756,8 +814,10 @@ def new_version_view(request, robot_id):
         if form.is_valid():
             version = form.save(robot, Person.objects.get(user=request.user))
             if fight_id != 0:
+                response.delete_cookie("robot_or_version")
                 return redirect("main:edtSignupVersion", fight_id, version.id)
             else:
+                response.delete_cookie("robot_or_version")
                 return redirect("main:versionDetail", version.id)
     else:
         form = NewVersionForm()
@@ -836,7 +896,7 @@ def team_index_view(request):
 
 @login_required(login_url='/accounts/login/')  # TODO: No validation anymore
 def new_robot_view(request):
-    fight_id = request.GET.get("fight")
+    fight_id = request.COOKIES.get("editing_fight")
     team_id = request.GET.get("team")
     try:
         fight_id = int(fight_id)
@@ -848,13 +908,17 @@ def new_robot_view(request):
     except (ValueError, TypeError):
         team = None
 
+    response = HttpResponse()
+    response.set_cookie("robot_or_version", "robot", ONE_HOUR_TIMER)
     if request.method == "POST":
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
             v = form.save(team, Person.objects.get(user=request.user))[1]
             if fight_id != 0:
+                response.delete_cookie("robot_or_version")
                 return redirect("main:edtSignupVersion", fight_id, v.id)
             else:
+                response.delete_cookie("robot_or_version")
                 return redirect("main:index")
     else:
         form = NewRobotForm()
@@ -873,7 +937,7 @@ def version_detail_view(request, version_id):
 
 @login_required(login_url='/accounts/login/')
 def team_edit_view(request, team_id=None):
-    fight_id = request.GET.get("fight")
+    fight_id = request.COOKIES.get("editing_fight")
     v = request.GET.get("v")
     try:
         fight_id = int(fight_id)
@@ -902,7 +966,7 @@ def team_edit_view(request, team_id=None):
             if fight_id:
                 # person = Person.objects.get(id=1)
                 # Person_Team.objects.create(team=new, person=person)
-                return redirect("%s?team=%s" % (reverse("main:edtSelectTeam", args=[fight_id]), new.id))
+                return redirect("main:edtTeam", new.id)
             if team_id is None:
                 person = Person.objects.get(user=request.user)
                 Person_Team.objects.create(team=new, person=person)

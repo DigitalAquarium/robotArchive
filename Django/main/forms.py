@@ -93,7 +93,7 @@ class NewRobotForm(forms.Form):
                                           required=True)
     opt_out = forms.BooleanField(required=False)
 
-    def save(self, team,owner):
+    def save(self, team, owner):
         r = Robot()
         v = Version()
         r.name = self.cleaned_data['name']
@@ -155,13 +155,13 @@ class VersionForm(forms.ModelForm):
         fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "weight_class"]
 
 
-class TeamForm(forms.ModelForm):#TODO: Add web links
+class TeamForm(forms.ModelForm):  # TODO: Add web links
     class Meta:
         model = Team
         fields = ['name', 'logo', 'country']
 
 
-class FranchiseForm(forms.ModelForm): #TODO: Add Web Links
+class FranchiseForm(forms.ModelForm):  # TODO: Add Web Links
     class Meta:
         model = Franchise
         fields = ['name', 'description', 'logo']

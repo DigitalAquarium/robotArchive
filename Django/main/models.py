@@ -886,6 +886,29 @@ class Web_Link(models.Model):
     def get_logo(self):
         return settings.STATIC_URL + "web_logos/" + self.type + ".png"
 
+    @staticmethod
+    def classify(link):
+        link = link.lower()
+        if "web.archive.org/" in link:
+            return "WA"
+        if "facebook.com/" in link:
+            return "FB"
+        if "twitter.com/" in link:
+            return "TW"
+        if "instagram.com/" in link:
+            return "IG"
+        if "tiktok.com/" in link:
+            return "TT"
+        if "discord.com/" in link or "discord.gg/" in link:
+            return "DC"
+        if "youtube.com/" in link or "youtu.be/" in link:
+            return "WA"
+        if "weibo.com/" in link or "weibo.cn/" in link:
+            return "SW"
+        if "wechat.com/" in link or "wechat.cn/" in link:
+            return "WC"
+        return "WW"
+
     def __str__(self):
         if self.franchise:
             return self.franchise.name + " " + self.get_type_display()
