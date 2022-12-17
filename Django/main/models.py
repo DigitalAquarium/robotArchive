@@ -890,6 +890,10 @@ class Web_Link(models.Model):
         else:
             return settings.STATIC_URL + "web_logos/" + self.type + ".png"
 
+    def can_edit(self,user): #TODO: Improve this?
+        p = Person.objects.get(user=user)
+        return user.is_staff
+
     @staticmethod
     def classify(link):
         link = link.lower()
@@ -917,9 +921,9 @@ class Web_Link(models.Model):
 
     def __str__(self):
         if self.franchise:
-            return self.franchise.name + " " + self.get_type_display()
+            return self.franchise.name + " " + self.get_type_display() + ": " + self.link
         else:
-            return self.team.name + " " + self.get_type_display()
+            return self.team.name + " " + self.get_type_display() + ": " + self.link
 
 
 class Source(models.Model):

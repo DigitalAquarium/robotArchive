@@ -12,7 +12,11 @@
         <div class="main-content">
         <h1> {{ robot }}</h1>
         <div style="text-align: center">
-        <a class="editor-link" href="{% url 'main:newVersion' robot.id %}?fight_id={{ fight_id }}">Add New Version</a>
+        {% if obj_type == "fight" %}
+            <a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>
+        {% elif obj_type == "team" %}
+            <a class="editor-link" href="{% url 'main:edtTeam' obj_id %}?add_robot={{ robot.id }}">Add All Versions</a>
+        {% endif %}
         </div>
             <div class="gridview-row competitor-row">
                 {% for version in robot.version_set.all %}
@@ -20,7 +24,11 @@
                         <div class="gridview-title">
 
                             <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
-                            <a href="{% url 'main:edtSignupVersion' fight_id version.id %}">{{ version }}</a>
+                            {% if obj_type == "fight" %}
+                                <a href="{% url 'main:edtSignupVersion' obj_id version.id %}">{{ version }}</a>
+                            {% elif obj_type == "team" %}
+                                <a href="{% url 'main:edtTeam' obj_id %}?add_version={{version.id}}">{{ version }}</a>
+                            {% endif %}
                         </div>
                     <div class="gridview-image-container">
                             <img class="fit-image" src="

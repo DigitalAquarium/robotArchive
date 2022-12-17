@@ -22,7 +22,7 @@
     </section>
     <div class="main-content">
     {% if obj_type == "fight" %}
-     <br><a class="editor-link" href="{% url 'main:newRobot' %}?fight={{ obj_id }}">New Robot</a><br>
+     <br><a class="editor-link" href="{% url 'main:newRobot' %}">New Robot</a><br>
     {% endif %}
         <table>
             <thead>
@@ -40,11 +40,7 @@
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
                              src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ robot.name }} image"></td>
                     <td style="text-align: center"><img class="flag-image" src="{{ robot.get_flag }}" alt="{{ robot.version_set.last.country|upper }} Flag"></td>
-                    {% if obj_type == "fight" %}
-                        <td><a href="{% url "main:edtSelectVersion" fight_id robot.id %}">{{ robot }}</a></td>
-                    {% else %}
-                        <td><a href="{% url "main:edtSelectRobot" %}?selected_robot={{ robot.id }}">{{ robot }}</a></td>
-                    {% endif %}
+                    <td><a href="{% url "main:edtSelectVersion" robot.id %}">{{ robot }}</a></td>
                 </tr>
             {% endfor %}
             </tbody>

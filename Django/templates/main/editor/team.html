@@ -15,8 +15,8 @@
             <div class="team-heading">
                 <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
                 <h1>{{ team }}</h1>
-                    <a class="editor-link" href="{% url 'main:editTeam' team.id %}">Edit Team</a>
-                    <a class="delete-link" href="{% url 'main:delete_noreturn' 'team' team.id %}">Delete Team</a>
+                    <a href="{% url 'main:editTeam' team.id %}"><img class="inline-image" src="{% static "edit.png" %}" alt="Edit Team"></a>
+                    <a href="{% url 'main:delete_noreturn' 'team' team.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Delete Team"></a>
             </div>
             {% if team.logo %}
                 <div class="team-logo-image">
@@ -64,7 +64,9 @@
         {% endif %}
 
         <h2>Robots:</h2>
-        <a class="editor-link" href="{% url 'main:newRobot'%}?team=team_id">Add New Robot</a>
+        {% if not editing_fight %}
+            <a class="editor-link" href="{% url 'main:newRobot'%}?team=team_id">Add New Robot</a>
+        {% endif %}
         <a class="editor-link" href="{% url 'main:edtSelectRobot'%}">Add Existing Robot</a>
         <div class="gridview-row">
             {% for robot in team.robots %}
@@ -84,6 +86,13 @@
                 {% endif %}
            {% endfor %}
             </div>
+        {% if editing_fight %}
+            {% if robot_or_version == "robot" %}
+                <a class="editor-link" href="{% url 'main:newRobot' %}?team={{ team.id }}">Continue</a>
+            {% else %}
+                <a class="editor-link" href="{% url 'main:newVersion' editing_version_id %}?team={{ team.id }}">Continue</a>
+            {% endif %}
+        {% endif %}
         </div>
     {% else %}
         Something has gone wrong.
