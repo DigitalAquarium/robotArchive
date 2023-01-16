@@ -23,7 +23,7 @@
         <input class="editor-link" style="font-size: 18px; color:blue;" type="submit" name="save" value="Save Fight">
         </form>
         <div style="text-align: center">
-        <a class="editor-link" href="{% url 'main:newFightVersion' fight.id %}?editor=true">Add New Robot</a>
+        <a class="editor-link" href="{% url 'main:newFightVersion' fight.id %}">Add New Robot</a>
         </div>
             <div class="gridview-row competitor-row">
                 {% for fv in fight.fight_version_set.all %}
@@ -32,7 +32,7 @@
 
                             <img class="flag-image" src="{{ fv.version.get_flag }}" alt="Flag">
                             <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
-                            <a href="{% url 'main:editFightVersion' fight.id fv.id %}?editor=true"><img class="inline-image" src="{% static "edit.png" %}" alt="Edit Competitor"></a>
+                            <a href="{% url 'main:editFightVersion' fight.id fv.id %}"><img class="inline-image" src="{% static "edit.png" %}" alt="Edit Competitor"></a>
                             <a href="{% url 'main:delete_noreturn' "fight_version" fv.id%}?redirect={% url 'main:edtFightOverview' fight.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Remove Competitor"></a>
                         </div>
                     {% if fv.tag_team != 0 %}

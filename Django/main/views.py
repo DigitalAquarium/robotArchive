@@ -119,9 +119,13 @@ def edt_fight_view(request, fight_id):
                               {"form": form, "has_winner": has_winner, "fight": fight})
             response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
     else:
-        form = FightForm(instance=fight)
-        response = render(request, "main/editor/fight.html", {"form": form, "has_winner": has_winner, "fight": fight})
-        response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
+        if fight.fight_version_set.count() == 0:
+            response = redirect('main:newFightVersion', fight_id)
+            response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
+        else:
+            form = FightForm(instance=fight)
+            response = render(request, "main/editor/fight.html", {"form": form, "has_winner": has_winner, "fight": fight})
+            response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
     return response
 
 
@@ -238,7 +242,7 @@ def edt_team_view(request, team_id):
 def edt_select_team_view(request, fight_id):
     name = request.GET.get("name") or ""
     page = request.GET.get("page")
-    robot_id = request.GET.get("v")
+    robot_id = request.COOKIES.get("rv_id")
     selected_team = request.GET.get("team")
     try:
         robot_id = int(robot_id)
@@ -1170,9 +1174,10 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
 
 @login_required(login_url='/accounts/login/')  # Still Being Used
 def modify_fight_version_view(request, fight_id, vf_id=None):
-    editor = request.GET.get("editor") or ""
+    #editor = request.GET.get("editor") or ""
+    editor = request.COOKIES.get("editing_fight") is not None and request.COOKIES.get("editing_fight") != ""
     fight = Fight.objects.get(pk=fight_id)
-    editor = editor.lower() == "true"
+    #editor = editor.lower() == "true"
 
     can_change = fight.can_edit(request.user)
     if not can_change:
@@ -1617,5 +1622,56 @@ def recalc_all(request):
             contest_cache = fight.contest
             print("Saving:", contest_cache, fight.contest.event)
         fight.calculate(True)
+
+    return render(request, "main/credits.html", {})
+
+def tournament_tree(request):
+    #97
+    #3216
+    contest = Contest.objects.get(pk=97)
+    all_fights = Fight.objects.filter(contest=contest)
+    entry = Fight.objects.get(pk=3216)
+    fights = [entry]
+    links = {}
+    out = ""
+    entrantDict = {}
+    for i, version in enumerate(Version.objects.filter(fight__in=all_fights).distinct()):
+        entrantDict[version.id] = i + 1
+
+    for fight in fights:
+        #print(fight)
+        for fv in fight.fight_version_set.all():
+            prev = all_fights.filter(fight_version__version=fv.version)
+            prev = prev.exclude(number__gte=fight.number).order_by("-number")
+            if len(prev) > 0:
+                fights.append(prev[0])
+                links[prev[0].fight_version_set.get(version=fv.version)] = fight
+    localIDDict = {}
+    i = 0
+    #print(links)
+    for fight in all_fights:
+        out += "<fight"
+        try:
+            localID = localIDDict[fight]
+        except KeyError:
+            i += 1
+            localID = localIDDict[fight] = i
+        out += ' id="' + str(localID) + '">\n'
+        out += "\t<db_id>"+str(fight.id)+"</db_id>\n"
+        for fv in fight.fight_version_set.all():
+            out += '\t<competitor entrant="' + str(entrantDict[fv.version.id]) + '">\n'
+            try:
+                next_fight = links[fv]
+                try:
+                    nextLocalID = localIDDict[next_fight]
+                except KeyError:
+                    i += 1
+                    nextLocalID = localIDDict[next_fight] = i
+                out += "\t\t<next>" + str(nextLocalID) + "</next>\n"
+            except KeyError:
+                out += "\t\t<eliminated/>\n"
+            out += "\t</competitor>\n"
+        out += "</fight>\n"
+    print(out)
 
     return render(request, "main/credits.html", {})

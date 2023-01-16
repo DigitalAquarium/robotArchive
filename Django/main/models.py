@@ -692,7 +692,7 @@ class Fight(models.Model):
                 else:
                     return "Lost"
             elif self.method == "DR":
-                return "Draw"
+                return "Drew"
             else:
                 return "Unknown"
 
@@ -910,7 +910,7 @@ class Web_Link(models.Model):
         if "discord.com/" in link or "discord.gg/" in link:
             return "DC"
         if "youtube.com/" in link or "youtu.be/" in link:
-            return "WA"
+            return "YT"
         if "weibo.com/" in link or "weibo.cn/" in link:
             return "SW"
         if "wechat.com/" in link or "wechat.cn/" in link:

@@ -21,7 +21,7 @@
                 </fieldset>
             </form>
             {% if fight_id != 0 %}
-                <a class="editor-link" href="{% url 'main:edtSelectTeam' fight_id %}?v={{ robot.id }}">Add a team</a>
+                <a class="editor-link" href="{% url 'main:edtSelectTeam' fight_id %}">Add a team</a>
             {% endif %}
         {% else %}
             Something has gone wrong
