@@ -133,7 +133,8 @@ class NewVersionForm(forms.Form):
         else:
             v.country = robot.country
         v.robot_name = self.cleaned_data['robot_name']
-        v.version_name = self.cleaned_data['version_name']
+        v.name = self.cleaned_data['version_name']
+        v.description = self.cleaned_data['description']
         v.image = self.cleaned_data['img']
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']

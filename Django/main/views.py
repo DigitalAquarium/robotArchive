@@ -299,13 +299,13 @@ def edt_signup_version_view(request, fight_id, version_id):
     fv.version = version
     fv.won = False
     fv.save()
-
-    reg = Registration()
-    reg.contest = contest
-    reg.version = version
-    reg.approved = True
-    reg.signee = version.owner
-    reg.save()
+    if Registration.objects.filter(version=version,contest=contest).count() == 0:
+        reg = Registration()
+        reg.contest = contest
+        reg.version = version
+        reg.approved = True
+        reg.signee = version.owner
+        reg.save()
     return redirect("%s?editor=True" % reverse("main:editFightVersion", args=[fight_id, fv.id]))
 
 
