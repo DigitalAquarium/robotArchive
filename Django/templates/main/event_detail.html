@@ -3,6 +3,8 @@
 {% block meta %}
     <title>{{ event }} - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/event_detail.css' %}">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"/>
+	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
 {% endblock %}
 {% block content %}
     {% if event %}
@@ -120,9 +122,10 @@
         {% endif %}
 
 
-
-        <iframe loading="lazy" allowfullscreen
-                src="https://www.google.com/maps/embed/v1/place?key={{ map }}&zoom=14&center={{ event.latitude }},{{ event.longitude }}&q={{ event.latitude }},{{ event.longitude }}"></iframe>
+		<div id="osm-map" lat="{{ event.latitude }}" lng="{{ event.longitude }}"></div>
+		<script src="{% static "scripts/open_street_map.js" %}"></script>
+        <!--<iframe loading="lazy" allowfullscreen
+                src="https://www.google.com/maps/embed/v1/place?key={{ map }}&zoom=14&center={{ event.latitude }},{{ event.longitude }}&q={{ event.latitude }},{{ event.longitude }}"></iframe> -->
 
 
 
