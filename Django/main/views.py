@@ -84,7 +84,7 @@ def edt_fran_view(request):
 
 def edt_contest_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
-    fights = Fight.objects.filter(contest=contest)
+    fights = Fight.objects.filter(contest=contest).order_by("number")
     registrations = contest.registration_set.all().order_by("signup_time")
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "fights": fights, "applications": registrations})
@@ -339,6 +339,7 @@ def delete_view(request, model, instance_id=None, next_id=None):
         next_url = reverse("main:eventDetail", args=[next_id])
     elif model == "registration":
         instance = Registration.objects.get(pk=instance_id)
+        next_url = reverse("main:editContest", args=[next_id])
     elif model == "fight":
         instance = Fight.objects.get(pk=instance_id)
         next_url = reverse("main:contestDetail", args=[next_id])
@@ -572,7 +573,7 @@ def contest_signup_view(response, contest_id):
 
 def contest_detail_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
-    fights = Fight.objects.filter(contest=contest)
+    fights = Fight.objects.filter(contest=contest).order_by("number")
     registrations = contest.registration_set.all().order_by("signup_time")
     applied = False
     approved = False
@@ -857,6 +858,7 @@ def new_version_view(request, robot_id):
             if fight_id != 0:
                 response = redirect("main:edtSignupVersion", fight_id, version.id)
                 response.delete_cookie("robot_or_version")
+                response.delete_cookie("rv_id")
             else:
                 response = redirect("main:versionDetail", version.id)
                 response.delete_cookie("robot_or_version")
@@ -1037,10 +1039,10 @@ def franchise_modify_view(request, franchise_id=None):
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this franchise."))
     if request.method == "POST":
         if franchise_id is None:
-            form = FranchiseForm(request.POST)
+            form = FranchiseForm(request.POST,request.FILES)
         else:
-            franchise = Franchise.objects.get(franchise_id)
-            form = FranchiseForm(request.POST, instance=franchise)
+            franchise = Franchise.objects.get(pk=franchise_id)
+            form = FranchiseForm(request.POST,request.FILES, instance=franchise)
         if form.is_valid():
             new = form.save()
             if franchise_id is None:

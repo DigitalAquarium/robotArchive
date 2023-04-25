@@ -33,7 +33,7 @@
                     style="background-color: #eeeeee"{% endif %}>
                     <td style="text-align: center; padding: 1px 0 0 1px;">
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
-                             src="{% if team.logo %} {{ team.logo.url }} {% elif team.version_set.first %} {{ team.version_set.first.image.url}} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ team.name }} image"></td>
+                             src="{% if team.logo %} {{ team.logo.url }} {% elif team.version_set.first.image %} {{ team.version_set.first.image.url}} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ team.name }} image"></td>
                     <td style="text-align: center"><img class="flag-image" src="{{ team.get_flag }}" alt="{{ team.country|upper }} Flag"></td>
                     <td><a href="{% url "main:edtSelectTeam" fight_id %}?team={{team.id}}">{{ team }}</a></td>
                 </tr>

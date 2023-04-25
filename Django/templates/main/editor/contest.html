@@ -50,6 +50,26 @@
                 {% endfor %}
                 </tbody>
             </table>
+			<div class="gridview-row">
+                        {% for app in applications %}
+                            <div class="gridview-square">
+                                <div class="gridview-title">
+                                    <img class="flag-image" src="{{ app.version.get_flag }}" alt="Flag">
+                                    <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
+									<a href="{% url "main:delete" "registration" app.id contest.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Remove Competitor"></a>
+                                </div>
+                                <div class="gridview-image-container">
+                                    <img class="fit-image"
+                                         src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                                         alt="Robot Image">
+                                </div>
+                            </div>
+                            {% if forloop.counter|divisibleby:5 and not forloop.last %}
+                                </div>
+                                <div class="gridview-row">
+                            {% endif %}
+                        {% endfor %}
+            </div>
         {% endif %}
 
     {% endif %}
