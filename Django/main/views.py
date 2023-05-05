@@ -85,7 +85,7 @@ def edt_fran_view(request):
 def edt_contest_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
     fights = Fight.objects.filter(contest=contest).order_by("number")
-    registrations = contest.registration_set.all().order_by("signup_time")
+    registrations = contest.registration_set.all()
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "fights": fights, "applications": registrations})
 
@@ -144,7 +144,6 @@ def edt_select_robot_view(request):
     else:
         obj_type = "fight"
         obj_id = request.COOKIES.get("editing_fight")
-    print(obj_type)
 
     ignore_wc = ignore_wc.lower()
     ignore_wc = True if ignore_wc == "1" or ignore_wc == "on" or ignore_wc == "true" else False
@@ -339,7 +338,7 @@ def delete_view(request, model, instance_id=None, next_id=None):
         next_url = reverse("main:eventDetail", args=[next_id])
     elif model == "registration":
         instance = Registration.objects.get(pk=instance_id)
-        next_url = reverse("main:editContest", args=[next_id])
+        next_url = reverse("main:edtContest", args=[next_id])
     elif model == "fight":
         instance = Fight.objects.get(pk=instance_id)
         next_url = reverse("main:contestDetail", args=[next_id])

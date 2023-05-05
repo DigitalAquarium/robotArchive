@@ -14,7 +14,7 @@
         <br>
         <a class="editor-link" href="{% url 'main:newFight' contest.id %}?editor=true">Add Fight</a>
         <br>
-        {% if contest.fight_set.all|length > 0 %}
+        {% if fights|length > 0 %}
             <table>
                 <thead>
                 <tr>
@@ -24,9 +24,9 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for fight in contest.fight_set.all %}
+                {% for fight in fights %}
                     <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
-                        <td><a href="{% url "main:edtFightOverview" fight.id %}">{{ fight|truncatechars:55 }} </a></td>
+                        <td><a href="{% url 'main:edtFightOverview' fight.id %}">{{ fight|truncatechars:55 }} </a></td>
                         <td>{{ fight.get_fight_type_display }}</td>
                         <td>
                             {% if fight.winners|length > 0 %}
@@ -44,7 +44,7 @@
                         </td>
                         {% if can_change %}
                             <td><a class="editor-link" href="{% url 'main:editWholeFight' fight.id %}">Edit</a></td>
-                            <td><a class="delete-link" href="{% url 'main:delete' "fight" fight.id contest.id %} ">Delete</a>
+                            <td><a class="delete-link" href="{% url 'main:delete' 'fight' fight.id contest.id %} ">Delete</a>
                             </td> {% endif %}
                     </tr>
                 {% endfor %}
@@ -56,11 +56,11 @@
                                 <div class="gridview-title">
                                     <img class="flag-image" src="{{ app.version.get_flag }}" alt="Flag">
                                     <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
-									<a href="{% url "main:delete" "registration" app.id contest.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Remove Competitor"></a>
+									<a href="{% url 'main:delete' 'registration' app.id contest.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Remove Competitor"></a>
                                 </div>
                                 <div class="gridview-image-container">
                                     <img class="fit-image"
-                                         src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                                         src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
                                          alt="Robot Image">
                                 </div>
                             </div>

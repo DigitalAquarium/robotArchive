@@ -255,7 +255,7 @@ class Robot(models.Model):
 class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)
     robot_name_alphanum = models.CharField(max_length=255, blank=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255,blank=True)
     requires_translation = models.BooleanField(default=False)
 
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")

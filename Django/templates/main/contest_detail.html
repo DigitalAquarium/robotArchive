@@ -32,7 +32,7 @@
 
             {% if can_change %}<a class="editor-link" href="{% url 'main:newFight' contest.id %}">Add Fight</a>
             {% endif %}
-            {% if contest.fight_set.all|length > 0 %}
+            {% if fights|length > 0 %}
                 <table>
                     <thead>
                     <tr>
@@ -46,7 +46,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for fight in contest.fight_set.all %}
+                    {% for fight in fights %}
                         <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
                             <td><a href="{% url "main:fightDetail" fight.id %}">{{ fight|truncatechars:55 }} </a></td>
                             <td>{{ fight.get_fight_type_display }}</td>

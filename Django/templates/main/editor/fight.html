@@ -62,8 +62,13 @@
                 {% elif fight.media_type == "EI" %}
                     <img class="fight-image" src="{{ fight.external_media }}" alt="This Image is Broken, please change it.">
 
-                {% elif fight.media_type == "LV" %}
-                    <video src="{{ fight.internal_media.url }}" width="800" height="450" controls></video>
+                 {% elif fight.media_type == "LV" %}
+					<video id="my-video" class="video-js" controls preload="auto" width="800" height="450" data-setup="{}" >     
+						<source src="{{ fight.internal_media.url }}" type="video/mp4" /> 
+						<video src="{{ fight.internal_media.url }}" width="800" height="450" controls></video>
+						<p class="vjs-no-js"> To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+					</video>
+					<script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
 
                 {% elif fight.media_type == "FB" %}
                     <div id="fb-root"></div>
