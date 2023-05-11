@@ -1,5 +1,6 @@
 import re
 import pycountry
+import datetime
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -29,6 +30,19 @@ COUNTRY_CHOICES.extend([
 ])
 COUNTRY_CHOICES.sort(key=lambda x: x[1])
 COUNTRY_CHOICES = [('XX', "Unspecified")] + COUNTRY_CHOICES
+
+LEADERBOARD_WEIGHTS = [
+    ("A", "UK Antweight / US Fairyweight"),
+    ("U", "US Antweight"),
+    ("B", "Beetleweight"),
+    ("Y", "Hobbyweight"),
+    ("F", "Featherweight"),
+    ("L", "Lightweight"),
+    ("M", "Middleweight"),
+    ("H", "Heavyweight"),
+    ("S", "Super Heavyweight"),
+    ("X", "Not Leaderboard Valid"),
+]
 
 
 def get_flag(code):
@@ -180,7 +194,7 @@ class Robot(models.Model):
     wins = models.IntegerField(default=0)
     losses = models.IntegerField(default=0)
     ranking = models.FloatField(default=RANKING_DEFAULT)
-    lb_rank = models.IntegerField(default=0)
+    lb_weight_class = models.CharField(max_length=1, choices=LEADERBOARD_WEIGHTS, default="X")
     opt_out = models.BooleanField(default=False)  # for opting out of rankings
     first_fought = models.DateField(blank=True, null=True)
     last_fought = models.DateField(blank=True, null=True)
@@ -195,37 +209,6 @@ class Robot(models.Model):
         lower_bound = wc - (wc * BOUNDARY_AMOUNT)
         classes = Weight_Class.objects.filter(weight_grams__lte=upper_bound, weight_grams__gte=lower_bound)
         robs = Robot.objects.filter(version__weight_class__in=classes).distinct()
-        return robs
-
-    @staticmethod
-    def get_leaderboard(wc, last_event=None, update=False):
-        # TODO: Ensure robots appear on one and only one leaderboard
-        robs = Robot.get_by_rough_weight(wc)
-        old_lb = robs.filter(lb_rank__gt=0).order_by("lb_rank")
-        robs = robs.filter(opt_out=False)
-        if last_event is None:
-            last_event = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date
-        robs = robs.filter(first_fought__lte=last_event, last_fought__gte=last_event - relativedelta(years=5))
-        # for robot in robs:
-        #    robot.remove_rank_from(last_event)
-        # robs = robs[:]  # list cast
-        # robs.sort(key=lambda x: -x.ranking)
-        robs = robs.order_by("-ranking")
-        if update and wc in Weight_Class.LEADERBOARD_VALID_GRAMS and list(old_lb) != list(robs[:len(old_lb)]):
-            old_lb.update(lb_rank=0)
-            i = 0
-            for r in robs:
-                if r.ranking <= Robot.RANKING_DEFAULT:
-                    # This Prevents robots that are at the base line or below from gaining a ranking, to prevent
-                    # the leaderboard numbers from just being a list of every robot in weight classes with a small
-                    # number of competitors.
-                    break
-                else:
-                    r.lb_rank = i + 1
-                i += 1
-                if i == 50:
-                    break
-            Robot.objects.bulk_update(robs[:i], ["lb_rank"])
         return robs
 
     def set_alphanum(self, commit=True):
@@ -255,7 +238,7 @@ class Robot(models.Model):
 class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)
     robot_name_alphanum = models.CharField(max_length=255, blank=True)
-    name = models.CharField(max_length=255,blank=True)
+    name = models.CharField(max_length=255, blank=True)
     requires_translation = models.BooleanField(default=False)
 
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
@@ -845,6 +828,110 @@ class Fight_Version(models.Model):
         return self.version.__str__() + " in |" + self.fight.__str__() + "|"
 
 
+class Leaderboard(models.Model):
+    position = models.PositiveSmallIntegerField()
+    ranking = models.FloatField()
+    weight = models.CharField(max_length=1, choices=LEADERBOARD_WEIGHTS)
+    year = models.IntegerField()
+    robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
+
+    @staticmethod
+    def update_class(wc, current_year=None):
+        top_100 = Robot.objects.filter(lb_weight_class=wc).order_by("-ranking")[:100]
+        if current_year:
+            lb = Leaderboard.objects.filter(weight=wc, year=current_year).order_by("position")
+        else:
+            lb = Leaderboard.get_current(wc)
+            try:
+                current_year = lb[0].year
+            except IndexError:
+                current_year = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date.year
+        i = 0
+        update_list = []
+        for robot in top_100:
+            if i < lb.count():
+                to_update = lb[i]
+                to_update.robot = robot
+                to_update.ranking = robot.ranking
+                to_update.position = i + 1
+                update_list.append(to_update)
+            else:
+                new_entry = Leaderboard()
+                new_entry.position = i + 1
+                new_entry.ranking = robot.ranking
+                new_entry.weight = wc
+                new_entry.year = current_year
+                new_entry.robot = robot
+                new_entry.save()
+            i += 1
+        Leaderboard.objects.bulk_update(update_list, ["robot", "ranking","position"])
+
+    @staticmethod
+    def update_all(current_year=None):
+        wcs = [x[0] for x in LEADERBOARD_WEIGHTS]
+        wcs.remove("X")
+        for wc in wcs:
+            Leaderboard.update_class(wc,current_year)
+
+    @staticmethod
+    def update_robot_weight_class(robot, commit=True, year=None):
+        def find_weight_class(grams):
+            BOUNDARY_AMOUNT = 0.21
+            nearest_weight_class = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - grams))
+            if abs(nearest_weight_class - grams) <= nearest_weight_class * BOUNDARY_AMOUNT:
+                # This version is close enough to a valid weight class
+                return LEADERBOARD_WEIGHTS[Weight_Class.LEADERBOARD_VALID_GRAMS.index(nearest_weight_class)][0]
+            else:
+                return "X"
+
+        currentYear = year is None
+        if currentYear:
+            latest_event = Event.objects.all().order_by("-end_date")[0]
+            date = latest_event.end_date
+        else:
+            date = datetime.date(year, 12, 31)
+
+        if not robot.last_fought or robot.last_fought < date - relativedelta(years=5):
+            robot.lb_weight_class = "X"
+            if commit: robot.save()
+            return robot
+        else:
+            #Checks to see if there are less computationally heavy ways to test weight class
+            if robot.version_set.count() == 1:
+                robot.lb_weight_class = find_weight_class(robot.version_set.last().weight_class.weight_grams)
+                if commit: robot.save()
+                return robot
+            if currentYear and find_weight_class(robot.version_set.last().weight_class.weight_grams) == robot.lb_weight_class:
+                return robot
+
+            # Count number of fights each weight class has to determine which it should be a part of. not perfect if the same version goes to events more than 5 years ago
+            fights = {"X": 0}
+            for version in robot.version_set.filter(first_fought__lte = date , last_fought__gte = date - relativedelta(years=5)):
+                if not version.last_fought or version.last_fought < date - relativedelta(years=5):
+                    continue
+                wc = find_weight_class(version.weight_class.weight_grams)
+                if wc not in fights.keys():
+                    fights[wc] = 0
+                fights[wc] += version.fight_set.count()
+            actual_weight_class = "X"
+            for key in fights:
+                if fights[key] >= fights[actual_weight_class]:
+                    actual_weight_class = key
+
+            robot.lb_weight_class = actual_weight_class
+
+            if commit: robot.save()
+            return robot
+
+    @staticmethod
+    def get_current(wc):
+        last_event = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date
+        return Leaderboard.objects.filter(weight=wc, year=last_event.year).order_by("position")
+
+    def __str__(self):
+        return "#" + str(self.position) + " " + self.weight + " in " + str(self.year) + ": " + self.robot.__str__()
+
+
 class Web_Link(models.Model):
     LINK_CHOICES = [
         ("WW", "Website"),
@@ -890,7 +977,7 @@ class Web_Link(models.Model):
         else:
             return settings.STATIC_URL + "web_logos/" + self.type + ".png"
 
-    def can_edit(self,user): #TODO: Improve this?
+    def can_edit(self, user):  # TODO: Improve this?
         p = Person.objects.get(user=user)
         return user.is_staff
 

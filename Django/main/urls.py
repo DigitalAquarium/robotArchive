@@ -67,4 +67,6 @@ urlpatterns = [
     #path('editor/recalculate', views.recalc_all, name='recalculateAll'),
     path('test/tourny', views.tournament_tree, name='tournament_test'),
     #path('import', views.importView, name='import'),
+    path('test/graph', views.graph_test, name='graph_test'),
+    path('test/graph_data', views.graph_data, name='graph_test'),
 ]

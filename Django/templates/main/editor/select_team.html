@@ -9,7 +9,7 @@
 {% block content %}
     <section class="search-params">
         <form class="search-form" method="get"
-          action="{% url "main:edtSelectTeam" fight_id %}">
+          action="{% url 'main:edtSelectTeam' fight_id %}">
              <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>

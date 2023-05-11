@@ -8,7 +8,7 @@
 
 {% block content %}
     <section class="search-params">
-        <form method="get" action="{% url "main:leaderboard" %}">
+        <form method="get" action="{% url 'main:leaderboard' %}">
             <label>Weight Class:
                 <select name="weight">
                     {% for wc in weights %}
@@ -17,11 +17,36 @@
                     {% endfor %}
                 </select>
             </label>
+			<label>Year:
+                <select name="year">
+                    {% for year in years %}
+                        <option value="{{ year }}"
+                                {% if chosen_year == year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </label>
             <br>
             <input type="submit" value="Go">
         </form>
     </section>
     <div class="main-content">
+	<div class="gridview-row">
+		{% for lb in robot_list %}
+			{% if forloop.counter > 3 %}
+				{%comment%}Do Nothing. end loop here, only interested in top 3 placers {%endcomment%}
+            {%else%}
+            <div class="gridview-square">
+                <div class="gridview-title">
+                    <img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag">
+                    <a href="{% url 'main:robotDetail' lb.robot.id %}">{{ lb.robot }}</a>
+                </div>
+                <div class="gridview-image-container">
+                    <img class="fit-image" src="{% if lb.robot.version_set.last.image %} {{ lb.robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="Robot Image">
+                </div>
+            </div>
+		{% endif %}
+		{% endfor %}
+    </div>
         <table>
             <thead>
             <tr>
@@ -35,27 +60,27 @@
             </tr>
             </thead>
             <tbody>
-            {% for robot in robot_list %}
-                <tr id="row-{{ robot.id }}" {% if forloop.counter|divisibleby:2 %}
+            {% for lb in robot_list %}
+                <tr id="row-{{ lb.robot.id }}" {% if forloop.counter|divisibleby:2 %}
                     style="background-color: #eeeeee"{% endif %}>
                     <td style="text-align: center">{% if forloop.counter <= 3 %}{% if forloop.counter == 1 %}
                         <img class="award-icon" style="width: 1em; height:1em"
-                             src="{% static "awards/trophy_gold.png" %}" alt="award icon">
+                             src="{% static 'awards/trophy_gold.png' %}" alt="award icon">
                     {% elif forloop.counter == 2 %}
                         <img class="award-icon" style="width: 1em; height:1em"
-                             src="{% static "awards/trophy_silver.png" %}" alt="award icon">
+                             src="{% static 'awards/trophy_silver.png' %}" alt="award icon">
                     {% else %}
                         <img class="award-icon" style="width: 1em; height:1em"
-                             src="{% static "awards/trophy_bronze.png" %}" alt="award icon">
+                             src="{% static 'awards/trophy_bronze.png' %}" alt="award icon">
                     {% endif %}{% else %}
                         {{ forloop.counter }}
                     {% endif %}</td>
-                    <td style="text-align: center">{{ robot.ranking|floatformat:1 }}</td>
-                    <td style="text-align: center"><img class="flag-image" src="{{ robot.get_flag }}" alt="Flag"></td>
-                    <td><a href="{% url "main:robotDetail" robot.id %}">{{ robot }}</a></td>
-                    <td style="text-align: center">{{ robot.wins }}</td>
-                    <td style="text-align: center">{{ robot.losses }}</td>
-                    <td style="text-align: center">{{ robot.awards|length }}</td>
+                    <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
+                    <td style="text-align: center"><img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag"></td>
+                    <td><a href="{% url 'main:robotDetail' lb.robot.id %}">{{ lb.robot }}</a></td>
+                    <td style="text-align: center">{{ lb.robot.wins }}</td>
+                    <td style="text-align: center">{{ lb.robot.losses }}</td>
+                    <td style="text-align: center">{{ lb.robot.awards|length }}</td>
                 </tr>
             {% endfor %}
             </tbody>

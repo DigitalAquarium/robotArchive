@@ -124,7 +124,8 @@ def edt_fight_view(request, fight_id):
             response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
         else:
             form = FightForm(instance=fight)
-            response = render(request, "main/editor/fight.html", {"form": form, "has_winner": has_winner, "fight": fight})
+            response = render(request, "main/editor/fight.html",
+                              {"form": form, "has_winner": has_winner, "fight": fight})
             response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
     return response
 
@@ -298,7 +299,7 @@ def edt_signup_version_view(request, fight_id, version_id):
     fv.version = version
     fv.won = False
     fv.save()
-    if Registration.objects.filter(version=version,contest=contest).count() == 0:
+    if Registration.objects.filter(version=version, contest=contest).count() == 0:
         reg = Registration()
         reg.contest = contest
         reg.version = version
@@ -744,15 +745,27 @@ def robot_index_view(request):
 
 def leaderboard(request):
     weight = request.GET.get("weight")
+    year = request.GET.get("year")
+    current_year = Event.objects.all().order_by("-end_date")[0].end_date.year
+    years = [x for x in range(1994, current_year + 1)]
     try:
-        weight = int(weight)
-    except (ValueError, TypeError):
-        weight = 100000
-    robot_list = Robot.get_leaderboard(weight, update=True)
+        year = int(year)
+    except (ValueError,TypeError):
+        year = current_year
+    if year not in years:
+        year = current_year
+    if not weight or weight not in [x[0] for x in LEADERBOARD_WEIGHTS]:
+        weight = "H"
+    #Leaderboard.update_class(weight)
+    robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
+    # robot_list = Leaderboard.get_current(weight)
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
-                   "weights": [(0, "")] + Weight_Class.LEADERBOARD_VALID,
+                   "weights": [("H", "")] + LEADERBOARD_WEIGHTS[0:-1],
                    "chosen_weight": weight,
+                   "chosen_year": year,
+                   "years": years,
+                   "is_this_year": year == current_year
                    })
 
 
@@ -1038,10 +1051,10 @@ def franchise_modify_view(request, franchise_id=None):
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this franchise."))
     if request.method == "POST":
         if franchise_id is None:
-            form = FranchiseForm(request.POST,request.FILES)
+            form = FranchiseForm(request.POST, request.FILES)
         else:
             franchise = Franchise.objects.get(pk=franchise_id)
-            form = FranchiseForm(request.POST,request.FILES, instance=franchise)
+            form = FranchiseForm(request.POST, request.FILES, instance=franchise)
         if form.is_valid():
             new = form.save()
             if franchise_id is None:
@@ -1175,10 +1188,10 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
 
 @login_required(login_url='/accounts/login/')  # Still Being Used
 def modify_fight_version_view(request, fight_id, vf_id=None):
-    #editor = request.GET.get("editor") or ""
+    # editor = request.GET.get("editor") or ""
     editor = request.COOKIES.get("editing_fight") is not None and request.COOKIES.get("editing_fight") != ""
     fight = Fight.objects.get(pk=fight_id)
-    #editor = editor.lower() == "true"
+    # editor = editor.lower() == "true"
 
     can_change = fight.can_edit(request.user)
     if not can_change:
@@ -1613,22 +1626,31 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
 
 
 def recalc_all(request):
-    Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0)
+    #Need top update more robots than currently doing to add the X to them
+    Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X")
 
     fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")
     contest_cache = None
     for fight in fights:
         if contest_cache != fight.contest:
+            if contest_cache is not None:
+                print("updating robots")
+                for reg in contest_cache.registration_set.all():
+                    Leaderboard.update_robot_weight_class(reg.version.robot, year=contest_cache.event.end_date.year)
+                if contest_cache.event.end_date.year != fight.contest.event.end_date.year:
+                    print("Creating Leaderboard for year: " + str(contest_cache.event.end_date.year))
+                    Leaderboard.update_all(contest_cache.event.end_date.year)
             contest_cache = fight.contest
+            event_cache = contest_cache.event
             print("Saving:", contest_cache, fight.contest.event)
         fight.calculate(True)
-
     return render(request, "main/credits.html", {})
 
+
 def tournament_tree(request):
-    #97
-    #3216
+    # 97
+    # 3216
     contest = Contest.objects.get(pk=97)
     all_fights = Fight.objects.filter(contest=contest)
     entry = Fight.objects.get(pk=3216)
@@ -1640,7 +1662,7 @@ def tournament_tree(request):
         entrantDict[version.id] = i + 1
 
     for fight in fights:
-        #print(fight)
+        # print(fight)
         for fv in fight.fight_version_set.all():
             prev = all_fights.filter(fight_version__version=fv.version)
             prev = prev.exclude(number__gte=fight.number).order_by("-number")
@@ -1649,7 +1671,7 @@ def tournament_tree(request):
                 links[prev[0].fight_version_set.get(version=fv.version)] = fight
     localIDDict = {}
     i = 0
-    #print(links)
+    # print(links)
     for fight in all_fights:
         out += "<fight"
         try:
@@ -1658,7 +1680,7 @@ def tournament_tree(request):
             i += 1
             localID = localIDDict[fight] = i
         out += ' id="' + str(localID) + '">\n'
-        out += "\t<db_id>"+str(fight.id)+"</db_id>\n"
+        out += "\t<db_id>" + str(fight.id) + "</db_id>\n"
         for fv in fight.fight_version_set.all():
             out += '\t<competitor entrant="' + str(entrantDict[fv.version.id]) + '">\n'
             try:
@@ -1676,3 +1698,21 @@ def tournament_tree(request):
     print(out)
 
     return render(request, "main/credits.html", {})
+
+
+def graph_test(request):
+    return render(request, 'graph_test.html')
+
+
+def graph_data(request):
+    labels = []
+    data = []
+    wedge = Robot.objects.get(id=88)
+    for version in wedge.version_set.all():
+        for fv in version.fight_version_set.all():
+            labels.append("hi")
+            data.append(fv.ranking_change)
+    return JsonResponse(data={
+        'labels': labels,
+        'data': data,
+    })

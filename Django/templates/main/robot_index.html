@@ -59,11 +59,11 @@
                     <a style="display:flex; color:inherit" href="{% url 'main:robotDetail' robot.id %}">
                         <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
                         <span>
-                            {%if robot.lb_rank != 0%}<span style="font-weight: bold;font-style: italic;
+                            {%comment%}{%if robot.lb_rank != 0%}<span style="font-weight: bold;font-style: italic;
                                     color:  {% if robot.lb_rank == 1 %}gold
                                             {% elif robot.lb_rank == 2 %}silver
                                             {% elif robot.lb_rank == 3 %}darkgoldenrod
-                                            {%else%}purple{% endif %};">#{{ robot.lb_rank }}</span>{% endif %}
+                                            {%else%}purple{% endif %};">#{{ robot.lb_rank }}</span>{% endif %}{%endcomment%}
                             <span>{{ robot.name }}</span>
                             {% if robot.requires_translation %} <span class="alphanum">({{ robot.name_alphanum }})</span>{% endif %}
                         </span>
