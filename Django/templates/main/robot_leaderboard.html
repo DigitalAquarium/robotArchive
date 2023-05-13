@@ -4,6 +4,39 @@
 
 {% block meta %}
     <title>Leaderboard - Roboteer's Tavern</title>
+	
+	<style>
+	.big-trophy{
+		height: 0.9em;
+		margin-inline-end: 0.1em;
+	}
+	.gridview-row {
+		height: 20em;
+	}
+	.gridview-square {
+		width:30%;
+	}
+	.gridview-title {
+		height: FIT-CONTENT;
+		align-items: center;
+	}
+	.gridview-subtitle {
+		font-size: 15px;
+		width: 100%;
+		display: flex;
+	}
+	.gridview-subtitle p{
+	   margin: 0em;
+	}
+	.gridview-image-container{
+		height:80%;
+	}
+	.lb-table-container{
+		display:flex;
+		justify-content:center;
+	}
+	</style>
+	
 {% endblock %}
 
 {% block content %}
@@ -36,9 +69,13 @@
 				{%comment%}Do Nothing. end loop here, only interested in top 3 placers {%endcomment%}
             {%else%}
             <div class="gridview-square">
-                <div class="gridview-title">
-                    <img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag">
+				<div class="gridview-title">
+                    <img class="big-trophy" src="{% if forloop.counter == 1 %}{% static 'awards/trophy_gold.png' %}{% elif forloop.counter == 2 %}{% static 'awards/trophy_silver.png' %}{%else%}{% static 'awards/trophy_bronze.png' %}{%endif%}" alt="Flag">
                     <a href="{% url 'main:robotDetail' lb.robot.id %}">{{ lb.robot }}</a>
+                </div>
+                <div class="gridview-subtitle">
+                    <img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag">
+                    <p>{{ lb.ranking|floatformat:2 }}</p>
                 </div>
                 <div class="gridview-image-container">
                     <img class="fit-image" src="{% if lb.robot.version_set.last.image %} {{ lb.robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="Robot Image">
@@ -47,6 +84,7 @@
 		{% endif %}
 		{% endfor %}
     </div>
+	<div class="lb-table-container">
         <table>
             <thead>
             <tr>
@@ -85,5 +123,6 @@
             {% endfor %}
             </tbody>
         </table>
+	</div>
     </div>
 {% endblock %}

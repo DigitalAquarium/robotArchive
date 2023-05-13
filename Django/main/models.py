@@ -837,6 +837,15 @@ class Leaderboard(models.Model):
 
     @staticmethod
     def update_class(wc, current_year=None):
+        if current_year is None:
+            latest_event = Event.objects.all().order_by("-end_date")[0]
+            date = latest_event.end_date
+        else:
+            date = datetime.date(current_year, 12, 31)
+
+        five_years_ago = date - relativedelta(years=5)
+        Robot.objects.filter(last_fought__lte=five_years_ago).exclude(lb_weight_class="X").update(lb_weight_class="X")
+
         top_100 = Robot.objects.filter(lb_weight_class=wc).order_by("-ranking")[:100]
         if current_year:
             lb = Leaderboard.objects.filter(weight=wc, year=current_year).order_by("position")
@@ -865,6 +874,8 @@ class Leaderboard(models.Model):
                 new_entry.save()
             i += 1
         Leaderboard.objects.bulk_update(update_list, ["robot", "ranking","position"])
+        #if leaderboard shrinks for some reason, delete garbage data at the end
+        lb.filter(position__gt=top_100.count()).delete()
 
     @staticmethod
     def update_all(current_year=None):
@@ -891,7 +902,9 @@ class Leaderboard(models.Model):
         else:
             date = datetime.date(year, 12, 31)
 
-        if not robot.last_fought or robot.last_fought < date - relativedelta(years=5):
+        five_years_ago = date - relativedelta(years=5)
+
+        if not robot.last_fought or robot.last_fought < five_years_ago:
             robot.lb_weight_class = "X"
             if commit: robot.save()
             return robot
@@ -906,8 +919,8 @@ class Leaderboard(models.Model):
 
             # Count number of fights each weight class has to determine which it should be a part of. not perfect if the same version goes to events more than 5 years ago
             fights = {"X": 0}
-            for version in robot.version_set.filter(first_fought__lte = date , last_fought__gte = date - relativedelta(years=5)):
-                if not version.last_fought or version.last_fought < date - relativedelta(years=5):
+            for version in robot.version_set.filter(first_fought__lte = date , last_fought__gte = five_years_ago):
+                if not version.last_fought or version.last_fought < five_years_ago:
                     continue
                 wc = find_weight_class(version.weight_class.weight_grams)
                 if wc not in fights.keys():

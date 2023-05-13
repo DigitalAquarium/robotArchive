@@ -744,6 +744,7 @@ def robot_index_view(request):
 
 
 def leaderboard(request):
+    #CSS Notes: row height up to 20em
     weight = request.GET.get("weight")
     year = request.GET.get("year")
     current_year = Event.objects.all().order_by("-end_date")[0].end_date.year
@@ -756,8 +757,9 @@ def leaderboard(request):
         year = current_year
     if not weight or weight not in [x[0] for x in LEADERBOARD_WEIGHTS]:
         weight = "H"
-    #Leaderboard.update_class(weight)
+    Leaderboard.update_class(weight)
     robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
+
     # robot_list = Leaderboard.get_current(weight)
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
@@ -765,6 +767,7 @@ def leaderboard(request):
                    "chosen_weight": weight,
                    "chosen_year": year,
                    "years": years,
+                   "top_three": None,
                    "is_this_year": year == current_year
                    })
 
