@@ -1,0 +1,29 @@
+.big-trophy{
+	height: 0.9em;
+	margin-inline-end: 0.1em;
+}
+.gridview-row {
+	height: 20em;
+}
+.gridview-square {
+	width:30%;
+}
+.gridview-title {
+	height: FIT-CONTENT;
+	align-items: center;
+}
+.gridview-subtitle {
+	font-size: 15px;
+	width: 100%;
+	display: flex;
+}
+.gridview-subtitle p{
+   margin: 0em;
+}
+.gridview-image-container{
+	height:80%;
+}
+.lb-table-container{
+	display:flex;
+	justify-content:center;
+}

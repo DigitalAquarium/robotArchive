@@ -61,7 +61,7 @@ def edt_new_event_view(request):
 
 def edt_event_view(request, event_id):
     event = Event.objects.get(pk=event_id)
-    return render(request, "main/editor/edit_event.html",
+    return render(request, "main/editor/event.html",
                   {"event": event})
 
 
@@ -759,6 +759,9 @@ def leaderboard(request):
         weight = "H"
     Leaderboard.update_class(weight)
     robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
+    top_three = []
+    for i in range(robot_list.count() if robot_list.count() < 3  else 3):
+        top_three.append( (robot_list[i],robot_list[i].robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")[0]) )
 
     # robot_list = Leaderboard.get_current(weight)
     return render(request, "main/robot_leaderboard.html",
@@ -767,7 +770,7 @@ def leaderboard(request):
                    "chosen_weight": weight,
                    "chosen_year": year,
                    "years": years,
-                   "top_three": None,
+                   "top_three": top_three,
                    "is_this_year": year == current_year
                    })
 

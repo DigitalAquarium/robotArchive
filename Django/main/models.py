@@ -837,6 +837,10 @@ class Leaderboard(models.Model):
 
     @staticmethod
     def update_class(wc, current_year=None):
+        valid = [x[0] for x in LEADERBOARD_WEIGHTS]
+        valid.remove("X")
+        if wc not in valid:
+            return
         if current_year is None:
             latest_event = Event.objects.all().order_by("-end_date")[0]
             date = latest_event.end_date

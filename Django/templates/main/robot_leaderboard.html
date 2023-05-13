@@ -4,39 +4,7 @@
 
 {% block meta %}
     <title>Leaderboard - Roboteer's Tavern</title>
-	
-	<style>
-	.big-trophy{
-		height: 0.9em;
-		margin-inline-end: 0.1em;
-	}
-	.gridview-row {
-		height: 20em;
-	}
-	.gridview-square {
-		width:30%;
-	}
-	.gridview-title {
-		height: FIT-CONTENT;
-		align-items: center;
-	}
-	.gridview-subtitle {
-		font-size: 15px;
-		width: 100%;
-		display: flex;
-	}
-	.gridview-subtitle p{
-	   margin: 0em;
-	}
-	.gridview-image-container{
-		height:80%;
-	}
-	.lb-table-container{
-		display:flex;
-		justify-content:center;
-	}
-	</style>
-	
+	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -63,27 +31,31 @@
         </form>
     </section>
     <div class="main-content">
+	{% if robot_list|length == 0%}
+	No data to display
+	{%else%}
 	<div class="gridview-row">
-		{% for lb in robot_list %}
-			{% if forloop.counter > 3 %}
-				{%comment%}Do Nothing. end loop here, only interested in top 3 placers {%endcomment%}
-            {%else%}
+		{% for entry in top_three %}
+			{%with entry|first as lb%}
+			{%with entry|last as version%}
             <div class="gridview-square">
 				<div class="gridview-title">
                     <img class="big-trophy" src="{% if forloop.counter == 1 %}{% static 'awards/trophy_gold.png' %}{% elif forloop.counter == 2 %}{% static 'awards/trophy_silver.png' %}{%else%}{% static 'awards/trophy_bronze.png' %}{%endif%}" alt="Flag">
-                    <a href="{% url 'main:robotDetail' lb.robot.id %}">{{ lb.robot }}</a>
+                    <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
                 </div>
                 <div class="gridview-subtitle">
-                    <img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag">
+                    <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
                     <p>{{ lb.ranking|floatformat:2 }}</p>
                 </div>
                 <div class="gridview-image-container">
-                    <img class="fit-image" src="{% if lb.robot.version_set.last.image %} {{ lb.robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="Robot Image">
+                    <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="Robot Image">
                 </div>
             </div>
-		{% endif %}
+		{% endwith %}
+		{% endwith %}
 		{% endfor %}
     </div>
+	{% if robot_list|length > 3%}
 	<div class="lb-table-container">
         <table>
             <thead>
@@ -92,37 +64,34 @@
                 <th>Score</th>
                 <th></th>
                 <th>Robot</th>
+				{%if is_this_year%}
                 <th>Wins</th>
                 <th>Losses</th>
                 <th>Awards</th>
+				{%endif%}
             </tr>
             </thead>
             <tbody>
             {% for lb in robot_list %}
                 <tr id="row-{{ lb.robot.id }}" {% if forloop.counter|divisibleby:2 %}
                     style="background-color: #eeeeee"{% endif %}>
-                    <td style="text-align: center">{% if forloop.counter <= 3 %}{% if forloop.counter == 1 %}
-                        <img class="award-icon" style="width: 1em; height:1em"
-                             src="{% static 'awards/trophy_gold.png' %}" alt="award icon">
-                    {% elif forloop.counter == 2 %}
-                        <img class="award-icon" style="width: 1em; height:1em"
-                             src="{% static 'awards/trophy_silver.png' %}" alt="award icon">
-                    {% else %}
-                        <img class="award-icon" style="width: 1em; height:1em"
-                             src="{% static 'awards/trophy_bronze.png' %}" alt="award icon">
-                    {% endif %}{% else %}
-                        {{ forloop.counter }}
-                    {% endif %}</td>
+					{% if forloop.counter > 3 %}
+                    <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
                     <td style="text-align: center"><img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag"></td>
                     <td><a href="{% url 'main:robotDetail' lb.robot.id %}">{{ lb.robot }}</a></td>
+					{%if is_this_year%}
                     <td style="text-align: center">{{ lb.robot.wins }}</td>
                     <td style="text-align: center">{{ lb.robot.losses }}</td>
                     <td style="text-align: center">{{ lb.robot.awards|length }}</td>
+					{%endif%}
+					{%endif%}
                 </tr>
             {% endfor %}
             </tbody>
         </table>
 	</div>
+	{%endif%}
+	{%endif%}
     </div>
 {% endblock %}
