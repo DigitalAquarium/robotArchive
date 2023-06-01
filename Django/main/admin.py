@@ -71,3 +71,12 @@ class RegistrationAdmin(admin.ModelAdmin):
 @admin.register(Award)
 class AwardAdmin(admin.ModelAdmin):
     search_fields = ['name', 'event__name']
+
+@admin.register(Web_Link)
+class WebLinkAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Source)
+class SourceAdmin(admin.ModelAdmin):
+    pass
+

@@ -63,7 +63,7 @@
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {{ event.get_flag }}  {% endif %}"
              alt="Event Logo">
         </span>
                 <div class="hrz-index-content">

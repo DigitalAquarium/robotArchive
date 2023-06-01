@@ -21,4 +21,6 @@ var target = L.latLng(element.getAttribute("lat"), element.getAttribute("lng"));
 map.setView(target, 14);
 
 // Place a marker on the same location.
-L.marker(target).addTo(map);
+L.marker(target).addTo(map)
+	.bindPopup(element.getAttribute("location_name"))
+	.openPopup();

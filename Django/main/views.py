@@ -61,6 +61,40 @@ def edt_new_event_view(request):
 
 def edt_event_view(request, event_id):
     event = Event.objects.get(pk=event_id)
+
+    if request.method == "POST":
+        sources = event.source_set.all()
+        for i in range(len(sources)):
+            updated_name = request.POST["src-name-" + str(i)]
+            updated_url = request.POST["src-link-" + str(i)]
+            current = sources[i]
+            if updated_url != current.link or updated_name != current.name:
+                validator = URLValidator()
+                try:
+                    validator(updated_url)
+                    current.name = updated_name
+                    current.link = updated_url
+                    current.archived = "web.archive.org" in updated_url
+                    current.last_accessed=timezone.now()
+                    current.save()
+                except ValidationError:
+                    pass
+
+        new_name = request.POST["new-src-name"]
+        new_link = request.POST["new-src-link"]
+        if new_name != "" and new_name is not None and new_link != "" and new_link is not None:
+            validator = URLValidator()
+            src = Source()
+            try:
+                validator(new_link)
+                src.name= new_name
+                src.link = new_link
+                src.archived = "web.archive.org" in new_link
+                src.last_accessed=timezone.now()
+                src.event = event
+                src.save()
+            except ValidationError:
+                pass
     return render(request, "main/editor/event.html",
                   {"event": event})
 
@@ -86,8 +120,59 @@ def edt_contest_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
     fights = Fight.objects.filter(contest=contest).order_by("number")
     registrations = contest.registration_set.all()
+    other_contests = Contest.objects.filter(event=contest.event).exclude(pk=contest_id)
+
+    def move_to_contest(fight,target_contest):
+        fight.contest = target_contest
+        for fv in Fight_Version.objects.filter(fight=fight):
+            v = fv.version
+            if target_contest.registration_set.filter(version=v).count() == 0:
+                reg = Registration()
+                reg.contest = target_contest
+                reg.version = v
+                reg.approved = True
+                reg.signee = v.owner
+                reg.save()
+        fight.save()
+
+
+    if request.method == "POST":
+        if request.POST["save"] == "move":
+            fight_dict = {}
+            for i in range(fights.count()):
+                #Create a permanent fight record that does not change when fights are removed from the contest
+                #prevents indexoutofbound
+                fight_dict[i] = fights[i]
+            for i in range(len(fight_dict)):
+                if int(request.POST["fight-"+str(i)]) != contest_id:
+                    if "recursive-" + str(i) in request.POST.keys():
+                        versions_checked = []
+                        versions_to_check = [fv.version for fv in Fight_Version.objects.filter(fight=fight_dict[i])]
+                        fights_to_move = [fight_dict[i]]
+                        while len(versions_to_check) > 0:
+                            v = versions_to_check.pop()
+                            fights_to_check = Fight.objects.filter(contest=contest,fight_version__version=v).exclude(fight_version__version__in=versions_checked).exclude(fight_version__version__in=versions_to_check)
+                            for fight in fights_to_check:
+                                fights_to_move.append(fight)
+                                for fv in fight.fight_version_set.all().exclude(version=v):
+                                    if fv.version not in versions_to_check and fv.version not in versions_checked:
+                                        versions_to_check.append(fv.version)
+                            versions_checked.append(v)
+                        for fight in fights_to_move:
+                            move_to_contest(fight,Contest.objects.get(pk=request.POST["fight-"+str(i)]))
+
+                    else:
+                        move_to_contest(fight_dict[i], Contest.objects.get(pk=request.POST["fight-"+str(i)]))
+        elif request.POST["save"] == "prune":
+            versions = Version.objects.filter(fight_version__fight__contest=contest).distinct()
+            Registration.objects.filter(contest=contest).exclude(version__in=versions).delete()
+            i = 1
+            for f in fights:
+                f.number = i
+                i += 1
+            Fight.objects.bulk_update(fights,["number"])
     return render(request, "main/editor/contest.html",
-                  {"contest": contest, "fights": fights, "applications": registrations})
+                  {"contest": contest, "other_contests": other_contests, "fights": fights, "applications": registrations})
 
 
 def edt_fight_view(request, fight_id):
@@ -484,12 +569,12 @@ def new_event_view(request, franchise_id):
         return redirect("%s?m=%s" % (
             reverse("main:message"), "You do not have permission to create a new event for this franchise."))
     if request.method == "POST":
-        form = EventForm(request.POST)
+        form = EventForm(request.POST,request.FILES)
         if form.is_valid():
             event = form.save(commit=False)
             event.franchise = fran
             event.save()
-            return redirect("main:eventDetail", event.id)
+            return redirect("main:edtEvent", event.id)
     else:
         form = EventForm()
     return render(request, "main/new_event.html", {"form": form, "fran": fran})
@@ -505,7 +590,7 @@ def modify_event_view(request, event_id):
         form = EventForm(request.POST, request.FILES, instance=event)
         if form.is_valid():
             new = form.save()
-            return redirect("main:eventDetail", new.id)
+            return redirect("main:edtEvent", new.id)
     else:
         form = EventForm(instance=event)
     return render(request, "main/edit_event.html", {"form": form, "event_id": event_id})
@@ -637,7 +722,7 @@ def new_contest_view(request, event_id):
             contest = form.save(commit=False)
             contest.event = event
             contest.save()
-            return redirect("main:eventDetail", event.id)
+            return redirect("main:edtEvent", event.id)
     else:
         form = ContestForm()
     return render(request, "main/new_contest.html", {"form": form, "event": event})
@@ -653,7 +738,7 @@ def edit_contest_view(request, contest_id):
         form = ContestForm(request.POST, instance=contest)
         if form.is_valid():
             form.save()
-            return redirect("main:eventDetail", contest.event.id)
+            return redirect("main:edtEvent", contest.event.id)
     else:
         form = ContestForm(instance=contest)
     return render(request, "main/edit_contest.html", {"form": form, "contest_id": contest_id})
@@ -1129,11 +1214,10 @@ def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the sa
             "%s?m=%s" % (reverse("main:message"), "You do not have permission to add a fight to this contest."))
     f = Fight()
     f.contest = contest
-    f.number = 1
-    for prevFight in contest.fight_set.all():  # Should Probably find a more efficient way of doing
-        # this but it'll work for now
-        if prevFight.number >= f.number:
-            f.number = prevFight.number + 1
+    try:
+        f.number = contest.fight_set.all().order_by("-number")[0].number + 1
+    except IndexError:
+        f.number = 1
     if contest.fight_type == "MU":
         f.save()
         if request.GET.get("editor") == "true":

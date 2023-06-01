@@ -315,6 +315,7 @@ class Event(models.Model):
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     latitude = models.FloatField()
     longitude = models.FloatField()
+    location_name = models.CharField(max_length=255,default="Undefined")
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -1036,6 +1037,23 @@ class Source(models.Model):
     archived = models.BooleanField()
     last_accessed = models.DateField(default=timezone.now)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    
+    def get_domain(self): # TODO: This wastes the server's time, do this in JavaScript
+        if "ultimate-robot-archive.fandom.com" in self.link:
+            #this does not display properly with iconhorse
+            return "fandom.com"
+        if self.link[:8] == "https://":
+            ret = self.link[8:]
+            i = 8
+        elif self.link[:7] == "http://":
+            ret = self.link[7:]
+            i = 7
+        if ret[:4] == "www.":
+            ret = ret[4:]
+        for i in range(i,len(ret)):
+            if ret[i] == '/' or ret[i] == ':':
+                break
+        return ret[:i]
 
     def __str__(self):
         return self.name

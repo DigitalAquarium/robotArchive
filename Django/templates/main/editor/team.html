@@ -37,7 +37,7 @@
                         <input type="text" id="link{{ forloop.counter0 }}" name="link{{ forloop.counter0 }}" value="{{ web.link }}" style="width: 100%">
                     </td>
                 <td>
-                    <a href="{% url 'main:delete_noreturn' "web_link" web.id%}?redirect={% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Delete Link"></a>
+                    <a href="{% url 'main:delete_noreturn' 'web_link' web.id%}?redirect={% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Delete Link"></a>
                 </td>
                 </tr>
             {% endfor %}

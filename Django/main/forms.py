@@ -172,10 +172,8 @@ class EventForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = ['name', 'description', 'logo', 'country', 'start_date', 'end_date', 'start_time', 'end_time',
-                  'registration_open', 'registration_close', 'latitude', 'longitude']
+                  'registration_open', 'registration_close', 'location_name', 'latitude', 'longitude','franchise']
         widgets = {
-            'start_date': forms.SelectDateWidget(),
-            'end_date': forms.SelectDateWidget(),
             'start_time': forms.TimeInput(attrs={'supports_microseconds': False}),
             'end_time': forms.TimeInput(attrs={'supports_microseconds': False}),
         }

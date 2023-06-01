@@ -3,27 +3,32 @@
 {% load static %}
 {% block meta %}
     <title>{{ event }} - Roboteer's Tavern</title>
-    <link rel="stylesheet" href="{% static "style/robot_detail.css" %}">
+    <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
+	<link rel="stylesheet" href="{% static 'style/event_detail.css' %}">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"/>
+	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
 {% endblock %}
 {% block content %}
     <div class="main-content">
+		<a href="{%url 'main:edtHome'%}">Home</a>
         {% if event %}
             <div class="version-block" style="display:block">
                 <div class="version-header">
                     <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
                     <p>{{ event }}</p>
+					<a href="{% url 'main:editEvent' event.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Event"></a>
                 </div>
 
                 <div class="version-content">
                     <div class="version-image">
                         <img class="fit-image"
-                             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %} {% endif %}"
+                             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static 'unknown.png' %} {% endif %}"
                              alt="Event Image">
                     </div>
                     <div class="version-text">
                         <div class="version-mini-head">
                             <span>Franchise : <a
-                                    href="{% url "main:franchiseDetail" event.franchise.id %}">{{ event.franchise }}</a></span>
+                                    href="{% url 'main:franchiseDetail' event.franchise.id %}">{{ event.franchise }}</a></span>
                             <span>Start Date: {{ event.start_date|date:"d F Y" }}</span>
                             <span>End Date: {{ event.end_date|date:"d F Y" }}</span>
                         </div>
@@ -87,7 +92,44 @@
                     {% endfor %}
                 </table>
             {% endif %}
-
+		<h2>Sources:</h2>
+		<form method="post" style="display:block">
+            {% csrf_token %}
+		<table style="border:None">
+		{% for source in event.source_set.all %}
+                <tr>
+                    <td style="border:None"><label for="src{{ forloop.counter0 }}">
+                        <a href="{{ source.link }}"><img src="{%if source.archived %}{%static 'web_logos/WA.png'%}{%else%}https://icon.horse/icon/{{source.get_domain}}{%endif%}" alt="{{ source.name }}" width="25px" height="25px"></a>
+                    </label></td>
+					<td style="width: 300px; border:None">
+                        <input type="text" id="src-name-{{ forloop.counter0 }}" name="src-name-{{ forloop.counter0 }}" value="{{ source.name }}" style="width: 100%">
+                    </td>
+                    <td style="width: 750px; border:None">
+                        <input type="text" id="src-link-{{ forloop.counter0 }}" name="src-link-{{ forloop.counter0 }}" value="{{ source.link }}" style="width: 100%">
+                    </td>
+                <td style="border:None">
+                    <a href="{% url 'main:delete_noreturn' 'source' source.id%}?redirect={% url 'main:edtEvent' event.id %}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Delete Link"></a>
+                </td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td style="border:None"><label for="new-source">
+                    New:
+                </label></td>
+				<td style="width: 300px;border:None">
+                    <input type="text" id="new-src-name" name="new-src-name" style="width: 100%">
+                </td>
+                <td style="width: 750px; border:None">
+                    <input type="text" id="new-src-link" name="new-src-link" style="width: 100%">
+                </td>
+            </tr>
+            </table>
+            <button class="editor-link" name="save" value="save">Save</button>
+            </form>
+		</table>
+		<br>
+		<div id="osm-map" location_name="{{ event.location_name }}" lat="{{ event.latitude }}" lng="{{ event.longitude }}"></div>
+		<script src="{% static 'scripts/open_street_map.js' %}"></script>
         {% else %}
             Something appears to have gone wrong
         {% endif %}

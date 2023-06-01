@@ -24,16 +24,14 @@
         {% if event.logo or event.franchise.logo %}
             <div class="event-logo-image">
                 <img class="fit-image" src="{% if event.logo %}
-
-                    {{ event.logo.url }}{% else %}{% if event.franchise.logo %} {{ event.franchise.logo.url }}{% endif %}{% endif %}"
-                     alt="logo">
+                    {{ event.logo.url }}{% else %}{% if event.franchise.logo %} {{ event.franchise.logo.url }}{% endif %}{% endif %}" alt="logo">
             </div>
         {% endif %}
 
 
 
         <div class="event-details">
-            <p>Organised by: <a href="{% url "main:franchiseDetail" event.franchise.id %}">{{ event.franchise }}</a>
+            <p>Organised by: <a href="{% url 'main:franchiseDetail' event.franchise.id %}">{{ event.franchise }}</a>
                 {% if event.franchise.website %}: {{ event.franchise.website|urlize }}{% endif %}</p>
             <p>
                 {% if event.is_one_day %}
@@ -111,9 +109,9 @@
         {% if event.award_set.all|length > 0 %}
             <p>There
                 {% if event.award_set.all|length == 1 %}
-                    was <a href="{% url "main:awardIndex" event.id %}">{{ event.award_set.all|length }} award</a>
+                    was <a href="{% url 'main:awardIndex' event.id %}">{{ event.award_set.all|length }} award</a>
                 {% else %}
-                    were <a href="{% url "main:awardIndex" event.id %}">{{ event.award_set.all|length }} awards</a>
+                    were <a href="{% url 'main:awardIndex' event.id %}">{{ event.award_set.all|length }} awards</a>
                 {% endif %}
                 given out at this event</p>
         {% endif %}
@@ -122,8 +120,8 @@
         {% endif %}
 
 
-		<div id="osm-map" lat="{{ event.latitude }}" lng="{{ event.longitude }}"></div>
-		<script src="{% static "scripts/open_street_map.js" %}"></script>
+		<div id="osm-map" location_name="{{ event.location_name }}" lat="{{ event.latitude }}" lng="{{ event.longitude }}"></div>
+		<script src="{% static 'scripts/open_street_map.js' %}"></script>
 
 
 
