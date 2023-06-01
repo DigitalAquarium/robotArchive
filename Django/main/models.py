@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.text import slugify
+import uuid
 
 FULL_COMBAT = 'FC'
 SPORTSMAN = 'SP'
@@ -152,6 +154,16 @@ class Weight_Class(models.Model):
     def to_lbs(self):
         return round(self.weight_grams / 453.59237)
 
+    def find_lb_class(self):
+        grams = self.weight_grams
+        BOUNDARY_AMOUNT = 0.21
+        nearest_weight_class = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - grams))
+        if abs(nearest_weight_class - grams) <= nearest_weight_class * BOUNDARY_AMOUNT:
+            # This class is close enough to a valid weight class
+            return LEADERBOARD_WEIGHTS[Weight_Class.LEADERBOARD_VALID_GRAMS.index(nearest_weight_class)][0]
+        else:
+            return "X"
+
     def __eq__(self, other):
         if isinstance(other, Weight_Class):
             return self.weight_grams == other.weight_grams
@@ -187,6 +199,7 @@ class Robot(models.Model):
     RANKING_DEFAULT = 1000
     name = models.CharField(max_length=255)
     name_alphanum = models.CharField(max_length=255, blank=True)
+    slug = models.SlugField(max_length=60,blank=True)
     requires_translation = models.BooleanField(default=False)
 
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
@@ -201,6 +214,93 @@ class Robot(models.Model):
 
     def __str__(self):
         return self.name
+
+    def slugify(self,allow_unicode=True):
+        def try_save_slug(slug):
+            if Robot.objects.filter(slug=slug).count() == 0:
+                self.slug = slug
+                self.save()
+                return True
+            else:
+                return False
+
+        SLUG_LEN = 60
+        # <38 chars of name>-<2 wc>-<12 country>-<5 hex number> = 38 + 2 + 12 + 5 + 3 (dashes) = 60 else:
+        # <23 chars of name> + "-" + <uuid 36> = 60
+        if self.slug != "":
+            return self.slug
+        if self.country not in ["XE","XS","XW","XI","XX"]:
+            if self.country not in ["GB","US","KP","KR","CD","RU","SY"] and len(pycountry.countries.get(alpha_2=self.country).name) <= 12:
+                countryslug = slugify(pycountry.countries.get(alpha_2=self.country).name,allow_unicode=allow_unicode)
+            elif self.country in ["GB","US","KP","KR","CD","RU","SY"]:
+                if self.country == "GB":
+                    countryslug = "uk"
+                elif self.country == "US":
+                    countryslug = "usa"
+                elif self.country == "KP":
+                    countryslug = "north-korea"
+                elif self.country == "KR":
+                    countryslug = "south-korea"
+                elif self.country == "CD":
+                    countryslug = "dr-congo"
+                elif self.country == "RU":
+                    countryslug = "russia"
+                elif self.country == "SY":
+                    countryslug = "syria"
+            else:
+                countryslug = self.country.lower()
+        else:
+            if self.country == "XE":
+                countryslug = "england"
+            elif self.country == "XS":
+                countryslug = "scotland"
+            elif self.country == "XW":
+                countryslug = "wales"
+            elif self.country == "XI":
+                countryslug = "nireland"
+            else:
+                countryslug = "unknown"
+
+        if self.lb_weight_class != "X":
+            wc_slug = self.lb_weight_class.lower() + "w"
+        else:
+            wc_slug = self.version_set.first().weight_class.find_lb_class().lower() + "w"
+
+        wc_slug = "-" + wc_slug
+        countryslug = "-" + countryslug
+        nameslug = slugify(self.name[:SLUG_LEN], allow_unicode=allow_unicode)
+        slug = nameslug
+        if try_save_slug(slug): return slug
+
+        if Robot.objects.filter(slug=slug).exclude(country=self.country).count() == 0:
+            slug = slug[:SLUG_LEN - 3] + wc_slug
+            if try_save_slug(slug): return slug
+
+        slug = nameslug[:SLUG_LEN - len(countryslug)] + countryslug
+        if try_save_slug(slug): return slug
+
+        slug = nameslug[:SLUG_LEN - len(countryslug) - len(wc_slug)] + countryslug + wc_slug
+        if try_save_slug(slug): return slug
+
+        if len(slug) >= 54:
+            slug = nameslug[:SLUG_LEN - len(countryslug) - len(wc_slug) - 6] + countryslug + wc_slug
+
+        count = Robot.objects.get(slug__contains=slug)
+        count_slug = "-" + hex(count)[2:] # Should allow for over 1 million duplicate name, wc, country sets
+        if len(count_slug) <= 5:
+            if try_save_slug(slug + count_slug): return slug
+            for i in range(2,count+2):
+                #Try to grab slugs from any robots that have been deleted, as there can be a discrepancy between the amount of slugs avalible and the count
+                count_slug = "-" + hex(i)[2:]
+                if try_save_slug(slug + count_slug): return slug
+
+
+        #Nuclear Option, If this is not unique then something has gone seriously wrong
+        uuid_slug = "-" + str(uuid.uuid4())
+        slug = nameslug[:SLUG_LEN-len(uuid_slug)] + uuid_slug
+        self.slug = slug
+        self.save
+        return slug
 
     @staticmethod
     def get_by_rough_weight(wc):
@@ -891,14 +991,6 @@ class Leaderboard(models.Model):
 
     @staticmethod
     def update_robot_weight_class(robot, commit=True, year=None):
-        def find_weight_class(grams):
-            BOUNDARY_AMOUNT = 0.21
-            nearest_weight_class = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - grams))
-            if abs(nearest_weight_class - grams) <= nearest_weight_class * BOUNDARY_AMOUNT:
-                # This version is close enough to a valid weight class
-                return LEADERBOARD_WEIGHTS[Weight_Class.LEADERBOARD_VALID_GRAMS.index(nearest_weight_class)][0]
-            else:
-                return "X"
 
         currentYear = year is None
         if currentYear:
@@ -916,10 +1008,10 @@ class Leaderboard(models.Model):
         else:
             #Checks to see if there are less computationally heavy ways to test weight class
             if robot.version_set.count() == 1:
-                robot.lb_weight_class = find_weight_class(robot.version_set.last().weight_class.weight_grams)
+                robot.lb_weight_class = robot.version_set.last().weight_class.find_lb_class()
                 if commit: robot.save()
                 return robot
-            if currentYear and find_weight_class(robot.version_set.last().weight_class.weight_grams) == robot.lb_weight_class:
+            if currentYear and robot.version_set.last().weight_class.find_lb_class() == robot.lb_weight_class:
                 return robot
 
             # Count number of fights each weight class has to determine which it should be a part of. not perfect if the same version goes to events more than 5 years ago
@@ -927,7 +1019,7 @@ class Leaderboard(models.Model):
             for version in robot.version_set.filter(first_fought__lte = date , last_fought__gte = five_years_ago):
                 if not version.last_fought or version.last_fought < five_years_ago:
                     continue
-                wc = find_weight_class(version.weight_class.weight_grams)
+                wc = version.weight_class.find_lb_class()
                 if wc not in fights.keys():
                     fights[wc] = 0
                 fights[wc] += version.fight_set.count()

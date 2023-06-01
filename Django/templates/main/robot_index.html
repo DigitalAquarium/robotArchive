@@ -51,7 +51,7 @@
             <div class="hrz-index-result">
                 <span class="hrz-index-image">
                     <img class="fit-image"
-                         src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                         src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
                          alt="Robot Image">
                 </span>
                 <div class="hrz-index-content">
