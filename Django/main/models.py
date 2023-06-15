@@ -91,6 +91,15 @@ class Team(models.Model):
     def get_flag(self):
         return get_flag(self.country)
 
+    def get_logo_url(self):
+        if self.logo:
+            return self.logo.url
+        if Version.objects.filter(team=self).count() > 0:
+            for version in Version.objects.filter(team=self).order_by("-last_fought"):
+                if version.image:
+                    return version.image.url
+        return settings.STATIC_URL + "unknown.png"
+
     def robots(self):
         return Robot.objects.filter(version__team=self).distinct()
 
@@ -429,6 +438,13 @@ class Franchise(models.Model):
         p = Person.objects.get(user=user)
         return p in self.members.all() or user.is_staff
 
+    def get_logo_url(self):
+        if self.logo:
+            return self.logo.url
+        if Event.objects.filter(franchise=self)[0].country != "XX":
+            return Event.objects.filter(franchise=self)[0].get_flag()
+        return settings.STATIC_URL + "unknown.png"
+
 
 class Event(models.Model):
     name = models.CharField(max_length=255)
@@ -486,6 +502,15 @@ class Event(models.Model):
 
     def can_edit(self, user):
         return self.franchise.can_edit(user)
+
+    def get_logo_url(self): #TODO: Make a thing similar to this for robots & versoins?
+        if self.logo:
+            return self.logo.url
+        if self.franchise.logo:
+            return self.franchise.logo.url
+        if self.country != "XX":
+            return self.get_flag()
+        return settings.STATIC_URL + "unknown.png"
 
 
 class Contest(models.Model):
@@ -1177,7 +1202,7 @@ class Source(models.Model):
             i = 7
         if ret[:4] == "www.":
             ret = ret[4:]
-        for i in range(i,len(ret)):
+        for i in range(i, len(ret)):
             if ret[i] == '/' or ret[i] == ':':
                 break
         return ret[:i]

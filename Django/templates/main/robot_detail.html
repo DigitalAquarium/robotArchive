@@ -3,8 +3,8 @@
 {% load static %}
 {% block meta %}
     <title>{{ robot.name }} - Roboteer's Tavern</title>
-    <link rel="stylesheet" href="{% static "style/robot_detail.css" %}">
-    <script src="{% static "scripts/robot_detail.js" %}"></script>
+    <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
+    <script src="{% static 'scripts/robot_detail.js' %}"></script>
 {% endblock %}
 {% block content %}
     <div class="main-content">
@@ -60,7 +60,7 @@
                                             {% if v.first_fought != v.last_fought %} -
                                                 {{ v.last_fought|date:"F Y" }}{% endif %}</span>
                                 {% if v.team %}
-                                    <span>Team : <a href="{% url "main:teamDetail" v.team.id %}">{{ v.team }}</a></span>
+                                    <span>Team : <a href="{% url 'main:teamDetail' v.team.slug %}">{{ v.team }}</a></span>
                                 {% endif %}
                                 </div>
                                 <div class="version-description">
@@ -131,7 +131,7 @@
                             {% with fights|fights_event_number:fight as num_fights %}
                                 {% if num_fights != -1 %}
                                     <td rowspan="{{ num_fights }}" style="background-color: white">
-                                        <a href="{% url "main:eventDetail" fight.contest.event.id %}">{{ fight.contest.event }}</a>
+                                        <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
                                     </td>
                                 {% endif %}
                             {% endwith %}
@@ -140,9 +140,9 @@
                             <td>{{ fight|fight_result:robot }}</td>
                             <td>
                                 {% if fight.has_video %}
-                                    <a href="{% url "main:fightDetail" fight.id %}">Video</a>
+                                    <a href="{% url 'main:fightDetail' fight.id %}">Video</a>
                                 {% else %}
-                                    <a href="{% url "main:fightDetail" fight.id %}">Details</a>
+                                    <a href="{% url 'main:fightDetail' fight.id %}">Details</a>
                                 {% endif %}
                             </td>
                         </tr>

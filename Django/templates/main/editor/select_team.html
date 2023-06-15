@@ -29,13 +29,13 @@
             </thead>
             <tbody>
             {% for team in team_list %}
-                <tr id="row-{{ event.id }}" {% if forloop.counter|divisibleby:2 %}
+                <tr id="row-{{ team.slug }}" {% if forloop.counter|divisibleby:2 %}
                     style="background-color: #eeeeee"{% endif %}>
                     <td style="text-align: center; padding: 1px 0 0 1px;">
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
-                             src="{% if team.logo %} {{ team.logo.url }} {% elif team.version_set.first.image %} {{ team.version_set.first.image.url}} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ team.name }} image"></td>
+                             src="{{team.get_logo_url}}" alt="{{ team.name }} image"></td>
                     <td style="text-align: center"><img class="flag-image" src="{{ team.get_flag }}" alt="{{ team.country|upper }} Flag"></td>
-                    <td><a href="{% url "main:edtSelectTeam" fight_id %}?team={{team.id}}">{{ team }}</a></td>
+                    <td><a href="{% url 'main:edtSelectTeam' fight_id %}?team={{team.id}}">{{ team }}</a></td>
                 </tr>
             {% endfor %}
             </tbody>

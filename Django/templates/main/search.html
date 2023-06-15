@@ -48,13 +48,13 @@
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
-             alt="Event Logo">
+             src="{{event.get_logo_url}}"
+             alt="{{event.name}} Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
                 <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
-                <a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a>
+                <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}</a>
             </span>
                     <span class="hrz-index-details">
                     <span>{{ event.start_date|date:"jS F Y" }}</span>
@@ -74,13 +74,13 @@
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if team.logo %} {{ team.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
-             alt="Team Logo">
+             src="{{team.get_logo_url}}"
+             alt="{{team.name}} Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
                 <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
-                <a href="{% url 'main:teamDetail' team.id %}">{{ team.name }}</a>
+                <a href="{% url 'main:teamDetail' team.slug %}">{{ team.name }}</a>
             </span>
                     <span class="hrz-index-details">
                     <span>{{ team.web_link_set.first.link|urlize }}</span>
@@ -97,12 +97,12 @@
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if franchise.logo %} {{ franchise.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
-             alt="Franchise Logo">
+             src="{{franchise.get_logo_url}}"
+             alt="{{franchise.name}} Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
-                <a href="{% url 'main:franchiseDetail' franchise.id %}">{{ franchise.name }}</a>
+                <a href="{% url 'main:franchiseDetail' franchise.slug %}">{{ franchise.name }}</a>
             </span>
                     <span class="hrz-index-details">
                     <span>{{ franchise.web_link_set.firs.link|urlize }}</span>

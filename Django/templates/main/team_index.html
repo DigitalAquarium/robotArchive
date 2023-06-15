@@ -11,7 +11,7 @@
 {% block content %}
     <form class="search-form" method="get"
           style="display:block; padding-left: 10%; padding-right: 10%; text-align: center"
-          action="{% url "main:teamIndex" %}">
+          action="{% url 'main:teamIndex' %}">
         <label> Search Term:
             <input name="name" type="text" value={{ name }}>
         </label>
@@ -36,13 +36,13 @@
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if team.logo %} {{ team.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             src="{{team.get_logo_url}}"
              alt="Team Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
                 <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
-                <a href="{% url 'main:teamDetail' team.id %}">{{ team.name }}</a>
+                <a href="{% url 'main:teamDetail' team.slug %}">{{ team.name }}</a>
             </span>
                     <span class="hrz-index-details">
                     <span>{{ team.website|urlize }}</span>

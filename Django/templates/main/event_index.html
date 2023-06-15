@@ -14,7 +14,7 @@
 {% block content %}
     <form class="search-form" method="get"
           style="display:block; padding-left: 10%; padding-right: 10%; text-align: center"
-          action="{% url "main:eventIndex" %}">
+          action="{% url 'main:eventIndex' %}">
         <label> Search Term:
             <input name="name" type="text" value={{ name }}>
         </label>
@@ -63,13 +63,13 @@
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {{ event.get_flag }}  {% endif %}"
+             src="{{event.get_logo_url}}"
              alt="Event Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
                 <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
-                <a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a>
+                <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}</a>
             </span>
                     <div class="hrz-index-details">
                         <span>{{ event.start_date|date:"jS F Y" }}</span>

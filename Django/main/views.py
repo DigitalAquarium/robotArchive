@@ -547,8 +547,8 @@ def event_index_view(request):
                    })
 
 
-def event_detail_view(request, event_id):
-    event = Event.objects.get(pk=event_id)
+def event_detail_view(request, slug):
+    event = Event.objects.get(slug=slug)
     fran = event.franchise
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
@@ -992,8 +992,8 @@ def new_version_view(request, robot_id):
     return response
 
 
-def team_detail_view(request, team_id):
-    team = Team.objects.get(pk=team_id)
+def team_detail_view(request, slug):
+    team = Team.objects.get(slug=slug)
     pt = None
     if request.user.is_authenticated:
         can_change = team.can_edit(request.user)
@@ -1160,8 +1160,8 @@ def franchise_modify_view(request, franchise_id=None):
         return render(request, "main/modify_franchise.html", {"form": form, "franchise_id": franchise_id})
 
 
-def franchise_detail_view(request, fran_id):
-    fran = Franchise.objects.get(pk=fran_id)
+def franchise_detail_view(request, slug):
+    fran = Franchise.objects.get(slug=slug)
     '''pf = None
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
@@ -1329,7 +1329,7 @@ def new_award_view(request, event_id):
             a = form.save(False)
             a.event = event
             a.save()
-            return redirect("main:eventDetail", event_id)
+            return redirect("main:eventDetail", event.slug)
     else:
         form = AwardForm()
         form.fields['contest'].queryset = Contest.objects.filter(event=event)
@@ -1350,7 +1350,7 @@ def award_edit_view(request, award_id):
         form = AwardForm(request.POST, instance=a)
         if form.is_valid():
             form.save()
-            return redirect("main:eventDetail", a.event.id)
+            return redirect("main:eventDetail", a.event.slug)
     else:
         form = AwardForm(instance=a)
         form.fields['contest'].queryset = Contest.objects.filter(event=a.event)

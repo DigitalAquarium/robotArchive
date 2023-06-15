@@ -22,13 +22,13 @@
                 <div class="version-content">
                     <div class="version-image">
                         <img class="fit-image"
-                             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static 'unknown.png' %} {% endif %}"
+                             src="{{event.get_logo_url}}"
                              alt="Event Image">
                     </div>
                     <div class="version-text">
                         <div class="version-mini-head">
                             <span>Franchise : <a
-                                    href="{% url 'main:franchiseDetail' event.franchise.id %}">{{ event.franchise }}</a></span>
+                                    href="{% url 'main:franchiseDetail' event.franchise.slug %}">{{ event.franchise }}</a></span>
                             <span>Start Date: {{ event.start_date|date:"d F Y" }}</span>
                             <span>End Date: {{ event.end_date|date:"d F Y" }}</span>
                         </div>

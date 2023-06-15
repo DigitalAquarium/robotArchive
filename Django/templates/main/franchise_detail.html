@@ -70,7 +70,7 @@
             <tbody>
             {% for event in fran.event_set.all %}
                 <tr>
-                    <td><a href="{% url 'main:eventDetail' event.id %}">{{ event }}</a></td>
+                    <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
                     <td>{{ event.start_date|date:"d M Y" }}</td>
                     {% if can_change %}
                         <td><a class="editor-link" href="{% url 'main:editEvent' event.id %}"> Edit </a></td>

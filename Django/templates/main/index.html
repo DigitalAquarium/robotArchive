@@ -8,8 +8,8 @@
         <h1>Roboteer's Tavern</h1>
         <div class="other_nonsense" style="width: 48%; height: 100%; display: inline-flex; flex-direction: column">
             <p>Welcome to roboteer's tavern, a site for management of events for robot combat.</p>
-            <a href="{% url "main:leaderboard" %}">Leaderboard</a>
-            <a href="{% url "main:credits" %}">Asset Credits</a>
+            <a href="{% url 'main:leaderboard' %}">Leaderboard</a>
+            <a href="{% url 'main:credits' %}">Asset Credits</a>
         </div>
 
 
@@ -20,13 +20,13 @@
                     <div class="hrz-index-result" style="height:7em">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
              alt="Event Logo">
         </span>
                         <div class="hrz-index-content">
                 <span class="hrz-index-title">
                 <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
-                <a href="{% url 'main:eventDetail' event.id %}">{{ event.name }}</a>
+                <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}</a>
             </span>
                             <div class="hrz-index-details">
                                 <span>{{ event.start_date|date:"jS F Y" }}</span>
@@ -49,7 +49,7 @@
                 {% endfor %}
             {% else %}
             {% endif %}
-            <a href="{% url "main:eventIndex" %}">View More</a>
+            <a href="{% url 'main:eventIndex' %}">View More</a>
         </div>
     </div>
 {% endblock %}

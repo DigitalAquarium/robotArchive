@@ -16,7 +16,7 @@
                 <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
                 <h1>{{ team }}</h1>
                     <a href="{% url 'main:editTeam' team.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Team"></a>
-                    <a href="{% url 'main:delete_noreturn' 'team' team.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Delete Team"></a>
+                    <a href="{% url 'main:delete_noreturn' 'team' team.id %}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Delete Team"></a>
             </div>
             {% if team.logo %}
                 <div class="team-logo-image">

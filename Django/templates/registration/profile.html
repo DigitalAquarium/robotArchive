@@ -43,7 +43,7 @@
                             {% for franchise in franchises %}
                                 <div class="gridview-square">
                                     <div class="gridview-title">
-                                        <a href="{% url 'main:franchiseDetail' franchise.id %}">{{ franchise }}</a>
+                                        <a href="{% url 'main:franchiseDetail' franchise.slug %}">{{ franchise }}</a>
                                     </div>
                                     <div class="gridview-image-container">
                                         <img class="fit-image" src="
@@ -68,7 +68,7 @@
                                 <div class="gridview-square">
                                     <div class="gridview-title">
                                         <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
-                                        <a href="{% url 'main:teamDetail' team.id %}">{{ team }}</a>
+                                        <a href="{% url 'main:teamDetail' team.slug %}">{{ team }}</a>
                                     </div>
                                     <div class="gridview-image-container">
                                         <img class="fit-image" src="

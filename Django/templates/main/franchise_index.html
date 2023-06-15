@@ -19,12 +19,12 @@
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if franchise.logo %} {{ franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             src="{{franchise.get_logo_url}}"
              alt="Franchise Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
-                <a href="{% url 'main:franchiseDetail' franchise.id %}">{{ franchise.name }}</a>
+                <a href="{% url 'main:franchiseDetail' franchise.slug %}">{{ franchise.name }}</a>
             </span>
                     <span class="hrz-index-details">
                     <span>{{ franchise.website|urlize }}</span>
