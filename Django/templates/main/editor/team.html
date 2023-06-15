@@ -15,7 +15,7 @@
             <div class="team-heading">
                 <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
                 <h1>{{ team }}</h1>
-                    <a href="{% url 'main:editTeam' team.id %}"><img class="inline-image" src="{% static "edit.png" %}" alt="Edit Team"></a>
+                    <a href="{% url 'main:editTeam' team.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Team"></a>
                     <a href="{% url 'main:delete_noreturn' 'team' team.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Delete Team"></a>
             </div>
             {% if team.logo %}
@@ -72,11 +72,11 @@
             {% for robot in team.robots %}
                 <div class="gridview-square">
                     <div class="gridview-title">
-                        <a href="{% url 'main:robotDetail' robot.id %}">{{ robot }}</a>
+                        <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
                     </div>
                     <div class="gridview-image-container">
                         <img class="fit-image"
-                             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
                              alt="Robot Image">
                     </div>
                 </div>

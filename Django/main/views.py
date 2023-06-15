@@ -860,8 +860,8 @@ def leaderboard(request):
                    })
 
 
-def robot_detail_view(request, robot_id):
-    r = Robot.objects.get(pk=robot_id)
+def robot_detail_view(request, slug):
+    r = Robot.objects.get(slug=slug)
     v = None
     if request.user.is_authenticated:
         can_change = r.can_edit(request.user)
@@ -892,7 +892,7 @@ def robot_edit_view(request, robot_id):
         form = RobotForm(request.POST, instance=robot)
         if form.is_valid():
             form.save()
-            return redirect("main:robotDetail", robot.id)
+            return redirect("main:robotDetail", robot.slug)
     else:
         form = RobotForm(instance=robot)
     return render(request, "main/edit_robot.html", {"form": form, "robot": robot})
@@ -1088,8 +1088,8 @@ def new_robot_view(request):
 
 def version_detail_view(request, version_id):
     v = Version.objects.get(pk=version_id)
-    robot_id = v.robot.id
-    return redirect("%s?v=%d" % (reverse("main:robotDetail", args=[robot_id]), version_id))
+    robot_slug = v.robot.slug
+    return redirect("%s?v=%d" % (reverse("main:robotDetail", args=[robot_slug]), version_id))
 
 
 @login_required(login_url='/accounts/login/')
@@ -1115,14 +1115,10 @@ def team_edit_view(request, team_id=None):
             form = TeamForm(request.POST, request.FILES, instance=team)
         if form.is_valid():
             new = form.save()
-            if fight_id:
-                # person = Person.objects.get(id=1)
-                # Person_Team.objects.create(team=new, person=person)
-                return redirect("main:edtTeam", new.id)
             if team_id is None:
                 person = Person.objects.get(user=request.user)
                 Person_Team.objects.create(team=new, person=person)
-            return redirect("main:index")
+            return redirect("main:edtTeam", new.id)
     else:
         if team_id is None:
             form = TeamForm()
@@ -1518,7 +1514,7 @@ def robot_transfer_view(request, robot_id, team_id=None):
             new_version.team = team
             new_version.description += "\nThis version has been transferred to " + team.__str__() + " Please edit it to match your version, but don't delete it or the robot will revert back to previous owners."
             new_version.save()
-            return redirect("main:robotDetail", robot.id)
+            return redirect("main:robotDetail", robot.slug)
         else:
             return render(request, "main/transfer_robot.html", {"robot": robot, "team": team})
 

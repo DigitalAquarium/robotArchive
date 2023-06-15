@@ -59,7 +59,7 @@
                 {% for robot in team.robots %}
                     <div class="gridview-square">
                         <div class="gridview-title">
-                            <a href="{% url 'main:robotDetail' robot.id %}">{{ robot }}</a>
+                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"

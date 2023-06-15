@@ -50,6 +50,14 @@ LEADERBOARD_WEIGHTS = [
 def get_flag(code):
     return settings.STATIC_URL + "flags/4x3/" + code.lower() + ".svg"
 
+def make_slug(slug_text,queryset):
+    SLUG_LENGTH = 50
+    slug_text = slugify(slug_text[:50])
+    if queryset.filter(slug=slug_text).count() > 0:
+        uu = "-" + str(uuid.uuid4())
+        slug_text = slug_text[:50-len(uu)] + uu
+    return slug_text
+
 
 class Person(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.CASCADE)
@@ -75,6 +83,7 @@ class Team(models.Model):
     logo = models.ImageField(upload_to='team_logos/%Y/', blank=True)
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     members = models.ManyToManyField(Person, through="Person_Team")
+    slug = models.SlugField(max_length=50)
 
     def __str__(self):
         return self.name
@@ -88,6 +97,15 @@ class Team(models.Model):
     def can_edit(self, user):
         p = Person.objects.get(user=user)
         return p in self.members.all() or user.is_staff
+
+    def slugify(self):
+        if self.slug is not None and self.slug != "": return self.slug
+        slug_text = self.name
+        if slug_text[:5].lower() == "team ":
+            slug_text = slug_text[5:]
+        self.slug = make_slug(slug_text,Team.objects.all())
+        self.save()
+        return self.slug
 
 
 class Weight_Class(models.Model):
@@ -199,7 +217,7 @@ class Robot(models.Model):
     RANKING_DEFAULT = 1000
     name = models.CharField(max_length=255)
     name_alphanum = models.CharField(max_length=255, blank=True)
-    slug = models.SlugField(max_length=60,blank=True)
+    slug = models.SlugField(max_length=60, allow_unicode=True)
     requires_translation = models.BooleanField(default=False)
 
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
@@ -215,7 +233,8 @@ class Robot(models.Model):
     def __str__(self):
         return self.name
 
-    def slugify(self,allow_unicode=True):
+    def slugify(self):
+        if self.slug is not None and self.slug != "": return self.slug
         def try_save_slug(slug):
             if Robot.objects.filter(slug=slug).count() == 0:
                 self.slug = slug
@@ -229,9 +248,9 @@ class Robot(models.Model):
         # <23 chars of name> + "-" + <uuid 36> = 60
         if self.slug != "":
             return self.slug
-        if self.country not in ["XE","XS","XW","XI","XX"]:
+        if self.country[0] not in ["XE","XS","XW","XI","XX"]:
             if self.country not in ["GB","US","KP","KR","CD","RU","SY"] and len(pycountry.countries.get(alpha_2=self.country).name) <= 12:
-                countryslug = slugify(pycountry.countries.get(alpha_2=self.country).name,allow_unicode=allow_unicode)
+                countryslug = slugify(pycountry.countries.get(alpha_2=self.country).name)
             elif self.country in ["GB","US","KP","KR","CD","RU","SY"]:
                 if self.country == "GB":
                     countryslug = "uk"
@@ -268,7 +287,9 @@ class Robot(models.Model):
 
         wc_slug = "-" + wc_slug
         countryslug = "-" + countryslug
-        nameslug = slugify(self.name[:SLUG_LEN], allow_unicode=allow_unicode)
+        nameslug = slugify(self.name[:SLUG_LEN])
+        if len(nameslug) == 0:
+            nameslug = slugify(self.name_alphanum[:SLUG_LEN])
         slug = nameslug
         if try_save_slug(slug): return slug
 
@@ -299,7 +320,7 @@ class Robot(models.Model):
         uuid_slug = "-" + str(uuid.uuid4())
         slug = nameslug[:SLUG_LEN-len(uuid_slug)] + uuid_slug
         self.slug = slug
-        self.save
+        self.save()
         return slug
 
     @staticmethod
@@ -390,6 +411,13 @@ class Franchise(models.Model):
     logo = models.ImageField(upload_to='franchise_logos/%Y/', blank=True)
     description = models.TextField(blank=True)
     members = models.ManyToManyField(Person, through="Person_Franchise")
+    slug = models.SlugField(max_length=50)
+
+    def slugify(self):
+        if self.slug is not None and self.slug != "": return self.slug
+        self.slug = make_slug(self.name, Franchise.objects.all())
+        self.save()
+        return self.slug
 
     def is_member(self, person):
         return len(Person_Franchise.objects.filter(person=person, franchise=self)) > 0
@@ -417,6 +445,13 @@ class Event(models.Model):
     longitude = models.FloatField()
     location_name = models.CharField(max_length=255,default="Undefined")
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
+    slug = models.SlugField(max_length=50)
+
+    def slugify(self):
+        if self.slug is not None and self.slug != "": return self.slug
+        self.slug = make_slug(self.name, Event.objects.all())
+        self.save()
+        return self.slug
 
     def __str__(self):
         return self.name
@@ -1238,3 +1273,11 @@ except:
         w.save()
     except:
         pass
+
+#TODO: DO THIS ON CREATION
+for e in Event.objects.filter(slug=""):
+    e.slugify()
+for f in Franchise.objects.filter(slug=""):
+    f.slugify()
+for t in Team.objects.filter(slug=""):
+    t.slugify()

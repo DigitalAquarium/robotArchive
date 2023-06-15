@@ -73,13 +73,13 @@
             </thead>
             <tbody>
             {% for lb in robot_list %}
-                <tr id="row-{{ lb.robot.id }}" {% if forloop.counter|divisibleby:2 %}
+                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %}
                     style="background-color: #eeeeee"{% endif %}>
 					{% if forloop.counter > 3 %}
                     <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
                     <td style="text-align: center"><img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag"></td>
-                    <td><a href="{% url 'main:robotDetail' lb.robot.id %}">{{ lb.robot }}</a></td>
+                    <td><a href="{% url 'main:robotDetail' lb.robot.slug %}">{{ lb.robot }}</a></td>
 					{%if is_this_year%}
                     <td style="text-align: center">{{ lb.robot.wins }}</td>
                     <td style="text-align: center">{{ lb.robot.losses }}</td>

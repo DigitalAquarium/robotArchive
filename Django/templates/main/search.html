@@ -8,19 +8,19 @@
     <div class="main-content">
         <h1>Results for: "{{ search_term }}"</h1>
         <h2>{% if robot_len > 0 %}Showing {{ robots|length }} robots {% if robot_len > 10 %}
-            <a href="{% url "main:robotIndex" %}?name={{ search_term }}">view {{ robot_len|add:-10 }} more</a>
+            <a href="{% url 'main:robotIndex' %}?name={{ search_term }}">view {{ robot_len|add:-10 }} more</a>
         {% endif %}{% endif %}</h2>
         {% for robot in robots %}
             <div class="hrz-index-result">
                 <span class="hrz-index-image">
                     <img class="fit-image"
-                         src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                         src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
                          alt="Robot Image">
                 </span>
                 <div class="hrz-index-content">
                     <span class="hrz-index-title">
                         <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                        <a href="{% url 'main:robotDetail' robot.id %}">{{ robot.name }}</a>
+                        <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot.name }}</a>
                     </span>
                     <span class="hrz-index-details">
                         {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
@@ -42,13 +42,13 @@
         <br>
         <br>
         <h2>{% if event_len > 0 %}Showing {{ events|length }} events {% if event_len > 10 %}
-            <a href="{% url "main:eventIndex" %}?name={{ search_term }}">view {{ event_len|add:-10 }} more</a>
+            <a href="{% url 'main:eventIndex' %}?name={{ search_term }}">view {{ event_len|add:-10 }} more</a>
         {% endif %}{% endif %}</h2>
         {% for event in events %}
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
              alt="Event Logo">
         </span>
                 <div class="hrz-index-content">
@@ -68,13 +68,13 @@
         <br>
         <br>
         <h2>{% if team_len > 0 %}Showing {{ teams|length }} teams {% if event_len > 10 %}
-            <a href="{% url "main:teamIndex" %}?name={{ search_term }}">view {{ team_len|add:-10 }} more</a>
+            <a href="{% url 'main:teamIndex' %}?name={{ search_term }}">view {{ team_len|add:-10 }} more</a>
         {% endif %}{% endif %}</h2>
         {% for team in teams %}
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if team.logo %} {{ team.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             src="{% if team.logo %} {{ team.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
              alt="Team Logo">
         </span>
                 <div class="hrz-index-content">
@@ -91,13 +91,13 @@
         <br>
         <br>
         <h2>{% if fran_len > 0 %}Showing {{ franchises|length }} franchises {% if fran_len > 10 %}
-            <a href="{% url "main:franchiseIndex" %}?name={{ search_term }}">view {{ fran_len|add:-10 }} more</a>
+            <a href="{% url 'main:franchiseIndex' %}?name={{ search_term }}">view {{ fran_len|add:-10 }} more</a>
         {% endif %}{% endif %}</h2>
         {% for franchise in franchises %}
             <div class="hrz-index-result">
         <span class="hrz-index-image">
         <img class="fit-image"
-             src="{% if franchise.logo %} {{ franchise.logo.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+             src="{% if franchise.logo %} {{ franchise.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
              alt="Franchise Logo">
         </span>
                 <div class="hrz-index-content">
