@@ -441,9 +441,17 @@ class Franchise(models.Model):
     def get_logo_url(self):
         if self.logo:
             return self.logo.url
-        if Event.objects.filter(franchise=self)[0].country != "XX":
+        if Event.objects.filter(franchise=self).count() > 0 and  Event.objects.filter(franchise=self)[0].country != "XX":
             return Event.objects.filter(franchise=self)[0].get_flag()
         return settings.STATIC_URL + "unknown.png"
+
+
+class Location(models.Model):
+    name = models.CharField(max_length=255)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    def __str__(self):
+        return self.name
 
 
 class Event(models.Model):
@@ -452,17 +460,10 @@ class Event(models.Model):
     logo = models.ImageField(upload_to='event_logos/%Y/', blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    registration_open = models.DateTimeField()
-    registration_close = models.DateTimeField()
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    location_name = models.CharField(max_length=255,default="Undefined")
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=50)
-
     def slugify(self):
         if self.slug is not None and self.slug != "": return self.slug
         self.slug = make_slug(self.name, Event.objects.all())
@@ -485,18 +486,6 @@ class Event(models.Model):
     def get_flag(self):
         return get_flag(self.country)
 
-    def is_registration_open(self):
-        return self.registration_open < timezone.now() < self.registration_close and not self.is_registration_full()
-
-    def is_registration_past(self):
-        return timezone.now() > self.registration_close
-
-    def is_registration_full(self):
-        for c in self.contest_set.all():
-            if not c.is_registration_full():
-                return False
-        return True
-
     def is_one_day(self):
         return self.start_date == self.end_date
 
@@ -512,13 +501,17 @@ class Event(models.Model):
             return self.get_flag()
         return settings.STATIC_URL + "unknown.png"
 
+    def get_location(self):
+        if self.location:
+            return self.location
+        else:
+            return Location(name="Undefined",latitude=0,longitude=0)
+
 
 class Contest(models.Model):
     name = models.CharField(max_length=255, blank=True)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES + [("MU", "Multiple Types")])
     # auto_awards = models.BooleanField()
-    entries = models.PositiveSmallIntegerField(default=0)
-    reserves = models.PositiveSmallIntegerField(default=0, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(1))
 
@@ -527,15 +520,6 @@ class Contest(models.Model):
             return self.name
         else:
             return self.weight_class.name
-
-    def is_registration_open(self):
-        return self.event.is_registration_open()
-
-    def is_registration_past(self):
-        return self.event.is_registration_past()
-
-    def is_registration_full(self):
-        return self.entries != 0 and (self.registration_set.count() >= self.entries + self.reserves)
 
     def can_edit(self, user):
         return self.event.franchise.can_edit(user)
@@ -1300,9 +1284,9 @@ except:
         pass
 
 #TODO: DO THIS ON CREATION
-for e in Event.objects.filter(slug=""):
+'''for e in Event.objects.filter(slug=""):
     e.slugify()
 for f in Franchise.objects.filter(slug=""):
     f.slugify()
 for t in Team.objects.filter(slug=""):
-    t.slugify()
+    t.slugify()'''

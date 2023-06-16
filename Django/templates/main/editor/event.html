@@ -68,9 +68,9 @@
 
                <p>There
                 {% if event.award_set.all|length == 1 %}
-                    was <a href="{% url "main:awardIndex" event.id %}">{{ event.award_set.all|length }} award</a>
+                    was <a href="{% url 'main:awardIndex' event.slug %}">{{ event.award_set.all|length }} award</a>
                 {% else %}
-                    were <a href="{% url "main:awardIndex" event.id %}">{{ event.award_set.all|length }} awards</a>
+                    were <a href="{% url 'main:awardIndex' event.slug %}">{{ event.award_set.all|length }} awards</a>
                 {% endif %}
                 given out at this event</p>
             <a class="editor-link" href="{% url 'main:newAward' event.id %}">Add Award</a>
@@ -128,7 +128,7 @@
             </form>
 		</table>
 		<br>
-		<div id="osm-map" location_name="{{ event.location_name }}" lat="{{ event.latitude }}" lng="{{ event.longitude }}"></div>
+		<div id="osm-map" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
 		<script src="{% static 'scripts/open_street_map.js' %}"></script>
         {% else %}
             Something appears to have gone wrong

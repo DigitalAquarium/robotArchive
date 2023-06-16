@@ -12,7 +12,6 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from EventManager import stuff
 from main import subdivisions
 from .forms import *
 
@@ -477,7 +476,6 @@ def event_index_view(request):
     page = request.GET.get("page")
     regions = request.GET.get("regions")
     country_code = request.GET.get("country") or ""
-    reg_open = request.GET.get("reg_open")
     past = request.GET.get("past")
     date_from = request.GET.get("date_from")  # TODO: Date stuff
     date_to = request.GET.get("date_to")
@@ -520,13 +518,6 @@ def event_index_view(request):
             event_list.filter(contest__name__icontains=name)).union(
             event_list.filter(franchise__name__icontains=name))
 
-    if reg_open == "on":
-        bad = []
-        for event in event_list:
-            if event.is_registration_full():
-                bad.append(event.id)
-        event_list = event_list.exclude(id__in=bad)
-
     event_list = event_list.order_by("name").order_by("start_date")
     results = len(event_list)
     event_list = event_list[num * (page - 1):num * page]
@@ -556,12 +547,10 @@ def event_detail_view(request, slug):
         can_change = False
     return render(request, "main/event_detail.html",
                   {"event": event,
-                   "map": stuff.map,
-                   "can_change": can_change,
-                   "reg_future": event.registration_open > timezone.now()})
+                   "can_change": can_change,})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/accounts/login/')#TODO: FORMS
 def new_event_view(request, franchise_id):
     fran = Franchise.objects.get(pk=franchise_id)
     can_change = fran.can_edit(request.user)
@@ -593,67 +582,8 @@ def modify_event_view(request, event_id):
             return redirect("main:edtEvent", new.id)
     else:
         form = EventForm(instance=event)
-    return render(request, "main/edit_event.html", {"form": form, "event_id": event_id})
-
-
-def contest_signup_view(response, contest_id):
-    contest = Contest.objects.get(pk=contest_id)
-
-    if not contest.is_registration_open():
-        if contest.is_registration_past():
-            return redirect("%s?m=%s" % (reverse("main:message"), "Registration for this contest has closed."))
-        else:
-            return redirect("%s?m=%s" % (reverse("main:message"), "Registration for this contest has not yet opened."))
-
-    if contest.is_registration_full():
-        return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
-
-    if response.user.is_authenticated:
-        owned_versions = Version.objects.filter(team__members__user=response.user)
-        applied = contest.registration_set.filter(version__in=owned_versions).exists()
-        if applied:
-            return redirect("%s?m=%s" % (reverse("main:message"), "You've Already signed up for this contest."))
-
-        user = response.user
-        me = Person.objects.get(user=user)
-        if response.method == "POST":
-            form = SignupForm(response.POST)
-            t = Person_Team.objects.filter(person=me)
-            teams = []
-            for result in t:
-                teams.append(result.team)
-            form.fields['version'].queryset = Version.objects.filter(team__in=teams)
-            if form.is_valid():
-                if contest.entries != 0 and (contest.registration_set.count() >= contest.entries + contest.reserves):
-                    # A Second Check in case slots filled up between the time the page was loaded and the time the
-                    # form was completed
-                    return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
-                form.save(contest, me)
-                return redirect("%s?m=%s" % (reverse("main:message"), "Successfully signed up to " + contest.__str__()))
-        else:
-            form = SignupForm()
-            t = Person_Team.objects.filter(person=me)
-            teams = []
-            for result in t:
-                teams.append(result.team)
-            form.fields['version'].queryset = Version.objects.filter(team__in=teams,
-                                                                     weight_class=contest.weight_class)
-        return render(response, "main/contest_signup.html", {"form": form, "contest": contest})
-
-    else:
-        if response.method == "POST":
-            anon_form = AnonSignupForm(response.POST)
-            if anon_form.is_valid():
-                if contest.entries != 0 and (contest.registration_set.count() >= contest.entries + contest.reserves):
-                    # A Second Check in case slots filled up between the time the page was loaded and the time the
-                    # form was completed
-                    return redirect("%s?m=%s" % (reverse("main:message"), "Entries for this contest are full."))
-                anon_form.save(contest)
-                return redirect("%s?m=%s" % (reverse("main:message"),
-                                             "You've successfully signed up to " + contest.event.__str__() + " at " + contest.__str__()))
-        else:
-            anon_form = AnonSignupForm()
-        return render(response, "main/contest_signup.html", {"anon_form": anon_form, "contest": contest})
+    return render(request, "main/forms/generic.html", {"form": form, "title": "Edit Event", "has_image":True,
+                                                       "next_url": reverse("main:editEvent", args=[event_id])})
 
 
 def contest_detail_view(request, contest_id):
@@ -665,48 +595,12 @@ def contest_detail_view(request, contest_id):
     reserve = False
     app_ver = False
     if request.user.is_authenticated:
-        if contest.event.start_date > timezone.now().date() and timezone.now() > contest.event.registration_open:
-            owned_versions = Version.objects.filter(team__members__user=request.user)
-            applied = contest.registration_set.filter(version__in=owned_versions).exists()
-            if applied:
-                app_ver = contest.registration_set.get(version__in=owned_versions)
-                approved = contest.registration_set.filter(version__in=owned_versions, approved=True).exists()
-                reserve = contest.registration_set.filter(version__in=owned_versions, reserve=True).exists()
         can_change = contest.can_edit(request.user)
     else:
         can_change = False
     return render(request, "main/contest_detail.html",
-                  {"contest": contest, "fights": fights, "applications": registrations,
-                   "future": contest.event.registration_open > timezone.now(), "can_change": can_change,
+                  {"contest": contest, "fights": fights, "applications": registrations, "can_change": can_change,
                    "applied": applied, "approved": approved, "reserve": reserve, "app_ver": app_ver})
-
-
-@login_required(login_url='/accounts/login/')
-def modify_registration_view(request, reg_id):
-    approval = request.GET.get("approval")
-    reserve = request.GET.get("reserve")
-    registration = Registration.objects.get(pk=reg_id)
-    if not registration.can_edit(request.user):
-        redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this registration."))
-
-    if approval == "true":
-        approval = True
-    elif approval == "false":
-        approval = False
-    else:
-        approval = registration.approved
-
-    if reserve == "true":
-        reserve = True
-    elif reserve == "false":
-        reserve = False
-    else:
-        reserve = registration.reserve
-
-    registration.approved = approval
-    registration.reserve = reserve
-    registration.save()
-    return redirect("main:contestDetail", registration.contest.id)
 
 
 @login_required(login_url='/accounts/login/')
@@ -725,7 +619,8 @@ def new_contest_view(request, event_id):
             return redirect("main:edtEvent", event.id)
     else:
         form = ContestForm()
-    return render(request, "main/new_contest.html", {"form": form, "event": event})
+    return render(request, "main/forms/generic.html", {"form": form, "title": "New Contest",
+                                                       "next_url": reverse("main:newContest", args=[event_id])})
 
 
 @login_required(login_url='/accounts/login/')
@@ -738,10 +633,11 @@ def edit_contest_view(request, contest_id):
         form = ContestForm(request.POST, instance=contest)
         if form.is_valid():
             form.save()
-            return redirect("main:edtEvent", contest.event.id)
+            return redirect("main:edtContest", contest.id)
     else:
         form = ContestForm(instance=contest)
-    return render(request, "main/edit_contest.html", {"form": form, "contest_id": contest_id})
+    return render(request, "main/forms/generic.html", {"form": form, "title": "Edit Contest",
+                                                       "next_url": reverse("main:editContest", args=[contest_id])})
 
 
 def register(response):
@@ -895,13 +791,14 @@ def robot_edit_view(request, robot_id):
             return redirect("main:robotDetail", robot.slug)
     else:
         form = RobotForm(instance=robot)
-    return render(request, "main/edit_robot.html", {"form": form, "robot": robot})
-
+    return render(request, "main/forms/generic.html",
+                  {"form": form, "title": "Edit Robot",
+                   "next_url": reverse("main:editRobot", args=[robot_id])})
 
 @login_required(login_url='/accounts/login/')
 def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RIGHT HERE
     fight_id = request.COOKIES.get("editing_fight")  # If not 0, is editor.
-    team_id = request.GET.get("team_id")
+    team_id = request.GET.get("team_id")# TODO: FORM
     try:
         fight_id = int(fight_id)
     except (ValueError, TypeError):
@@ -934,7 +831,7 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
 
 
 @login_required(login_url='/accounts/login/')
-def new_version_view(request, robot_id):
+def new_version_view(request, robot_id): # TODO: FORM
     fight_id = request.COOKIES.get("editing_fight")  # If not 0, is editor.
     team_id = request.GET.get("team_id")
     try:
@@ -1049,7 +946,7 @@ def team_index_view(request):
 
 
 @login_required(login_url='/accounts/login/')  # TODO: No validation anymore
-def new_robot_view(request):
+def new_robot_view(request): # TODO: FORM
     fight_id = request.COOKIES.get("editing_fight")
     team_id = request.GET.get("team")
     try:
@@ -1093,7 +990,7 @@ def version_detail_view(request, version_id):
 
 
 @login_required(login_url='/accounts/login/')
-def team_edit_view(request, team_id=None):
+def team_modify_view(request, team_id=None):
     fight_id = request.COOKIES.get("editing_fight")
     try:
         fight_id = int(fight_id)
@@ -1122,10 +1019,16 @@ def team_edit_view(request, team_id=None):
     else:
         if team_id is None:
             form = TeamForm()
+            return render(request, "main/forms/generic.html",
+                   {"form": form, "title": "New Team", "has_image": True,
+                    "next_url": reverse("main:newTeam")})
         else:
             team = Team.objects.get(pk=team_id)
             form = TeamForm(instance=team)
-    return render(request, "main/modify_team.html", {"form": form, "team_id": team_id})
+            return render(request, "main/forms/generic.html",
+                   {"form": form, "title": "Edit Team", "has_image": True,
+                    "next_url": reverse("main:editTeam", args=[team_id])})
+
 
 
 @login_required(login_url='/accounts/login/')
@@ -1155,9 +1058,13 @@ def franchise_modify_view(request, franchise_id=None):
             franchise = Franchise.objects.get(pk=franchise_id)
             form = FranchiseForm(instance=franchise)
     if franchise_id is None:
-        return render(request, "main/modify_franchise.html", {"form": form, "franchise_id": franchise_id})
+        return render(request, "main/forms/generic.html",
+                      {"form": form, "title": "New Franchise", "has_image": True,
+                       "next_url": reverse("main:newFranchise")})
     else:
-        return render(request, "main/modify_franchise.html", {"form": form, "franchise_id": franchise_id})
+        return render(request, "main/forms/generic.html",
+                      {"form": form, "title": "Edit Franchise", "has_image": True,
+                       "next_url": reverse("main:editFranchise", args=[franchise_id])})
 
 
 def franchise_detail_view(request, slug):
@@ -1230,7 +1137,7 @@ def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the sa
 
 
 @login_required(login_url='/accounts/login/')
-def fight_editj_view(request, fight_id):  # Just the Fight
+def fight_editj_view(request, fight_id):  # Just the Fight TODO: refactor this to a name that makes more sense
     fight = Fight.objects.get(pk=fight_id)
     can_change = fight.can_edit(request.user)
     if not can_change:
@@ -1245,22 +1152,8 @@ def fight_editj_view(request, fight_id):  # Just the Fight
             return redirect("main:editWholeFight", fight_id)
     else:
         form = FightForm(instance=fight)
-        return render(request, "main/modify_fight.html", {"form": form, "fight_id": fight_id})
-
-
-@login_required(login_url='/accounts/login/')
-def fight_edith_view(request, fight_id):  # The fight and the robots and media etc
-
-    fight = Fight.objects.get(pk=fight_id)
-    can_change = fight.can_edit(request.user)
-    if not can_change:
-        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
-
-    if request.GET.get("save") == "true":
-        fight.calculate(commit=True)
-        return redirect("main:contestDetail", fight.contest.id)
-
-    return render(request, "main/edit_whole_fight.html", {"fight": fight})
+        return render(request, "main/forms/generic.html",
+                      {"form": form, "title": "Edit Fight", "has_image":True, "next_url": reverse("main:editJustFight", args=[fight_id])})
 
 
 def fight_detail_view(request, fight_id):  # TODO: Sort this better
@@ -1273,7 +1166,7 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
 
 
 @login_required(login_url='/accounts/login/')  # Still Being Used
-def modify_fight_version_view(request, fight_id, vf_id=None):
+def modify_fight_version_view(request, fight_id, vf_id=None): #TODO SHIFT FORM
     # editor = request.GET.get("editor") or ""
     editor = request.COOKIES.get("editing_fight") is not None and request.COOKIES.get("editing_fight") != ""
     fight = Fight.objects.get(pk=fight_id)
@@ -1307,8 +1200,8 @@ def modify_fight_version_view(request, fight_id, vf_id=None):
     # TODO: This is basically identical to modify_fight and probably many more (maybe not anymore?)
 
 
-def award_index_view(request, event_id):
-    event = Event.objects.get(pk=event_id)
+def award_index_view(request, event_slug):
+    event = Event.objects.get(slug=event_slug)
     awards = Award.objects.filter(event=event).order_by("-award_type", "name")
     if request.user.is_authenticated:
         can_change = event.can_edit(request.user)
@@ -1334,8 +1227,8 @@ def new_award_view(request, event_id):
         form = AwardForm()
         form.fields['contest'].queryset = Contest.objects.filter(event=event)
         form.fields['version'].queryset = Version.objects.filter(
-            registration__contest__in=event.contest_set.all()).order_by("name", "robot__name")
-        return render(request, "main/new_award.html", {"form": form, "event_id": event_id})
+            registration__contest__in=event.contest_set.all()).order_by("name", "robot__name").distinct()
+        return render(request, "main/forms/generic.html", {"form": form, "title": "New Award", "next_url": reverse("main:newAward",args=[event_id])})
 
 
 # TODO: THis is almost identical to edit award should probably make a more generic one esp the template
@@ -1354,8 +1247,8 @@ def award_edit_view(request, award_id):
     else:
         form = AwardForm(instance=a)
         form.fields['contest'].queryset = Contest.objects.filter(event=a.event)
-        form.fields['version'].queryset = Version.objects.filter(registration__contest__in=a.event.contest_set.all())
-        return render(request, "main/edit_award.html", {"form": form, "award_id": award_id})
+        form.fields['version'].queryset = Version.objects.filter(registration__contest__in=a.event.contest_set.all()).distinct()
+        return  render(request, "main/forms/generic.html", {"form": form, "title": "Edit Award", "next_url": reverse("main:editAward",args=[award_id])})
 
 
 @login_required(login_url='/accounts/login/')
@@ -1372,7 +1265,7 @@ def person_edit_view(request, person_id):
             return redirect("main:profile")
     else:
         form = PersonForm(instance=person)
-    return render(request, "main/edit_person.html", {"form": form, "person": person})
+    return  render(request, "main/forms/generic.html", {"form": form, "title": "Edit Person", "next_url": reverse("main:editPerson",args=[person_id])})
 
 
 def message_view(request):
@@ -1424,7 +1317,7 @@ def new_weight_class_view(request, return_id):
             return redirect("main:newContest", return_id)
     else:
         form = WeightClassForm()
-    return render(request, "main/new_weight_class.html", {"form": form, "return_id": return_id})
+    return render(request, "main/forms/generic.html", {"form": form, "title": "New Weight Class", "next_url": reverse("main:newWeightClass")})
 
 
 @login_required(login_url='/accounts/login/')
@@ -1556,8 +1449,8 @@ def importView(aVariableNameThatWontBeUsed):
         except ValueError:
             e.start_date = datetime.datetime.strptime("1970-01-01", "%Y-%m-%d").date()
         e.end_date = e.start_date
-        e.start_time = e.end_time = datetime.time.fromisoformat("00:00")
-        e.registration_open = e.registration_close = datetime.datetime.strptime("1970-01-01", "%Y-%m-%d")
+        #e.start_time = e.end_time = datetime.time.fromisoformat("00:00")
+        #e.registration_open = e.registration_close = datetime.datetime.strptime("1970-01-01", "%Y-%m-%d")
         e.latitude = e.longitude = 0
         e.franchise = fran
         e.save()

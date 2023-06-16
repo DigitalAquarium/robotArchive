@@ -33,7 +33,7 @@
                     style="background-color: #eeeeee"{% endif %}>
                     <td style="text-align: center; padding: 1px 0 0 1px;">
                         <img class="franchise logo" style="width: 4em; height:2.5em; margin:0"
-                             src="{{franchise.get_logo_url}}" alt="{{ fran.name }} logo"></td>
+                             src="{{fran.get_logo_url}}" alt="{{ fran.name }} logo"></td>
                     <td><a href="{% url 'main:edtNewEvent' %}?franchise={{ fran.id }}">{{ fran }}</a></td>
                 <td><a href="{% url 'main:franchiseDetail' fran.slug %}">Details</a></td>
                 </tr>

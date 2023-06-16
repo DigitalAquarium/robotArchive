@@ -29,59 +29,6 @@ class RegistrationForm(UserCreationForm):
         return user
 
 
-class SignupForm(forms.Form):
-    version = forms.ModelChoiceField(queryset=Version.objects.none(), required=True)
-
-    def save(self, contest, person):
-        reg = Registration()
-        reg.version = self.cleaned_data['version']
-        reg.signee = person
-        reg.contest = contest
-        reg.save()
-
-
-class AnonSignupForm(forms.Form):
-    name = forms.CharField(max_length=255, required=True)
-    email = forms.EmailField(required=True)
-    team_name = forms.CharField(max_length=255, required=False)
-    robot_name = forms.CharField(max_length=255, required=True)
-    weapon_type = forms.CharField(max_length=20, required=True)
-
-    def save(self, contest):
-        weight = contest.weight_class
-        p = Person()
-        p.name = self.cleaned_data['name']
-        p.email = self.cleaned_data['email']
-        t = Team()
-        t.country = "XX"
-        team_name = self.cleaned_data['team_name']
-        if team_name is not None and team_name != "":
-            t.name = team_name
-        else:
-            t.name = "Team " + self.cleaned_data['robot_name']
-        r = Robot()
-        r.name = self.cleaned_data['robot_name']
-        v = Version()
-        v.name = "v1"
-        v.weapon_type = self.cleaned_data['weapon_type']
-        v.weight_class = weight
-        v.team = t
-        v.robot = r
-        p.save()
-        t.save()
-        pt = Person_Team.objects.create(person=p, team=t)
-        reg = Registration()
-        reg.version = v
-        reg.signee = p
-        reg.contest = contest
-
-        pt.save()
-        t.save()
-        r.save()
-        v.save()
-        reg.save()
-
-
 class NewRobotForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
     vname = forms.CharField(max_length=255, required=False, label="Name of first version if different from main name")
@@ -156,7 +103,7 @@ class VersionForm(forms.ModelForm):
         fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "weight_class"]
 
 
-class TeamForm(forms.ModelForm):  # TODO: Add web links
+class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
         fields = ['name', 'logo', 'country']
@@ -171,18 +118,13 @@ class FranchiseForm(forms.ModelForm):  # TODO: Add Web Links
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'description', 'logo', 'country', 'start_date', 'end_date', 'start_time', 'end_time',
-                  'registration_open', 'registration_close', 'location_name', 'latitude', 'longitude','franchise']
-        widgets = {
-            'start_time': forms.TimeInput(attrs={'supports_microseconds': False}),
-            'end_time': forms.TimeInput(attrs={'supports_microseconds': False}),
-        }
+        fields = ['name', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise']
 
 
 class ContestForm(forms.ModelForm):
     class Meta:
         model = Contest
-        fields = ["name", "fight_type", "entries", "reserves", "weight_class"]
+        fields = ["name", "fight_type", "weight_class"]
 
 
 class FightForm(forms.ModelForm):
@@ -255,10 +197,6 @@ class NewEventFormEDT(forms.Form):
     start_date = forms.DateField(required=True)
     end_date = forms.DateField(required=False)
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=True)
-    latitude = forms.FloatField(required=True)
-    longitude = forms.FloatField(required=True)
-    start_time = forms.TimeField(required=False)
-    end_time = forms.TimeField(required=False)
 
     def save(self, franchise):
         e = Event()
@@ -270,20 +208,7 @@ class NewEventFormEDT(forms.Form):
         else:
             e.end_date = self.cleaned_data['end_date']
         e.country = self.cleaned_data['country']
-        e.latitude = self.cleaned_data['latitude']
-        e.longitude = self.cleaned_data['longitude']
-        if not self.cleaned_data['start_time']:
-            e.start_time = datetime.time.fromisoformat("00:00")
-        else:
-            e.start_time = self.cleaned_data['start_time']
-        if not self.cleaned_data['end_time']:
-            e.end_time = datetime.time.fromisoformat("00:00")
-        else:
-            e.end_time = self.cleaned_data['end_time']
         e.franchise = franchise
-
-        e.registration_open = e.registration_open = e.registration_close = datetime.datetime.strptime(
-            e.start_date.strftime("%Y-%m-%d"), "%Y-%m-%d")
 
         if not self.cleaned_data['logo_img'] and not self.cleaned_data['logo_txt']:
             pass

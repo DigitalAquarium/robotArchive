@@ -13,9 +13,7 @@
             <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
             <h1>{{ event.name }}</h1>
             {% if can_change %}
-                <a class="editor-link" href="{% url 'main:editEvent' event.id %}">Edit Event</a>
-                <a class="delete-link" href="{% url 'main:delete' 'event' event.id event.franchise.id %}">Delete
-                    Event</a>
+                <a href="{% url 'main:edtEvent' event.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Event"></a>
             {% endif %}
         </div>
 
@@ -39,20 +37,6 @@
                     Event dates: {{ event.start_date }} - {{ event.end_date }}
                 {% endif %}
             </p>
-            <p>Event times: {{ event.start_time }} - {{ event.end_time }}</p>
-            <p>
-                {% if not event.is_registration_past %}
-                    {% if event.is_registration_open %}
-                        {% if event.is_registration_full %}
-                            Registration full.
-                        {% else %}
-                            Registration open until {{ event.registration_close }}
-                        {% endif %}
-                    {% else %}
-                        Registration opens at {{ event.registration_open }}
-                    {% endif %}
-                {% endif %}
-            </p>
         </div>
 
 
@@ -68,28 +52,12 @@
                     <th>Contest Name</th>
                     <th>Weight Class</th>
                     <th>Fight Type</th>
-                    {% if event.is_registration_open %}
-                        <th>Sign up</th>
-                    {% endif %}
-                    {% if can_change %}
-                        <th>Edit Contest</th>
-                        <th>Delete Contest</th>
-                    {% endif %}
                     </thead>
                     {% for contest in event.contest_set.all %}
                         <tr>
                             <td><a href="{% url 'main:contestDetail' contest.id %}">{{ contest }}</a></td>
                             <td>{{ contest.weight_class.weight_string }}</td>
                             <td>{{ contest.get_fight_type_display }}</td>
-                            {% if event.is_registration_open %}
-                                <td><a href="{% url 'main:contestSignup' contest.id %}">Sign up</a></td>
-                            {% endif %}
-                            {% if can_change %}
-                                <td><a class="editor-link" href="{% url 'main:editContest' contest.id %}"> Edit </a>
-                                </td>
-                                <td><a class="delete-link" href="{% url 'main:delete' "contest" contest.id event.id %}">
-                                    Delete </a></td>
-                            {% endif %}
                         </tr>
                     {% endfor %}
                 </table>
@@ -100,26 +68,19 @@
             {% endif %}
         {% endif %}
 
-        {% if can_change %}
-            <a class="editor-link" href="{% url 'main:newContest' event.id %}">Add Contest</a>
-        {% endif %}
-
 
         {% if event.award_set.all|length > 0 %}
             <p>There
                 {% if event.award_set.all|length == 1 %}
-                    was <a href="{% url 'main:awardIndex' event.id %}">{{ event.award_set.all|length }} award</a>
+                    was <a href="{% url 'main:awardIndex' event.slug %}">{{ event.award_set.all|length }} award</a>
                 {% else %}
-                    were <a href="{% url 'main:awardIndex' event.id %}">{{ event.award_set.all|length }} awards</a>
+                    were <a href="{% url 'main:awardIndex' event.slug %}">{{ event.award_set.all|length }} awards</a>
                 {% endif %}
                 given out at this event</p>
         {% endif %}
-        {% if can_change %}
-            <a class="editor-link" href="{% url 'main:newAward' event.id %}">Add Award</a>
-        {% endif %}
 
 
-		<div id="osm-map" location_name="{{ event.location_name }}" lat="{{ event.latitude }}" lng="{{ event.longitude }}"></div>
+		<div id="osm-map" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
 		<script src="{% static 'scripts/open_street_map.js' %}"></script>
 
 
