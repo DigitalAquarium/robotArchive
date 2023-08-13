@@ -49,6 +49,7 @@ def edt_new_event_view(request):
             form = NewEventFormEDT(request.POST)
             if form.is_valid():
                 event = form.save(fran)
+                event.make_slug(save=True)
                 return redirect("main:edtEvent", event.id)
         else:
             form = NewEventFormEDT()
@@ -562,6 +563,7 @@ def new_event_view(request, franchise_id):
         if form.is_valid():
             event = form.save(commit=False)
             event.franchise = fran
+            event.make_slug()
             event.save()
             return redirect("main:edtEvent", event.id)
     else:
@@ -774,7 +776,16 @@ def robot_detail_view(request, slug):
     fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "contest__id", "number")
     awards = Award.objects.filter(version__robot=r)
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "fights": fights, "awards": awards, "ver": v, "can_change": can_change})
+                  {"robot": r, "history":get_history(r), "fights": fights, "awards": awards, "ver": v, "can_change": can_change})
+
+def get_history(robot):
+    fight_versions = Fight_Version.objects.filter(version__robot=robot,fight__fight_type="FC")
+    rank = 1000
+    history = [rank]
+    for fv in fight_versions:
+        rank += fv.ranking_change
+        history.append(rank)
+    return history
 
 
 @login_required(login_url='/accounts/login/')
@@ -963,6 +974,7 @@ def new_robot_view(request): # TODO: FORM
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
             v = form.save(team, Person.objects.get(user=request.user))[1]
+            #TODO: SLug
             if fight_id != 0:
                 response = redirect("main:edtSignupVersion", fight_id, v.id)
                 response.delete_cookie("robot_or_version")
@@ -1013,6 +1025,7 @@ def team_modify_view(request, team_id=None):
         if form.is_valid():
             new = form.save()
             if team_id is None:
+                new.make_slug(save=True)
                 person = Person.objects.get(user=request.user)
                 Person_Team.objects.create(team=new, person=person)
             return redirect("main:edtTeam", new.id)
@@ -1048,6 +1061,7 @@ def franchise_modify_view(request, franchise_id=None):
         if form.is_valid():
             new = form.save()
             if franchise_id is None:
+                new.make_slug(save=True)
                 person = Person.objects.get(user=request.user)
                 Person_Franchise.objects.create(franchise=new, person=person)
             return redirect("main:index")
@@ -1069,16 +1083,6 @@ def franchise_modify_view(request, franchise_id=None):
 
 def franchise_detail_view(request, slug):
     fran = Franchise.objects.get(slug=slug)
-    '''pf = None
-    if request.user.is_authenticated:
-        can_change = fran.can_edit(request.user)
-        if can_change:
-            try:
-                pf = Person_Franchise.objects.get(franchise=fran, person__user=request.user)
-            except ObjectDoesNotExist:
-                pass
-    else:
-        can_change = False'''
     can_change = True  # TODO: lol
     return render(request, "main/franchise_detail.html",
                   {"fran": fran, "can_change": can_change, "leave_id": 1})  # pf.id or 1}) #TODO: lol
@@ -1410,6 +1414,11 @@ def robot_transfer_view(request, robot_id, team_id=None):
             return redirect("main:robotDetail", robot.slug)
         else:
             return render(request, "main/transfer_robot.html", {"robot": robot, "team": team})
+
+def hall_of_fame_view(request):
+    members = Robot.objects.filter(hallofame__full_member=True).order_by("-first_fought")
+    honoraries = Robot.objects.filter(hallofame__full_member=False).order_by("-first_fought")
+    return render(request,"main/hall_of_fame.html",{"members":members,"honoraries":honoraries})
 
 
 def credits_view(request):

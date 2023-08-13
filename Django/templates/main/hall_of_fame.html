@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+{% block meta %}
+    <title>Hall of Fame</title>
+{% endblock %}
+{% block content %}
+        <div class="main-content">
+            <h1>Combat Robot Hall of Fame</h1>
+            <p style="font-size:1.2em">
+                The Combat Robot Hall of Fame is a community voted hall of fame run by <a href="/team/run-amok">Team Run Amok.</a>
+                It aims to highlight robots that have had a big impact on the sport through being highly influential, competitive or entertaining.
+                Robots on this system that also appear in the hall of fame are listed below.
+                For a full list, info on each entry's ascension, and more please go to <a href="http://runamok.tech/hall_of_fame.html">The Combat Robot Hall of Fame website linked here!</a>
+            </p>
+            <h2>Members:</h2>
+            <div class="gridview-row">
+                {% for robot in members %}
+                    <div class="gridview-square">
+                        <div class="gridview-title">
+                             <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
+                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
+                        </div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image"
+                                 src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
+                                 alt="Robot Image">
+                        </div>
+                    </div>
+                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
+                        </div>
+                        <div class="gridview-row">
+                    {% endif %}
+                {% endfor %}
+                </div>
+            <h2>Honorable Mentions:</h2>
+            <div class="gridview-row">
+                {% for robot in honoraries %}
+                    <div class="gridview-square">
+                        <div class="gridview-title">
+                             <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
+                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
+                        </div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image"
+                                 src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
+                                 alt="Robot Image">
+                        </div>
+                    </div>
+                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
+                        </div>
+                        <div class="gridview-row">
+                    {% endif %}
+                {% endfor %}
+                </div>
+        </div>
+{% endblock %}

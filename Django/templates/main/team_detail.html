@@ -12,14 +12,9 @@
                 <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
                 <h1>{{ team }}</h1>
                 {% if can_change %}
-                    <a class="editor-link" href="{% url 'main:editTeam' team.id %}">Edit Team</a>
-                    <a class="delete-link" href="{% url 'main:delete_noreturn' 'team' team.id %}">Delete Team</a>
+                    <a href="{% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Team"></a>
                 {% endif %}
             </div>
-            {% if can_change %}
-                <a class="delete-link" href="{% url 'main:delete_noreturn' 'person_team' leave_id %}">Leave Team</a>
-                <h2>Team ID: {{ team.id }}</h2>
-            {% endif %}
             {% if team.logo %}
                 <div class="team-logo-image">
                     <img class="fit-image" src="{{ team.logo.url }}" alt="logo">
@@ -40,7 +35,7 @@
         </div>
         {% endif %}
 
-            {% if team.members.all|length > 0 %}
+            {%comment%}{% if team.members.all|length > 0 %}
                 <h2>Members</h2>
                 <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'team' team.id %}">Add
                     Member</a>
@@ -50,11 +45,8 @@
                     {% endfor %}
                 </p>
 
-            {% endif %}
+            {% endif %}{%endcomment%}
             <h2>Robots:</h2>
-            {% if can_change %}
-                <a class="editor-link" href="{% url 'main:newRobot'%}?team=team.id">New Robot</a>
-            {% endif %}
             <div class="gridview-row">
                 {% for robot in team.robots %}
                     <div class="gridview-square">
@@ -63,7 +55,7 @@
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"
-                                 src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
+                                 src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
                                  alt="Robot Image">
                         </div>
                     </div>

@@ -45,6 +45,7 @@ urlpatterns = [
     path('accounts/register', views.register, name='register'),
     path('accounts/profile/', views.profile_view, name='profile'),
     path('<str:obj_type>/add_member/<int:obj_id>', views.add_member_view, name="addMember"),
+    path('hall-of-fame', views.hall_of_fame_view, name="hallOfFame"),
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
     path('credits', views.credits_view, name='credits'),

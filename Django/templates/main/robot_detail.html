@@ -5,11 +5,14 @@
     <title>{{ robot.name }} - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
     <script src="{% static 'scripts/robot_detail.js' %}"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="{%static 'scripts/history_chart.js' %}"></script>
 {% endblock %}
 {% block content %}
     <div class="main-content">
         {% if robot %}
             <div class="heading">
+                <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
                 <h1>{{ robot.name }} {% if robot.requires_translation %} <span class="alphanum">({{ robot.name_alphanum }})</span> {% endif %} </h1>
                 {% if can_change %}
                     <a class="editor-link" href="{% url 'main:editRobot' robot.id %}">Edit Robot</a>
@@ -49,7 +52,7 @@
                         <div class="version-content">
                             <div class="version-image">
                                 <img class="fit-image"
-                                     src="{% if v.image %} {{ v.image.url }} {% else %} {% static "unknown.png" %} {% endif %}"
+                                     src="{% if v.image %} {{ v.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}"
                                      alt="Version Image">
                             </div>
                             <div class="version-text">
@@ -90,10 +93,15 @@
                 {% if can_change %}
                     <a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>{% endif %}
             </div>
+        <span id="history-data" history="{{history}}"></span>
+        <div id="history-chart" style="width:100%; height:400px;"></div>
 
-            {% if awards|length > 0 %}
-                <h2>{{ robot }} has won {{ awards|length }} {% if awards|length == 1 %}award. {% else %}
-                    awards.{% endif %}</h2>
+            {% if awards|length > 0 or robot.hallofame_set.all|length > 0 %}
+                {%if robot.hallofame_set.all|length > 0%}
+                <h2>{{ robot }} has won {{ awards|length|add:"1" }} {% if awards|length == 0 %}award. {% else %} awards.{% endif %}</h2>
+                {%else%}
+                <h2>{{ robot }} has won {{ awards|length }} {% if awards|length == 1 %}award. {% else %} awards.{% endif %}</h2>
+                {%endif%}
                 <table>
                     <thead>
                     <tr>
@@ -102,6 +110,10 @@
                         <th>Event</th>
                     </tr>
                     </thead>
+                    {%if robot.hallofame_set.all|length > 0%}
+                    <td><img class="award-icon" src="{%static 'awards/frame2.png'%}" alt="award icon"></td>
+                    <td colspan="2" style="text-align:center"><a href="{%url 'main:hallOfFame' %}">{%if robot.hallofame_set.first.full_member%}Hall of Fame Member{%else%}Hall of Fame Honorable Mention{%endif%}</a></td>
+                    {% endif %}
                     {% for award in awards %}
                         <tr>
                             <td><img class="award-icon" src="{{ award.get_icon }}" alt="award icon"></td>

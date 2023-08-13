@@ -107,13 +107,13 @@ class Team(models.Model):
         p = Person.objects.get(user=user)
         return p in self.members.all() or user.is_staff
 
-    def slugify(self):
+    def make_slug(self,save=False):
         if self.slug is not None and self.slug != "": return self.slug
         slug_text = self.name
         if slug_text[:5].lower() == "team ":
             slug_text = slug_text[5:]
         self.slug = make_slug(slug_text,Team.objects.all())
-        self.save()
+        if save: self.save()
         return self.slug
 
 
@@ -183,6 +183,7 @@ class Weight_Class(models.Model):
 
     def find_lb_class(self):
         grams = self.weight_grams
+        #[2,3,4,5,6,7,8,9]
         BOUNDARY_AMOUNT = 0.21
         nearest_weight_class = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - grams))
         if abs(nearest_weight_class - grams) <= nearest_weight_class * BOUNDARY_AMOUNT:
@@ -422,10 +423,10 @@ class Franchise(models.Model):
     members = models.ManyToManyField(Person, through="Person_Franchise")
     slug = models.SlugField(max_length=50)
 
-    def slugify(self):
+    def make_slug(self,save=False):
         if self.slug is not None and self.slug != "": return self.slug
         self.slug = make_slug(self.name, Franchise.objects.all())
-        self.save()
+        if save: self.save()
         return self.slug
 
     def is_member(self, person):
@@ -464,10 +465,10 @@ class Event(models.Model):
     location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=50)
-    def slugify(self):
+    def make_slug(self,save=False):
         if self.slug is not None and self.slug != "": return self.slug
         self.slug = make_slug(self.name, Event.objects.all())
-        self.save()
+        if save: self.save()
         return self.slug
 
     def __str__(self):
@@ -527,7 +528,7 @@ class Contest(models.Model):
 
 class Registration(models.Model):  # Idea for future: Add a team limit to reservations.
     signup_time = models.DateTimeField(auto_now_add=True)
-    approved = models.BooleanField(default=False)
+    approved = models.BooleanField(default=False) # TODO: Remove these
     reserve = models.BooleanField(default=False)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
     signee = models.ForeignKey(Person, on_delete=models.CASCADE)
@@ -1194,6 +1195,12 @@ class Source(models.Model):
     def __str__(self):
         return self.name
 
+class HalloFame(models.Model):
+    full_member = models.BooleanField()
+    robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
+
+    def __str__(self):
+        str(self.robot) + " " + ("hall of fame entry" if self.full_member else "hall of fame honorable mention")
 
 # TODO: This should maybe be another module, requires database but idk how to like, do it otherwise.
 class Ascii_Lookup(models.Model):
@@ -1284,9 +1291,9 @@ except:
         pass
 
 #TODO: DO THIS ON CREATION
-'''for e in Event.objects.filter(slug=""):
+for e in Event.objects.filter(slug=""):
     e.slugify()
 for f in Franchise.objects.filter(slug=""):
     f.slugify()
 for t in Team.objects.filter(slug=""):
-    t.slugify()'''
+    t.slugify()
