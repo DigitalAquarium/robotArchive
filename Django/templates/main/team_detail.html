@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load bonus_filters %}
 {% block meta %}
     <title>{{ team }} - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
@@ -51,11 +52,11 @@
                 {% for robot in team.robots %}
                     <div class="gridview-square">
                         <div class="gridview-title">
-                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
+                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"
-                                 src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
+                                 src="{{robot|image_from_team:team}}"
                                  alt="Robot Image">
                         </div>
                     </div>

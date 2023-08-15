@@ -34,3 +34,16 @@ def fights_event_number(fights, this_fight):
 @register.filter
 def fight_opponents(fight, robot):
     return fight.opponents_string(robot)
+
+
+@register.filter
+def image_from_team(robot,team):
+    return robot.get_image(team)
+
+@register.filter
+def name_from_team(robot,team): #TODO This may bring up a different version name to the image made above so may not be the best?
+    version = robot.get_representitive(team)
+    if version.robot_name:
+        return version.robot_name
+    else:
+        return robot.name

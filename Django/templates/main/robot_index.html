@@ -14,7 +14,7 @@
     <section class="search-params">
         <form class="search-form" method="get"
               style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" method="get"
-              action="{% url "main:robotIndex" %}">
+              action="{% url 'main:robotIndex' %}">
             <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>
@@ -51,7 +51,7 @@
             <div class="hrz-index-result">
                 <span class="hrz-index-image">
                     <img class="fit-image"
-                         src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
+                         src="{{robot.get_image}}"
                          alt="Robot Image">
                 </span>
                 <div class="hrz-index-content">

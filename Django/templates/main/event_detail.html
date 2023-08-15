@@ -83,6 +83,18 @@
 		<div id="osm-map" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
 		<script src="{% static 'scripts/open_street_map.js' %}"></script>
 
+            <h2>This event has been archived using the following websites:</h2>
+        {% for source in event.source_set.all %}
+                <ul>
+                    <ui style="border:None;display:flex">
+                        <a href="{{ source.link }}" style="display:inherit">
+                            <img src="{%if source.archived %}{%static 'web_logos/WA.png'%}{%else%}https://icon.horse/icon/{{source.get_domain}}{%endif%}" alt="{{ source.name }}" width="25px" height="25px" style="padding-inline:1em">
+                            <span>{{source.name}}</span>
+                        </a>
+                        <span style="padding-inline:1em">{%if source.archived %} archived. {%else%} last accessed {{source.last_accessed}}. {%endif%}</span>
+                    </ui>
+                </ul>
+        {% endfor %}
 
 
     {% else %}

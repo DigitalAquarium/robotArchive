@@ -365,6 +365,29 @@ class Robot(models.Model):
         last = self.version_set.all().last()
         return last.can_edit(user) or user.is_staff
 
+    def get_representitive(self,team=None):
+        if team:
+            valid_version_set = self.version_set.filter(team=team)
+        else:
+            valid_version_set = self.version_set
+
+        identically_named_versions = valid_version_set.filter(robot_name__regex="(^|"+self.name+" ([MDCLXVI]+|[mdclxvi]+|[0-9]+))$").order_by("-first_fought")
+        #This regex also classes numbered versions as identical, will show "Tiberius 6" over Tiberius or "Firestorm V" over "Firestorm"
+
+        if identically_named_versions.count() > 0:
+            representative = identically_named_versions[0]
+        else:
+            representative = valid_version_set.last()
+            #TODO: Could try to guess the best version based on string similarity?
+        return representative
+
+    def get_image(self,team=None):
+        rep = self.get_representitive(team)
+        if rep.image:
+            return rep.image.url
+        else:
+            return settings.STATIC_URL + "unknown.png"
+
 
 class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)

@@ -22,7 +22,7 @@
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"
-                                 src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
+                                 src="{{robot.get_image}}"
                                  alt="Robot Image">
                         </div>
                     </div>

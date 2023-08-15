@@ -8,7 +8,11 @@
 {% block content %}
     {% if fight %}
         <div class="main-content">
-        <h1> {{ fight }}</h1>
+        <h1> {{ fight }}
+            {% if can_change %}
+                <a href="{% url 'main:edtFightOverview' fight.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Fight"></a>
+            {% endif %}
+        </h1>
         <h4>{{ fight.get_fight_type_display }} </h4>
         {% if fight.fight_version_set.last.tag_team == 0 %}
             <div class="gridview-row competitor-row">
