@@ -10,15 +10,12 @@ from django.utils import timezone
 from django.utils.text import slugify
 import uuid
 
-FULL_COMBAT = 'FC'
-SPORTSMAN = 'SP'
-PLASTIC = 'PL'
-NON_COMBAT = 'NC'
 FIGHT_TYPE_CHOICES = [
-    (FULL_COMBAT, "Full Combat"),
-    (SPORTSMAN, "Sportsman"),
-    (PLASTIC, "Plastic"),
-    (NON_COMBAT, "Non-Combat"),
+    ('FC', "Full Combat"),
+    ('NS', "Non-Spinner"),
+    ('SP', "Sportsman"),
+    ('PL', "Plastic"),
+    ('NC', "Other - Not Combat"),
 ]
 
 COUNTRY_CHOICES = []
@@ -256,9 +253,7 @@ class Robot(models.Model):
         SLUG_LEN = 60
         # <38 chars of name>-<2 wc>-<12 country>-<5 hex number> = 38 + 2 + 12 + 5 + 3 (dashes) = 60 else:
         # <23 chars of name> + "-" + <uuid 36> = 60
-        if self.slug != "":
-            return self.slug
-        if self.country[0] not in ["XE","XS","XW","XI","XX"]:
+        if self.country not in ["XE","XS","XW","XI","XX"]:
             if self.country not in ["GB","US","KP","KR","CD","RU","SY"] and len(pycountry.countries.get(alpha_2=self.country).name) <= 12:
                 countryslug = slugify(pycountry.countries.get(alpha_2=self.country).name)
             elif self.country in ["GB","US","KP","KR","CD","RU","SY"]:
@@ -371,8 +366,9 @@ class Robot(models.Model):
         else:
             valid_version_set = self.version_set
 
-        identically_named_versions = valid_version_set.filter(robot_name__regex="(^|"+self.name+" ([MDCLXVI]+|[mdclxvi]+|[0-9]+))$").order_by("-first_fought")
+        identically_named_versions = valid_version_set.filter(robot_name__regex="(^|"+self.name+" ([MDCLXVI]+|[mdclxvi]+|[0-9]+))$").order_by("-number")
         #This regex also classes numbered versions as identical, will show "Tiberius 6" over Tiberius or "Firestorm V" over "Firestorm"
+        #TODO: Should probably contain an exact name match
 
         if identically_named_versions.count() > 0:
             representative = identically_named_versions[0]
@@ -395,6 +391,7 @@ class Version(models.Model):
     name = models.CharField(max_length=255, blank=True)
     requires_translation = models.BooleanField(default=False)
 
+    number = models.PositiveSmallIntegerField(default=0)
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='robot_images/%Y/', blank=True)
@@ -605,16 +602,18 @@ class Fight(models.Model):
     external_media = models.URLField(blank=True)
 
     def calculate(self, commit=True):
+        if self.fight_type=="NC":
+            return
         K = 25
+        if self.fight_type=="NS":
+            # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a spinner
+            # and those robots typically do more fights anyway due to being less destroyed.
+            K /= 2
         fvs = self.fight_version_set.all()
-        numBots = len(fvs)
-        numWinners = len(self.winners())
-        if self.fight_type == "FC" and (numWinners > 0 or self.method == "DR"):
-            tag = False
-            for fv in fvs:
-                if fv.tag_team != 0:
-                    tag = True
-                    break
+        numBots = fvs.count()
+        numWinners = fvs.filter(won=True).count()
+        if (self.fight_type == "FC" or self.fight_type == "NS") and (numWinners > 0 or self.method == "DR"):
+            tag = True if fvs.filter(tag_team__gt=0).count > 1 else 0
 
             if numBots == 2:
                 q1 = 10 ** (fvs[0].version.robot.ranking / 400)
@@ -836,7 +835,7 @@ class Fight(models.Model):
             else:
                 return "Qualified"
         else:
-            if self.method in ["KO", "JD", "TO", "OA", "PT"]:
+            if self.method in ["KO", "JD", "TO", "OA", "PT","OT"]:
                 return "Lost"
             if self.method == "NM":
                 if len(self.competitors.filter(fight_version__won=1)) == 0:
@@ -845,6 +844,8 @@ class Fight(models.Model):
                     return "Lost"
             elif self.method == "DR":
                 return "Drew"
+            elif self.method == "NW":
+                return "No Winner Declared"
             else:
                 return "Unknown"
 
@@ -917,15 +918,6 @@ class Fight(models.Model):
 
     def can_edit(self, user):
         return self.contest.can_edit(user)
-
-    @staticmethod
-    def recalculate_all():
-        Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0)
-        for event in Event.objects.all().order_by("start_date"):
-            for contest in event.contest_set.all():
-                for fight in contest.fight_set.all().order_by("number"):
-                    fight.calculate(True)
-            print(event, "saved.")
 
 
 class Award(models.Model):

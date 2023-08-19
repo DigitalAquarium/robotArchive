@@ -41,7 +41,7 @@ def image_from_team(robot,team):
     return robot.get_image(team)
 
 @register.filter
-def name_from_team(robot,team): #TODO This may bring up a different version name to the image made above so may not be the best?
+def name_from_team(robot,team):
     version = robot.get_representitive(team)
     if version.robot_name:
         return version.robot_name

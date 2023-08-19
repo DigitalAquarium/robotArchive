@@ -53,11 +53,13 @@ class NewRobotForm(forms.Form):
         v.image = self.cleaned_data['img']
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']
+        v.number = 1
         v.owner = owner
         if team != 0:
             v.team = team
         r.save()
         v.save()
+        r.slugify()
         return r, v
 
 
@@ -86,6 +88,7 @@ class NewVersionForm(forms.Form):
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']
         v.team = self.cleaned_data['team']
+        v.number = v.robot.version_set.all().order_by("number").last().number + 1
         v.owner = owner
         v.save()
         return v
@@ -94,14 +97,25 @@ class NewVersionForm(forms.Form):
 class RobotForm(forms.ModelForm):
     class Meta:
         model = Robot
-        fields = ['name', 'description', "opt_out"]
+        fields = ['name', 'description',"country", "opt_out"]
+
+    def save(self, commit=True):
+        rob = super().save(commit=False)
+        rob.slugify()
 
 
 class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
         fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "weight_class"]
+    def save(self,commit=True):
+        ver = super().save(commit=False)
+        if ver.number == 0:
+            ver.number = ver.robot.version_set.all().order_by("number").last().number + 1
 
+        if commit:
+            ver.save()
+        return ver
 
 class TeamForm(forms.ModelForm):
     class Meta:

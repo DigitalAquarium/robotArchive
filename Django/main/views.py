@@ -775,11 +775,20 @@ def robot_detail_view(request, slug):
             v = None
     fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "contest__id", "number")
     awards = Award.objects.filter(version__robot=r)
+
+    leaderboard_entries = Leaderboard.objects.filter(robot=r,ranking__gt=Robot.RANKING_DEFAULT).order_by("position","-year")
+    best_lb_entry = leaderboard_entries.first()
+    if leaderboard_entries.count() > 1:
+        leaderboard_entries = leaderboard_entries[1:]
+    else:
+        leaderboard_entries = None
+
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "history":get_history(r), "fights": fights, "awards": awards, "ver": v, "can_change": can_change})
+                  {"robot": r, "history":get_history(r), "fights": fights, "awards": awards, "ver": v, "can_change": can_change,
+                   "version_set":r.version_set.all().order_by("number"),"best_lb_entry":best_lb_entry,"leaderboard_entries":leaderboard_entries})
 
 def get_history(robot):
-    fight_versions = Fight_Version.objects.filter(version__robot=robot,fight__fight_type="FC")
+    fight_versions = Fight_Version.objects.filter(version__robot=robot,fight__fight_type="FC").order_by("fight__contest__event__start_date")
     rank = 1000
     history = [rank]
     for fv in fight_versions:
@@ -1321,7 +1330,7 @@ def new_weight_class_view(request, return_id):
             return redirect("main:newContest", return_id)
     else:
         form = WeightClassForm()
-    return render(request, "main/forms/generic.html", {"form": form, "title": "New Weight Class", "next_url": reverse("main:newWeightClass")})
+    return render(request, "main/forms/generic.html", {"form": form, "title": "New Weight Class", "next_url": reverse("main:newWeightClass",args=[return_id])})
 
 
 @login_required(login_url='/accounts/login/')
@@ -1620,6 +1629,7 @@ def recalc_all(request):
     fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")
     contest_cache = None
+    batch_size = 10000
     for fight in fights:
         if contest_cache != fight.contest:
             if contest_cache is not None:

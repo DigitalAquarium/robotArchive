@@ -30,9 +30,22 @@
             {% endif %}
             <p>{{ robot.description }}</p>
 
+            <p style="font-size:1.3em;font-weight: bold;font-style: italic;
+                                    color:  {% if best_lb_entry.position == 1 %}gold
+                                            {% elif best_lb_entry.position == 2 %}silver
+                                            {% elif best_lb_entry.position == 3 %}darkgoldenrod
+                                            {%else%}purple{% endif %}">{{best_lb_entry}}</p>
+            {%for entry in leaderboard_entries%}
+        <p style="color:  {% if entry.position == 1 %}gold
+                                            {% elif entry.position == 2 %}silver
+                                            {% elif entry.position == 3 %}darkgoldenrod
+                                            {%else%}purple{% endif %}">
+            {{entry}}</p>
+            {%endfor%}
+
             <div>
                 <div class="version tabs">
-                    {% for v in robot.version_set.all %}
+                    {% for v in version_set %}
                         <button class="tab-button{% if ver == v %} active{% elif not ver and forloop.last %} active{% endif %}"
                                 id="but-{{ v.id }}" onclick="viewRobot({{ v.id }},{{ robot.id }})">
                             {% comment %}{% if v.robot_name == "" or v.robot_name == v.robot.name %}{{ v.name }}{% else %}{{ v.robot_name }}{% endif %}{% endcomment%}
@@ -41,7 +54,7 @@
                         </button>
                     {% endfor %}
                 </div>
-                {% for v in robot.version_set.all %}
+                {% for v in version_set %}
                     <div class="version-block" id="ver-{{ v.id }}" {% if ver == v %}style="display:block"
                          {% elif not ver and forloop.last %}style="display:block"{% endif %}>
                         <div class="version-header">
@@ -73,7 +86,7 @@
                         </div>
                     </div>
                 {% endfor %}
-                {% with robot.version_set.last as lastV %}
+                {% with version_set.last as lastV %}
                     {% if can_change %}
                         <a class="editor-link" id="edit-version-button"
                                 {% if ver %}
