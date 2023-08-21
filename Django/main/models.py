@@ -601,9 +601,9 @@ class Fight(models.Model):
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
 
-    def calculate(self, commit=True):
+    def calculate(self, commit=True,v_dict=None):
         if self.fight_type=="NC":
-            return
+            return [[],v_dict]
         K = 25
         if self.fight_type=="NS":
             # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a spinner
@@ -612,12 +612,20 @@ class Fight(models.Model):
         fvs = self.fight_version_set.all()
         numBots = fvs.count()
         numWinners = fvs.filter(won=True).count()
+
+        if not v_dict:
+            v_dict = {}
+        for fv in fvs:
+            if fv.version.id not in v_dict:
+                v_dict[fv.version.id] = fv.version
+        #print(v_dict)
+
         if (self.fight_type == "FC" or self.fight_type == "NS") and (numWinners > 0 or self.method == "DR"):
-            tag = True if fvs.filter(tag_team__gt=0).count > 1 else 0
+            tag = True if fvs.filter(tag_team__gt=0).count() > 1 else 0
 
             if numBots == 2:
-                q1 = 10 ** (fvs[0].version.robot.ranking / 400)
-                q2 = 10 ** (fvs[1].version.robot.ranking / 400)
+                q1 = 10 ** (v_dict[fvs[0].version.id].robot.ranking / 400)
+                q2 = 10 ** (v_dict[fvs[1].version.id].robot.ranking / 400)
                 expected1 = q1 / (q1 + q2)
                 if fvs[0].won:
                     score1 = 1
@@ -626,9 +634,9 @@ class Fight(models.Model):
                 else:
                     score1 = 0
                 change = K * (score1 - expected1)
-                fvs[0].version.robot.ranking += change
+                v_dict[fvs[0].version.id].robot.ranking += change
                 fvs[0].ranking_change = change
-                fvs[1].version.robot.ranking -= change
+                v_dict[fvs[1].version.id].robot.ranking -= change
                 fvs[1].ranking_change = -change
 
             elif not tag and numWinners > 0:
@@ -637,20 +645,20 @@ class Fight(models.Model):
                 # still a win equal to a normal fight if you're the only winner of the rumble
                 averageRank = 0
                 for fv in fvs:
-                    averageRank += fv.version.robot.ranking / numBots
+                    averageRank += v_dict[fv.version.id].robot.ranking / numBots
                 averageQ = 10 ** (averageRank / 400)
                 pool = 0
                 for i in range(numBots):
-                    q = 10 ** (fvs[i].version.robot.ranking / 400)
+                    q = 10 ** (v_dict[fvs[i].version.id].robot.ranking / 400)
                     averageExpected = averageQ / (averageQ + q)
                     change = (K * (1 - averageExpected)) / numBots
                     pool += change
-                    fvs[i].version.robot.ranking -= change
+                    v_dict[fvs[i].version.id].robot.ranking -= change
                     fvs[i].ranking_change = -change
 
                 for i in range(numBots):  # Distribute this based on amount of elo maybe
                     if fvs[i].won == 1:
-                        fvs[i].version.robot.ranking += pool / numWinners
+                        v_dict[fvs[i].version.id].robot.ranking += pool / numWinners
                         fvs[i].ranking_change += pool / numWinners
 
             else:
@@ -667,7 +675,7 @@ class Fight(models.Model):
                 for tt in tteams:
                     tavg = 0
                     for fv in tt:
-                        tavg += fv.version.robot.ranking
+                        tavg += v_dict[fv.version.id].robot.ranking
                     tavg /= len(tteams)
                     tteamsAvg.append(tavg)
 
@@ -684,7 +692,7 @@ class Fight(models.Model):
                     change = K * (score1 - expected1)
                     for fv in tteams[0]:
                         fv.ranking_change = change / len(tteams[0])
-                        fv.version.robot.ranking += change / len(tteams[0])
+                        v_dict[fv.version.id].robot.ranking += change / len(tteams[0])
                     for fv in tteams[1]:
                         fv.ranking_change = -change / len(tteams[1])
                         fv.version.robot.ranking -= change / len(tteams[1])
@@ -701,43 +709,43 @@ class Fight(models.Model):
                         change = (K * (1 - averageExpected)) / len(tteams)
                         pool += change
                         for fv in tteams[i]:
-                            fv.version.robot.ranking -= change
+                            v_dict[fv.version.id].robot.ranking -= change
                             fv.ranking_change = -change
 
                     for i in range(len(tteams)):
                         if fvs[i].won == 1:
-                            fvs[i].version.robot.ranking += pool / numWinners
+                            v_dict[fvs[i].version.id].robot.ranking += pool / numWinners
                             fvs[i].ranking_change += pool / numWinners
 
-        if numBots == 2 and numWinners == 1 and self.fight_type in ["FC", "SP", "PL"]:
+        if numBots == 2 and numWinners == 1:
             for fv in fvs:
                 if fv.won:
-                    fv.version.robot.wins += 1
+                    v_dict[fv.version.id].robot.wins += 1
                 else:
-                    fv.version.robot.losses += 1
+                    v_dict[fv.version.id].robot.losses += 1
 
         # Update when fought
         vupdateFlag = False
         for fv in fvs:
-            if not fv.version.first_fought or fv.version.first_fought > fv.fight.contest.event.start_date:
-                fv.version.first_fought = fv.fight.contest.event.start_date
+            if not v_dict[fv.version.id].first_fought or v_dict[fv.version.id].first_fought > fv.fight.contest.event.start_date:
+                v_dict[fv.version.id].first_fought = fv.fight.contest.event.start_date
                 vupdateFlag = True
-            if not fv.version.robot.first_fought or fv.version.robot.first_fought > fv.fight.contest.event.start_date:
-                fv.version.robot.first_fought = fv.fight.contest.event.start_date
+            if not v_dict[fv.version.id].robot.first_fought or v_dict[fv.version.id].robot.first_fought > fv.fight.contest.event.start_date:
+                v_dict[fv.version.id].robot.first_fought = fv.fight.contest.event.start_date
 
-            if not fv.version.last_fought or fv.version.last_fought < fv.fight.contest.event.end_date:
-                fv.version.last_fought = fv.fight.contest.event.end_date
+            if not v_dict[fv.version.id].last_fought or v_dict[fv.version.id].last_fought < fv.fight.contest.event.end_date:
+                v_dict[fv.version.id].last_fought = fv.fight.contest.event.end_date
                 vupdateFlag = True
-            if not fv.version.robot.last_fought or fv.version.robot.last_fought < fv.fight.contest.event.end_date:
-                fv.version.robot.last_fought = fv.fight.contest.event.end_date
+            if not v_dict[fv.version.id].robot.last_fought or v_dict[fv.version.id].robot.last_fought < fv.fight.contest.event.end_date:
+                v_dict[fv.version.id].robot.last_fought = fv.fight.contest.event.end_date
 
         if commit:
             for fv in fvs:
                 if vupdateFlag:
-                    fv.version.save()
-                fv.version.robot.save()
+                    v_dict[fv.version.id].save()
+                v_dict[fv.version.id].robot.save()
                 fv.save()
-        return fvs
+        return [fvs,v_dict]
 
     def format_external_media(self):  # TODO: Youtube Shorts
         if re.match("(https?://)?(www\.)?youtu\.?be",

@@ -11,6 +11,7 @@ from django.core.validators import URLValidator
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.db import transaction
 
 from main import subdivisions
 from .forms import *
@@ -1629,20 +1630,42 @@ def recalc_all(request):
     fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")
     contest_cache = None
-    batch_size = 10000
+    fvs = []
+    version_dictionary = {}
     for fight in fights:
         if contest_cache != fight.contest:
             if contest_cache is not None:
-                print("updating robots")
-                for reg in contest_cache.registration_set.all():
-                    Leaderboard.update_robot_weight_class(reg.version.robot, year=contest_cache.event.end_date.year)
+                #print("updating robots")
+                #for reg in contest_cache.registration_set.all():
+                #    Leaderboard.update_robot_weight_class(reg.version.robot, year=contest_cache.event.end_date.year)
                 if contest_cache.event.end_date.year != fight.contest.event.end_date.year:
-                    print("Creating Leaderboard for year: " + str(contest_cache.event.end_date.year))
+                    print("~~~~~~~~~~~~~~~~~~~~~~~~~~Saving year " + str(contest_cache.event.end_date.year)+"~~~~~~~~~~~~~~~~~~~~~~~~~~")
+                    with transaction.atomic():
+                        for fv in fvs:
+                            fv.save()
+                            fv.version.save()
+                            fv.version.robot.save()
+
+                    print("updating leaderboard")
+                    for v in version_dictionary.values():
+                        Leaderboard.update_robot_weight_class(v.robot, year=contest_cache.event.end_date.year)
                     Leaderboard.update_all(contest_cache.event.end_date.year)
+                    fvs = []
+                    version_dictionary = {}
             contest_cache = fight.contest
             event_cache = contest_cache.event
             print("Saving:", contest_cache, fight.contest.event)
-        fight.calculate(True)
+        result = fight.calculate(False,version_dictionary)
+        fvs += result[0]
+        version_dictionary = result[1]
+
+    print("Saving Final Batch")
+    with transaction.atomic(): # Save the leftovers
+        for fv in fvs:
+            fv.save()
+            fv.version.save()
+            fv.version.robot.save()
+    print("Done!")
     return render(request, "main/credits.html", {})
 
 
