@@ -613,7 +613,7 @@ class Fight(models.Model):
         numBots = fvs.count()
         numWinners = fvs.filter(won=True).count()
         if (self.fight_type == "FC" or self.fight_type == "NS") and (numWinners > 0 or self.method == "DR"):
-            tag = True if fvs.filter(tag_team__gt=0).count > 1 else 0
+            tag = fvs.filter(tag_team__gt=0).count() > 1
 
             if numBots == 2:
                 q1 = 10 ** (fvs[0].version.robot.ranking / 400)
@@ -709,7 +709,7 @@ class Fight(models.Model):
                             fvs[i].version.robot.ranking += pool / numWinners
                             fvs[i].ranking_change += pool / numWinners
 
-        if numBots == 2 and numWinners == 1 and self.fight_type in ["FC", "SP", "PL"]:
+        if numBots == 2 and numWinners == 1 and self.fight_type in ["FC", "NS", "SP", "PL"]:
             for fv in fvs:
                 if fv.won:
                     fv.version.robot.wins += 1
@@ -775,7 +775,7 @@ class Fight(models.Model):
                 self.media_type = "LI"
 
         elif self.external_media is not None:
-            if "twitter" in self.external_media:
+            if "twitter" in self.external_media or "www.x.com" in self.external_media:
                 self.media_type = "TW"
             elif "tiktok" in self.external_media:
                 self.media_type = "TT"
@@ -1051,7 +1051,6 @@ class Leaderboard(models.Model):
 
     @staticmethod
     def update_robot_weight_class(robot, commit=True, year=None):
-
         currentYear = year is None
         if currentYear:
             latest_event = Event.objects.all().order_by("-end_date")[0]

@@ -1623,6 +1623,8 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
 
 
 def recalc_all(request):
+    #raise(Exception)
+    breakpoint()
     #Need top update more robots than currently doing to add the X to them
     Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X")
 
