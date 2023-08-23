@@ -1623,15 +1623,12 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
 
 
 def recalc_all(request):
-    #raise(Exception)
-    breakpoint()
     #Need top update more robots than currently doing to add the X to them
     Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X")
 
     fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")
     contest_cache = None
-    batch_size = 10000
     for fight in fights:
         if contest_cache != fight.contest:
             if contest_cache is not None:

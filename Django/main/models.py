@@ -610,7 +610,7 @@ class Fight(models.Model):
             # and those robots typically do more fights anyway due to being less destroyed.
             K /= 2
         fvs = self.fight_version_set.all()
-        numBots = fvs.count()
+        numBots = len(fvs) # Must be len and not count because lazy loading causes the robot to not save otherwise
         numWinners = fvs.filter(won=True).count()
         if (self.fight_type == "FC" or self.fight_type == "NS") and (numWinners > 0 or self.method == "DR"):
             tag = fvs.filter(tag_team__gt=0).count() > 1
