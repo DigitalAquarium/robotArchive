@@ -47,12 +47,13 @@ LEADERBOARD_WEIGHTS = [
 def get_flag(code):
     return settings.STATIC_URL + "flags/4x3/" + code.lower() + ".svg"
 
-def make_slug(slug_text,queryset):
+
+def make_slug(slug_text, queryset):
     SLUG_LENGTH = 50
     slug_text = slugify(slug_text[:50])
     if queryset.filter(slug=slug_text).count() > 0:
         uu = "-" + str(uuid.uuid4())
-        slug_text = slug_text[:50-len(uu)] + uu
+        slug_text = slug_text[:50 - len(uu)] + uu
     return slug_text
 
 
@@ -104,12 +105,12 @@ class Team(models.Model):
         p = Person.objects.get(user=user)
         return p in self.members.all() or user.is_staff
 
-    def make_slug(self,save=False):
+    def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
         slug_text = self.name
         if slug_text[:5].lower() == "team ":
             slug_text = slug_text[5:]
-        self.slug = make_slug(slug_text,Team.objects.all())
+        self.slug = make_slug(slug_text, Team.objects.all())
         if save: self.save()
         return self.slug
 
@@ -180,7 +181,7 @@ class Weight_Class(models.Model):
 
     def find_lb_class(self):
         grams = self.weight_grams
-        #[2,3,4,5,6,7,8,9]
+        # [2,3,4,5,6,7,8,9]
         BOUNDARY_AMOUNT = 0.21
         nearest_weight_class = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - grams))
         if abs(nearest_weight_class - grams) <= nearest_weight_class * BOUNDARY_AMOUNT:
@@ -242,6 +243,7 @@ class Robot(models.Model):
 
     def slugify(self):
         if self.slug is not None and self.slug != "": return self.slug
+
         def try_save_slug(slug):
             if Robot.objects.filter(slug=slug).count() == 0:
                 self.slug = slug
@@ -253,10 +255,11 @@ class Robot(models.Model):
         SLUG_LEN = 60
         # <38 chars of name>-<2 wc>-<12 country>-<5 hex number> = 38 + 2 + 12 + 5 + 3 (dashes) = 60 else:
         # <23 chars of name> + "-" + <uuid 36> = 60
-        if self.country not in ["XE","XS","XW","XI","XX"]:
-            if self.country not in ["GB","US","KP","KR","CD","RU","SY"] and len(pycountry.countries.get(alpha_2=self.country).name) <= 12:
+        if self.country not in ["XE", "XS", "XW", "XI", "XX"]:
+            if self.country not in ["GB", "US", "KP", "KR", "CD", "RU", "SY"] and len(
+                    pycountry.countries.get(alpha_2=self.country).name) <= 12:
                 countryslug = slugify(pycountry.countries.get(alpha_2=self.country).name)
-            elif self.country in ["GB","US","KP","KR","CD","RU","SY"]:
+            elif self.country in ["GB", "US", "KP", "KR", "CD", "RU", "SY"]:
                 if self.country == "GB":
                     countryslug = "uk"
                 elif self.country == "US":
@@ -312,18 +315,17 @@ class Robot(models.Model):
             slug = nameslug[:SLUG_LEN - len(countryslug) - len(wc_slug) - 6] + countryslug + wc_slug
 
         count = Robot.objects.get(slug__contains=slug)
-        count_slug = "-" + hex(count)[2:] # Should allow for over 1 million duplicate name, wc, country sets
+        count_slug = "-" + hex(count)[2:]  # Should allow for over 1 million duplicate name, wc, country sets
         if len(count_slug) <= 5:
             if try_save_slug(slug + count_slug): return slug
-            for i in range(2,count+2):
-                #Try to grab slugs from any robots that have been deleted, as there can be a discrepancy between the amount of slugs avalible and the count
+            for i in range(2, count + 2):
+                # Try to grab slugs from any robots that have been deleted, as there can be a discrepancy between the amount of slugs avalible and the count
                 count_slug = "-" + hex(i)[2:]
                 if try_save_slug(slug + count_slug): return slug
 
-
-        #Nuclear Option, If this is not unique then something has gone seriously wrong
+        # Nuclear Option, If this is not unique then something has gone seriously wrong
         uuid_slug = "-" + str(uuid.uuid4())
-        slug = nameslug[:SLUG_LEN-len(uuid_slug)] + uuid_slug
+        slug = nameslug[:SLUG_LEN - len(uuid_slug)] + uuid_slug
         self.slug = slug
         self.save()
         return slug
@@ -360,24 +362,25 @@ class Robot(models.Model):
         last = self.version_set.all().last()
         return last.can_edit(user) or user.is_staff
 
-    def get_representitive(self,team=None):
+    def get_representitive(self, team=None):
         if team:
             valid_version_set = self.version_set.filter(team=team)
         else:
             valid_version_set = self.version_set
 
-        identically_named_versions = valid_version_set.filter(robot_name__regex="(^|"+self.name+" ([MDCLXVI]+|[mdclxvi]+|[0-9]+))$").order_by("-number")
-        #This regex also classes numbered versions as identical, will show "Tiberius 6" over Tiberius or "Firestorm V" over "Firestorm"
-        #TODO: Should probably contain an exact name match
+        identically_named_versions = valid_version_set.filter(
+            robot_name__regex="(^|" + self.name + " ([MDCLXVI]+|[mdclxvi]+|[0-9]+))$").order_by("-number")
+        # This regex also classes numbered versions as identical, will show "Tiberius 6" over Tiberius or "Firestorm V" over "Firestorm"
+        # TODO: Should probably contain an exact name match
 
         if identically_named_versions.count() > 0:
             representative = identically_named_versions[0]
         else:
             representative = valid_version_set.last()
-            #TODO: Could try to guess the best version based on string similarity?
+            # TODO: Could try to guess the best version based on string similarity?
         return representative
 
-    def get_image(self,team=None):
+    def get_image(self, team=None):
         rep = self.get_representitive(team)
         if rep.image:
             return rep.image.url
@@ -443,7 +446,7 @@ class Franchise(models.Model):
     members = models.ManyToManyField(Person, through="Person_Franchise")
     slug = models.SlugField(max_length=50)
 
-    def make_slug(self,save=False):
+    def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
         self.slug = make_slug(self.name, Franchise.objects.all())
         if save: self.save()
@@ -462,7 +465,7 @@ class Franchise(models.Model):
     def get_logo_url(self):
         if self.logo:
             return self.logo.url
-        if Event.objects.filter(franchise=self).count() > 0 and  Event.objects.filter(franchise=self)[0].country != "XX":
+        if Event.objects.filter(franchise=self).count() > 0 and Event.objects.filter(franchise=self)[0].country != "XX":
             return Event.objects.filter(franchise=self)[0].get_flag()
         return settings.STATIC_URL + "unknown.png"
 
@@ -471,6 +474,7 @@ class Location(models.Model):
     name = models.CharField(max_length=255)
     latitude = models.FloatField()
     longitude = models.FloatField()
+
     def __str__(self):
         return self.name
 
@@ -485,7 +489,8 @@ class Event(models.Model):
     location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=50)
-    def make_slug(self,save=False):
+
+    def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
         self.slug = make_slug(self.name, Event.objects.all())
         if save: self.save()
@@ -513,7 +518,7 @@ class Event(models.Model):
     def can_edit(self, user):
         return self.franchise.can_edit(user)
 
-    def get_logo_url(self): #TODO: Make a thing similar to this for robots & versoins?
+    def get_logo_url(self):  # TODO: Make a thing similar to this for robots & versoins?
         if self.logo:
             return self.logo.url
         if self.franchise.logo:
@@ -526,7 +531,7 @@ class Event(models.Model):
         if self.location:
             return self.location
         else:
-            return Location(name="Undefined",latitude=0,longitude=0)
+            return Location(name="Undefined", latitude=0, longitude=0)
 
 
 class Contest(models.Model):
@@ -548,7 +553,7 @@ class Contest(models.Model):
 
 class Registration(models.Model):  # Idea for future: Add a team limit to reservations.
     signup_time = models.DateTimeField(auto_now_add=True)
-    approved = models.BooleanField(default=False) # TODO: Remove these
+    approved = models.BooleanField(default=False)  # TODO: Remove these
     reserve = models.BooleanField(default=False)
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
     signee = models.ForeignKey(Person, on_delete=models.CASCADE)
@@ -601,11 +606,13 @@ class Fight(models.Model):
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
 
-    def calculate(self, commit=True,v_dict=None):
-        if self.fight_type=="NC":
-            return [[],v_dict]
+    def calculate(self, commit=True, v_dict=None):
+        #if self.id == 981:
+        #    breakpoint()
+        if self.fight_type == "NC":
+            return [[], v_dict]
         K = 25
-        if self.fight_type=="NS":
+        if self.fight_type == "NS":
             # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a spinner
             # and those robots typically do more fights anyway due to being less destroyed.
             K /= 2
@@ -618,7 +625,11 @@ class Fight(models.Model):
         for fv in fvs:
             if fv.version.id not in v_dict:
                 v_dict[fv.version.id] = fv.version
-        #print(v_dict)
+        # print(v_dict)
+
+        startverif = []
+        for fv in fvs:
+            startverif.append(v_dict[fv.version.id].robot.ranking)
 
         if (self.fight_type == "FC" or self.fight_type == "NS") and (numWinners > 0 or self.method == "DR"):
             tag = True if fvs.filter(tag_team__gt=0).count() > 1 else 0
@@ -695,7 +706,7 @@ class Fight(models.Model):
                         v_dict[fv.version.id].robot.ranking += change / len(tteams[0])
                     for fv in tteams[1]:
                         fv.ranking_change = -change / len(tteams[1])
-                        fv.version.robot.ranking -= change / len(tteams[1])
+                        v_dict[fv.version.id].robot.ranking -= change / len(tteams[1])
 
                 elif numWinners > 0:
                     averageRank = 0
@@ -716,6 +727,9 @@ class Fight(models.Model):
                         if fvs[i].won == 1:
                             v_dict[fvs[i].version.id].robot.ranking += pool / numWinners
                             fvs[i].ranking_change += pool / numWinners
+        else:
+            for fv in fvs:
+                fv.ranking_change = 0
 
         if numBots == 2 and numWinners == 1:
             for fv in fvs:
@@ -739,13 +753,24 @@ class Fight(models.Model):
             if not v_dict[fv.version.id].robot.last_fought or v_dict[fv.version.id].robot.last_fought < fv.fight.contest.event.end_date:
                 v_dict[fv.version.id].robot.last_fought = fv.fight.contest.event.end_date
 
+        #Verification
+        iterator = 0
+        for fv in fvs:
+            change = fv.ranking_change
+            start = startverif[iterator]
+            end = v_dict[fv.version.id].robot.ranking
+            startpluschange = start + change
+            if abs(abs(startpluschange)-abs(end)) > 0.05:
+                breakpoint()
+            iterator += 1
+
         if commit:
             for fv in fvs:
                 if vupdateFlag:
                     v_dict[fv.version.id].save()
                 v_dict[fv.version.id].robot.save()
                 fv.save()
-        return [fvs,v_dict]
+        return [fvs, v_dict]
 
     def format_external_media(self):  # TODO: Youtube Shorts
         if re.match("(https?://)?(www\.)?youtu\.?be",
@@ -843,7 +868,7 @@ class Fight(models.Model):
             else:
                 return "Qualified"
         else:
-            if self.method in ["KO", "JD", "TO", "OA", "PT","OT"]:
+            if self.method in ["KO", "JD", "TO", "OA", "PT", "OT"]:
                 return "Lost"
             if self.method == "NM":
                 if len(self.competitors.filter(fight_version__won=1)) == 0:
@@ -1027,7 +1052,8 @@ class Leaderboard(models.Model):
             try:
                 current_year = lb[0].year
             except IndexError:
-                current_year = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date.year
+                current_year = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[
+                    0].start_date.year
         i = 0
         update_list = []
         for robot in top_100:
@@ -1046,8 +1072,8 @@ class Leaderboard(models.Model):
                 new_entry.robot = robot
                 new_entry.save()
             i += 1
-        Leaderboard.objects.bulk_update(update_list, ["robot", "ranking","position"])
-        #if leaderboard shrinks for some reason, delete garbage data at the end
+        Leaderboard.objects.bulk_update(update_list, ["robot", "ranking", "position"])
+        # if leaderboard shrinks for some reason, delete garbage data at the end
         lb.filter(position__gt=top_100.count()).delete()
 
     @staticmethod
@@ -1055,7 +1081,7 @@ class Leaderboard(models.Model):
         wcs = [x[0] for x in LEADERBOARD_WEIGHTS]
         wcs.remove("X")
         for wc in wcs:
-            Leaderboard.update_class(wc,current_year)
+            Leaderboard.update_class(wc, current_year)
 
     @staticmethod
     def update_robot_weight_class(robot, commit=True, year=None):
@@ -1074,7 +1100,7 @@ class Leaderboard(models.Model):
             if commit: robot.save()
             return robot
         else:
-            #Checks to see if there are less computationally heavy ways to test weight class
+            # Checks to see if there are less computationally heavy ways to test weight class
             if robot.version_set.count() == 1:
                 robot.lb_weight_class = robot.version_set.last().weight_class.find_lb_class()
                 if commit: robot.save()
@@ -1084,7 +1110,7 @@ class Leaderboard(models.Model):
 
             # Count number of fights each weight class has to determine which it should be a part of. not perfect if the same version goes to events more than 5 years ago
             fights = {"X": 0}
-            for version in robot.version_set.filter(first_fought__lte = date , last_fought__gte = five_years_ago):
+            for version in robot.version_set.filter(first_fought__lte=date, last_fought__gte=five_years_ago):
                 if not version.last_fought or version.last_fought < five_years_ago:
                     continue
                 wc = version.weight_class.find_lb_class()
@@ -1197,10 +1223,10 @@ class Source(models.Model):
     archived = models.BooleanField()
     last_accessed = models.DateField(default=timezone.now)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    
-    def get_domain(self): # TODO: This wastes the server's time, do this in JavaScript
+
+    def get_domain(self):  # TODO: This wastes the server's time, do this in JavaScript
         if "ultimate-robot-archive.fandom.com" in self.link:
-            #this does not display properly with iconhorse
+            # this does not display properly with iconhorse
             return "fandom.com"
         if self.link[:8] == "https://":
             ret = self.link[8:]
@@ -1218,12 +1244,14 @@ class Source(models.Model):
     def __str__(self):
         return self.name
 
+
 class HalloFame(models.Model):
     full_member = models.BooleanField()
     robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
 
     def __str__(self):
         str(self.robot) + " " + ("hall of fame entry" if self.full_member else "hall of fame honorable mention")
+
 
 # TODO: This should maybe be another module, requires database but idk how to like, do it otherwise.
 class Ascii_Lookup(models.Model):
@@ -1313,7 +1341,7 @@ except:
     except:
         pass
 
-#TODO: DO THIS ON CREATION
+# TODO: DO THIS ON CREATION
 for e in Event.objects.filter(slug=""):
     e.slugify()
 for f in Franchise.objects.filter(slug=""):

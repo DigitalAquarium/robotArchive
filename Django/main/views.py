@@ -1639,12 +1639,17 @@ def recalc_all(request):
                 #for reg in contest_cache.registration_set.all():
                 #    Leaderboard.update_robot_weight_class(reg.version.robot, year=contest_cache.event.end_date.year)
                 if contest_cache.event.end_date.year != fight.contest.event.end_date.year:
+                    if fight.contest.event.end_date.year == 1998:
+                        return
+                    #breakpoint()
                     print("~~~~~~~~~~~~~~~~~~~~~~~~~~Saving year " + str(contest_cache.event.end_date.year)+"~~~~~~~~~~~~~~~~~~~~~~~~~~")
                     with transaction.atomic():
                         for fv in fvs:
                             fv.save()
-                            fv.version.save()
-                            fv.version.robot.save()
+                        for v in version_dictionary.values():
+                            v.save()
+                            v.robot.save()
+
 
                     print("updating leaderboard")
                     for v in version_dictionary.values():

@@ -100,7 +100,7 @@ class RobotForm(forms.ModelForm):
         fields = ['name', 'description',"country", "opt_out"]
 
     def save(self, commit=True):
-        rob = super().save(commit=False)
+        rob = super().save()
         rob.slugify()
 
 
