@@ -1097,6 +1097,12 @@ class Leaderboard(models.Model):
         last_event = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[0].start_date
         return Leaderboard.objects.filter(weight=wc, year=last_event.year).order_by("position")
 
+    def wc_to_string(self):
+        for i in LEADERBOARD_WEIGHTS:
+            if i[0] == self.weight:
+                return i[1]
+        return "Not a weight class"
+
     def __str__(self):
         return "#" + str(self.position) + " " + self.weight + " in " + str(self.year) + ": " + self.robot.__str__()
 

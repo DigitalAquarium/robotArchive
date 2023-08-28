@@ -73,7 +73,7 @@
                                 <div class="gridview-title">
                                     <img class="flag-image" src="{{ app.version.get_flag }}" alt="Flag">
                                     <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
-									<a href="{% url 'main:delete' 'registration' app.id contest.id %}"><img class="inline-image" src="{% static "bin.png" %}" alt="Remove Competitor"></a>
+									<a href="{% url 'main:delete' 'registration' app.id contest.id %}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Remove Competitor"></a>
                                 </div>
                                 <div class="gridview-image-container">
                                     <img class="fit-image"

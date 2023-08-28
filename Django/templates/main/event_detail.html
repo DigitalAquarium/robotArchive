@@ -62,10 +62,6 @@
                     {% endfor %}
                 </table>
             </div>
-        {% else %}
-            {% if can_change %}
-                <h2 id="no-contest-warn">Warning: This event has no contests, please add one.</h2>
-            {% endif %}
         {% endif %}
 
 
@@ -78,6 +74,7 @@
                 {% endif %}
                 given out at this event</p>
         {% endif %}
+            <br>
 
 
 		<div id="osm-map" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>

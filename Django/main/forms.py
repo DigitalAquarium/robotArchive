@@ -97,18 +97,19 @@ class NewVersionForm(forms.Form):
 class RobotForm(forms.ModelForm):
     class Meta:
         model = Robot
-        fields = ['name', 'description',"country", "opt_out"]
+        fields = ['name', "country", 'description',  "opt_out"]
 
     def save(self, commit=True):
-        rob = super().save(commit=False)
+        rob = super().save()
         rob.slugify()
 
 
 class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
-        fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "weight_class"]
-    def save(self,commit=True):
+        fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "team", "weight_class"]
+
+    def save(self, commit=True):
         ver = super().save(commit=False)
         if ver.number == 0:
             ver.number = ver.robot.version_set.all().order_by("number").last().number + 1
@@ -116,6 +117,7 @@ class VersionForm(forms.ModelForm):
         if commit:
             ver.save()
         return ver
+
 
 class TeamForm(forms.ModelForm):
     class Meta:

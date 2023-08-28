@@ -75,7 +75,7 @@ def edt_event_view(request, event_id):
                     current.name = updated_name
                     current.link = updated_url
                     current.archived = "web.archive.org" in updated_url
-                    current.last_accessed=timezone.now()
+                    current.last_accessed = timezone.now()
                     current.save()
                 except ValidationError:
                     pass
@@ -87,10 +87,10 @@ def edt_event_view(request, event_id):
             src = Source()
             try:
                 validator(new_link)
-                src.name= new_name
+                src.name = new_name
                 src.link = new_link
                 src.archived = "web.archive.org" in new_link
-                src.last_accessed=timezone.now()
+                src.last_accessed = timezone.now()
                 src.event = event
                 src.save()
             except ValidationError:
@@ -122,7 +122,7 @@ def edt_contest_view(request, contest_id):
     registrations = contest.registration_set.all()
     other_contests = Contest.objects.filter(event=contest.event).exclude(pk=contest_id)
 
-    def move_to_contest(fight,target_contest):
+    def move_to_contest(fight, target_contest):
         fight.contest = target_contest
         for fv in Fight_Version.objects.filter(fight=fight):
             v = fv.version
@@ -135,23 +135,24 @@ def edt_contest_view(request, contest_id):
                 reg.save()
         fight.save()
 
-
     if request.method == "POST":
         if request.POST["save"] == "move":
             fight_dict = {}
             for i in range(fights.count()):
-                #Create a permanent fight record that does not change when fights are removed from the contest
-                #prevents indexoutofbound
+                # Create a permanent fight record that does not change when fights are removed from the contest
+                # prevents indexoutofbound
                 fight_dict[i] = fights[i]
             for i in range(len(fight_dict)):
-                if int(request.POST["fight-"+str(i)]) != contest_id:
+                if int(request.POST["fight-" + str(i)]) != contest_id:
                     if "recursive-" + str(i) in request.POST.keys():
                         versions_checked = []
                         versions_to_check = [fv.version for fv in Fight_Version.objects.filter(fight=fight_dict[i])]
                         fights_to_move = [fight_dict[i]]
                         while len(versions_to_check) > 0:
                             v = versions_to_check.pop()
-                            fights_to_check = Fight.objects.filter(contest=contest,fight_version__version=v).exclude(fight_version__version__in=versions_checked).exclude(fight_version__version__in=versions_to_check)
+                            fights_to_check = Fight.objects.filter(contest=contest, fight_version__version=v).exclude(
+                                fight_version__version__in=versions_checked).exclude(
+                                fight_version__version__in=versions_to_check)
                             for fight in fights_to_check:
                                 fights_to_move.append(fight)
                                 for fv in fight.fight_version_set.all().exclude(version=v):
@@ -159,10 +160,10 @@ def edt_contest_view(request, contest_id):
                                         versions_to_check.append(fv.version)
                             versions_checked.append(v)
                         for fight in fights_to_move:
-                            move_to_contest(fight,Contest.objects.get(pk=request.POST["fight-"+str(i)]))
+                            move_to_contest(fight, Contest.objects.get(pk=request.POST["fight-" + str(i)]))
 
                     else:
-                        move_to_contest(fight_dict[i], Contest.objects.get(pk=request.POST["fight-"+str(i)]))
+                        move_to_contest(fight_dict[i], Contest.objects.get(pk=request.POST["fight-" + str(i)]))
         elif request.POST["save"] == "prune":
             versions = Version.objects.filter(fight_version__fight__contest=contest).distinct()
             Registration.objects.filter(contest=contest).exclude(version__in=versions).delete()
@@ -170,9 +171,10 @@ def edt_contest_view(request, contest_id):
             for f in fights:
                 f.number = i
                 i += 1
-            Fight.objects.bulk_update(fights,["number"])
+            Fight.objects.bulk_update(fights, ["number"])
     return render(request, "main/editor/contest.html",
-                  {"contest": contest, "other_contests": other_contests, "fights": fights, "applications": registrations})
+                  {"contest": contest, "other_contests": other_contests, "fights": fights,
+                   "applications": registrations})
 
 
 def edt_fight_view(request, fight_id):
@@ -548,10 +550,10 @@ def event_detail_view(request, slug):
         can_change = False
     return render(request, "main/event_detail.html",
                   {"event": event,
-                   "can_change": can_change,})
+                   "can_change": can_change, })
 
 
-@login_required(login_url='/accounts/login/')#TODO: FORMS
+@login_required(login_url='/accounts/login/')  # TODO: FORMS
 def new_event_view(request, franchise_id):
     fran = Franchise.objects.get(pk=franchise_id)
     can_change = fran.can_edit(request.user)
@@ -559,7 +561,7 @@ def new_event_view(request, franchise_id):
         return redirect("%s?m=%s" % (
             reverse("main:message"), "You do not have permission to create a new event for this franchise."))
     if request.method == "POST":
-        form = EventForm(request.POST,request.FILES)
+        form = EventForm(request.POST, request.FILES)
         if form.is_valid():
             event = form.save(commit=False)
             event.franchise = fran
@@ -584,7 +586,7 @@ def modify_event_view(request, event_id):
             return redirect("main:edtEvent", new.id)
     else:
         form = EventForm(instance=event)
-    return render(request, "main/forms/generic.html", {"form": form, "title": "Edit Event", "has_image":True,
+    return render(request, "main/forms/generic.html", {"form": form, "title": "Edit Event", "has_image": True,
                                                        "next_url": reverse("main:editEvent", args=[event_id])})
 
 
@@ -727,14 +729,14 @@ def robot_index_view(request):
 
 
 def leaderboard(request):
-    #CSS Notes: row height up to 20em
+    # CSS Notes: row height up to 20em
     weight = request.GET.get("weight")
     year = request.GET.get("year")
     current_year = Event.objects.all().order_by("-end_date")[0].end_date.year
     years = [x for x in range(1994, current_year + 1)]
     try:
         year = int(year)
-    except (ValueError,TypeError):
+    except (ValueError, TypeError):
         year = current_year
     if year not in years:
         year = current_year
@@ -743,8 +745,10 @@ def leaderboard(request):
     Leaderboard.update_class(weight)
     robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
     top_three = []
-    for i in range(robot_list.count() if robot_list.count() < 3  else 3):
-        top_three.append( (robot_list[i],robot_list[i].robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")[0]) )
+    for i in range(robot_list.count() if robot_list.count() < 3 else 3):
+        top_three.append((robot_list[i],
+                          robot_list[i].robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")[
+                              0]))
 
     # robot_list = Leaderboard.get_current(weight)
     return render(request, "main/robot_leaderboard.html",
@@ -776,19 +780,28 @@ def robot_detail_view(request, slug):
     fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "contest__id", "number")
     awards = Award.objects.filter(version__robot=r)
 
-    leaderboard_entries = Leaderboard.objects.filter(robot=r,ranking__gt=Robot.RANKING_DEFAULT).order_by("position","-year")
+    leaderboard_entries = Leaderboard.objects.filter(robot=r, ranking__gt=Robot.RANKING_DEFAULT).order_by("position",
+                                                                                                          "-year")
     best_lb_entry = leaderboard_entries.first()
+    current_lb_entry = leaderboard_entries.order_by(
+        "-year").first() if leaderboard_entries.first() and leaderboard_entries.order_by("-year").first().year == \
+                            Leaderboard.objects.all().order_by("-year")[0].year else None
     if leaderboard_entries.count() > 1:
         leaderboard_entries = leaderboard_entries[1:]
     else:
         leaderboard_entries = None
 
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "history":get_history(r), "fights": fights, "awards": awards, "ver": v, "can_change": can_change,
-                   "version_set":r.version_set.all().order_by("number"),"best_lb_entry":best_lb_entry,"leaderboard_entries":leaderboard_entries})
+                  {"robot": r, "history": get_history(r), "fights": fights, "awards": awards, "ver": v,
+                   "can_change": can_change,
+                   "version_set": r.version_set.all().order_by("number"),
+                   "best_lb_entry": best_lb_entry, "leaderboard_entries": leaderboard_entries,
+                   "current_lb_entry": current_lb_entry, })
+
 
 def get_history(robot):
-    fight_versions = Fight_Version.objects.filter(version__robot=robot,fight__fight_type="FC").order_by("fight__contest__event__start_date")
+    fight_versions = Fight_Version.objects.filter(version__robot=robot, fight__fight_type__in=["FC", "NS"]).order_by(
+        "fight__contest__event__start_date")
     rank = 1000
     history = [rank]
     for fv in fight_versions:
@@ -815,10 +828,11 @@ def robot_edit_view(request, robot_id):
                   {"form": form, "title": "Edit Robot",
                    "next_url": reverse("main:editRobot", args=[robot_id])})
 
+
 @login_required(login_url='/accounts/login/')
 def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RIGHT HERE
     fight_id = request.COOKIES.get("editing_fight")  # If not 0, is editor.
-    team_id = request.GET.get("team_id")# TODO: FORM
+    team_id = request.GET.get("team_id")  # TODO: FORM
     try:
         fight_id = int(fight_id)
     except (ValueError, TypeError):
@@ -851,7 +865,7 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
 
 
 @login_required(login_url='/accounts/login/')
-def new_version_view(request, robot_id): # TODO: FORM
+def new_version_view(request, robot_id):  # TODO: FORM
     fight_id = request.COOKIES.get("editing_fight")  # If not 0, is editor.
     team_id = request.GET.get("team_id")
     try:
@@ -966,7 +980,7 @@ def team_index_view(request):
 
 
 @login_required(login_url='/accounts/login/')  # TODO: No validation anymore
-def new_robot_view(request): # TODO: FORM
+def new_robot_view(request):  # TODO: FORM
     fight_id = request.COOKIES.get("editing_fight")
     team_id = request.GET.get("team")
     try:
@@ -983,7 +997,7 @@ def new_robot_view(request): # TODO: FORM
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
             v = form.save(team, Person.objects.get(user=request.user))[1]
-            #TODO: SLug
+            # TODO: SLug
             if fight_id != 0:
                 response = redirect("main:edtSignupVersion", fight_id, v.id)
                 response.delete_cookie("robot_or_version")
@@ -1042,15 +1056,14 @@ def team_modify_view(request, team_id=None):
         if team_id is None:
             form = TeamForm()
             return render(request, "main/forms/generic.html",
-                   {"form": form, "title": "New Team", "has_image": True,
-                    "next_url": reverse("main:newTeam")})
+                          {"form": form, "title": "New Team", "has_image": True,
+                           "next_url": reverse("main:newTeam")})
         else:
             team = Team.objects.get(pk=team_id)
             form = TeamForm(instance=team)
             return render(request, "main/forms/generic.html",
-                   {"form": form, "title": "Edit Team", "has_image": True,
-                    "next_url": reverse("main:editTeam", args=[team_id])})
-
+                          {"form": form, "title": "Edit Team", "has_image": True,
+                           "next_url": reverse("main:editTeam", args=[team_id])})
 
 
 @login_required(login_url='/accounts/login/')
@@ -1166,7 +1179,8 @@ def fight_editj_view(request, fight_id):  # Just the Fight TODO: refactor this t
     else:
         form = FightForm(instance=fight)
         return render(request, "main/forms/generic.html",
-                      {"form": form, "title": "Edit Fight", "has_image":True, "next_url": reverse("main:editJustFight", args=[fight_id])})
+                      {"form": form, "title": "Edit Fight", "has_image": True,
+                       "next_url": reverse("main:editJustFight", args=[fight_id])})
 
 
 def fight_detail_view(request, fight_id):  # TODO: Sort this better
@@ -1179,7 +1193,7 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
 
 
 @login_required(login_url='/accounts/login/')  # Still Being Used
-def modify_fight_version_view(request, fight_id, vf_id=None): #TODO SHIFT FORM
+def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
     # editor = request.GET.get("editor") or ""
     editor = request.COOKIES.get("editing_fight") is not None and request.COOKIES.get("editing_fight") != ""
     fight = Fight.objects.get(pk=fight_id)
@@ -1235,13 +1249,14 @@ def new_award_view(request, event_id):
             a = form.save(False)
             a.event = event
             a.save()
-            return redirect("main:eventDetail", event.slug)
+            return redirect("main:edtEvent", event.id)
     else:
         form = AwardForm()
         form.fields['contest'].queryset = Contest.objects.filter(event=event)
         form.fields['version'].queryset = Version.objects.filter(
             registration__contest__in=event.contest_set.all()).order_by("name", "robot__name").distinct()
-        return render(request, "main/forms/generic.html", {"form": form, "title": "New Award", "next_url": reverse("main:newAward",args=[event_id])})
+        return render(request, "main/forms/generic.html",
+                      {"form": form, "title": "New Award", "next_url": reverse("main:newAward", args=[event_id])})
 
 
 # TODO: THis is almost identical to edit award should probably make a more generic one esp the template
@@ -1260,8 +1275,10 @@ def award_edit_view(request, award_id):
     else:
         form = AwardForm(instance=a)
         form.fields['contest'].queryset = Contest.objects.filter(event=a.event)
-        form.fields['version'].queryset = Version.objects.filter(registration__contest__in=a.event.contest_set.all()).distinct()
-        return  render(request, "main/forms/generic.html", {"form": form, "title": "Edit Award", "next_url": reverse("main:editAward",args=[award_id])})
+        form.fields['version'].queryset = Version.objects.filter(
+            registration__contest__in=a.event.contest_set.all()).distinct()
+        return render(request, "main/forms/generic.html",
+                      {"form": form, "title": "Edit Award", "next_url": reverse("main:editAward", args=[award_id])})
 
 
 @login_required(login_url='/accounts/login/')
@@ -1278,7 +1295,8 @@ def person_edit_view(request, person_id):
             return redirect("main:profile")
     else:
         form = PersonForm(instance=person)
-    return  render(request, "main/forms/generic.html", {"form": form, "title": "Edit Person", "next_url": reverse("main:editPerson",args=[person_id])})
+    return render(request, "main/forms/generic.html",
+                  {"form": form, "title": "Edit Person", "next_url": reverse("main:editPerson", args=[person_id])})
 
 
 def message_view(request):
@@ -1330,7 +1348,8 @@ def new_weight_class_view(request, return_id):
             return redirect("main:newContest", return_id)
     else:
         form = WeightClassForm()
-    return render(request, "main/forms/generic.html", {"form": form, "title": "New Weight Class", "next_url": reverse("main:newWeightClass",args=[return_id])})
+    return render(request, "main/forms/generic.html", {"form": form, "title": "New Weight Class",
+                                                       "next_url": reverse("main:newWeightClass", args=[return_id])})
 
 
 @login_required(login_url='/accounts/login/')
@@ -1424,10 +1443,11 @@ def robot_transfer_view(request, robot_id, team_id=None):
         else:
             return render(request, "main/transfer_robot.html", {"robot": robot, "team": team})
 
+
 def hall_of_fame_view(request):
     members = Robot.objects.filter(hallofame__full_member=True).order_by("-first_fought")
     honoraries = Robot.objects.filter(hallofame__full_member=False).order_by("-first_fought")
-    return render(request,"main/hall_of_fame.html",{"members":members,"honoraries":honoraries})
+    return render(request, "main/hall_of_fame.html", {"members": members, "honoraries": honoraries})
 
 
 def credits_view(request):
@@ -1623,7 +1643,7 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
 
 
 def recalc_all(request):
-    #Need top update more robots than currently doing to add the X to them
+    # Need top update more robots than currently doing to add the X to them
     Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X")
 
     fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
