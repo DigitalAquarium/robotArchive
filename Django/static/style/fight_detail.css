@@ -10,11 +10,8 @@ h1 {
 }
 
 .gridview-row {
-    height: 20em;
-}
-
-.gridview-square {
-    width: 30%;
+    grid-template-rows: 20em;
+    grid-auto-columns: 30%;
 }
 
 .competitor-title {
@@ -24,13 +21,11 @@ h1 {
 
 .competitor-vs {
     font-size: 64px;
-    width: 30%;
     text-align: center;
 }
 
 .competitor-and {
     font-size: 64px;
-    width: 10%;
     text-align: center;
 }
 

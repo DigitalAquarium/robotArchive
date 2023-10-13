@@ -45,7 +45,7 @@
 
 
 
-        {% if event.contest_set.all|length !=  0 %}
+        {% if contests|length !=  0 %}
             <div class="contest-table">
                 <table>
                     <thead>
@@ -53,7 +53,7 @@
                     <th>Weight Class</th>
                     <th>Fight Type</th>
                     </thead>
-                    {% for contest in event.contest_set.all %}
+                    {% for contest in contests %}
                         <tr>
                             <td><a href="{% url 'main:contestDetail' contest.id %}">{{ contest }}</a></td>
                             <td>{{ contest.weight_class.weight_string }}</td>
@@ -77,7 +77,7 @@
             <br>
 
 
-		<div id="osm-map" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
+		<div id="osm-map" style="z-index:0" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
 		<script src="{% static 'scripts/open_street_map.js' %}"></script>
 
             <h2>This event has been archived using the following websites:</h2>

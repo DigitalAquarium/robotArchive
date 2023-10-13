@@ -15,7 +15,7 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Robot)
 class RobotAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ['name']
 
 
 @admin.register(Version)

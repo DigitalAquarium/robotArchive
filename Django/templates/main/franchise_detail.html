@@ -34,7 +34,7 @@
             <a href="{{ web.link }}">
                 <img  src="{{ web.get_logo }}" alt="{{ web }}">
                 <span class="spacer"></span>
-                {% if web.type == "WW" %}{{ web.link }}{% else %}{{ web.get_type_display }}{% endif %}
+                {{web.get_display}}
             </a>
             </span>
         {% endfor %}

@@ -13,7 +13,7 @@
         {% if robot %}
             <div class="heading">
                 <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                <h1 id="title">{{ robot.name }} {% if robot.requires_translation %} <span class="alphanum">({{ robot.name_alphanum }})</span> {% endif %} </h1>
+                <h1 id="title">{{ robot.name }} {% if robot.display_latin_name %} <span class="alphanum">({{ robot.latin_name }})</span> {% endif %} </h1>
                 {% if can_change %}
                 <a href="{% url 'main:editRobot' robot.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Robot"></a>
                 <a href="{% url 'main:delete' 'robot' robot.id 0%}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Delete Robot"></a>
@@ -66,7 +66,7 @@
                          {% elif not ver and forloop.last %}style="display:block"{% endif %}>
                         <div class="version-header">
                             <img class="flag-image" src="{{ v.get_flag }}" alt="Flag">
-                            <p>{{ v }} {% if v.requires_translation %}<span class="alphanum">({{ v.get_alphanum }})</span> {% endif %}
+                            <p>{{ v }} {% if v.display_latin_name %}<span class="alphanum">({{ v.get_latin_name }})</span> {% endif %}
                                 {% if can_change %}
                                 <a href="{% url 'main:editVersion' v.id %}"><img class="inline-image" style="height:0.75em" src="{% static 'edit.png' %}" alt="Edit Version"></a>
                                 <a href="{% url 'main:delete' 'version' v.id robot.id %}"><img class="inline-image" style="height:0.75em" src="{% static 'bin.png' %}" alt="Delete Version"></a>
@@ -84,9 +84,14 @@
                                 <div class="version-mini-head">
                                     <span>Weapon: {{ v.weapon_type }}</span>
                                     <span>Weight Class: {{ v.weight_class }}</span>
-                                    <span>Time Competing: {{ v.first_fought|date:"F Y" }}
-                                            {% if v.first_fought != v.last_fought %} -
-                                                {{ v.last_fought|date:"F Y" }}{% endif %}</span>
+                                    <span>Competed:
+                                        {% if v.first_fought|date:"F Y" == v.last_fought|date:"F Y" %}
+                                            {{ v.first_fought|date:"F Y" }}
+                                        {% elif v.first_fought|date:"Y" == v.last_fought|date:"Y" %}
+                                            {{ v.first_fought|date:"F" }} - {{ v.last_fought|date:"F Y" }}
+                                        {%else%}
+                                            {{ v.first_fought|date:"F Y" }} - {{ v.last_fought|date:"F Y" }}
+                                        {% endif %}</span>
                                 {% if v.team %}
                                     <span>Team : <a href="{% url 'main:teamDetail' v.team.slug %}">{{ v.team }}</a></span>
                                 {% endif %}
@@ -100,8 +105,10 @@
                 {% endfor %}
                 {% if can_change %}<a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>{% endif %}
             </div>
+        {%if not history|length == 1 %}
         <span id="history-data" history="{{history}}"></span>
         <div id="history-chart" style="width:100%; height:400px;"></div>
+        {%endif%}
 
             {% if awards|length > 0 or robot.hallofame_set.all|length > 0 %}
                 {%if robot.hallofame_set.all|length > 0%}
@@ -132,7 +139,7 @@
             {% endif %}
 
             {% if fights|length > 0 %}
-                <h2>{% if robot.requires_translation %} {{ robot.name_alphanum }} {% else %}{{ robot }} {% endif %}
+                <h2>{% if robot.display_latin_name %} {{ robot.latin_name }} {% else %}{{ robot }} {% endif %}
                     has fought {{ fights|length }} {% if fights|length == 1 %}fight. {% else %}fights.{% endif %}</h2>
                 <table>
                     <thead>

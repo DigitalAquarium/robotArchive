@@ -6,7 +6,7 @@ from io import BytesIO
 from PIL import Image
 from django.core.files import File
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.validators import URLValidator
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -19,7 +19,9 @@ from .forms import *
 ONE_HOUR_TIMER = 3600
 
 
-@login_required(login_url='/accounts/login/')
+# @login_required(login_url='/accounts/login/')
+@permission_required("main.change_event", raise_exception=True)
+@permission_required("main.add_event", raise_exception=True)
 def edt_home_view(request):
     name = request.GET.get("name") or ""
 
@@ -38,7 +40,7 @@ def edt_home_view(request):
                    })
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.add_event", raise_exception=True)
 def edt_new_event_view(request):
     # TODO: Add verification
     fran_id = request.GET.get("franchise") or ""
@@ -59,6 +61,8 @@ def edt_new_event_view(request):
     return render(request, "main/editor/new_event.html", {"form": form, "fran": fran})
 
 
+@permission_required("main.add_contest", raise_exception=True)
+@permission_required("main.change_event", raise_exception=True)
 def edt_event_view(request, event_id):
     event = Event.objects.get(pk=event_id)
 
@@ -99,7 +103,7 @@ def edt_event_view(request, event_id):
                   {"event": event})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_franchise", raise_exception=True)
 def edt_fran_view(request):
     name = request.GET.get("name") or ""
 
@@ -116,6 +120,9 @@ def edt_fran_view(request):
                    })
 
 
+@permission_required("main.change_contest", raise_exception=True)
+@permission_required("main.change_fight", raise_exception=True)
+@permission_required("main.add_fight", raise_exception=True)
 def edt_contest_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
     fights = Fight.objects.filter(contest=contest).order_by("number")
@@ -177,6 +184,7 @@ def edt_contest_view(request, contest_id):
                    "applications": registrations})
 
 
+@permission_required("main.change_fight", raise_exception=True)
 def edt_fight_view(request, fight_id):
     fight = Fight.objects.get(pk=fight_id)
     has_winner = False
@@ -195,6 +203,11 @@ def edt_fight_view(request, fight_id):
             f.format_external_media()
             f.set_media_type()
             if "save" in request.POST:
+                for fv in fight.fight_version_set.all():
+                    if not fv.version.last_fought:
+                        fv.version.last_fought = fight.contest.event.start_date
+                        fv.version.robot.last_fought = fight.contest.event.start_date
+                    Leaderboard.update_robot_weight_class(fv.version.robot)
                 fight.calculate(commit=True)
                 response = redirect("main:edtContest", fight.contest.id)
                 response.delete_cookie("editing_fight")
@@ -217,6 +230,7 @@ def edt_fight_view(request, fight_id):
     return response
 
 
+@permission_required("main.change_fight", raise_exception=True)
 def edt_select_robot_view(request):
     name = request.GET.get("name") or ""
     ignore_wc = request.GET.get("nowc") or ""
@@ -260,6 +274,9 @@ def edt_select_robot_view(request):
                    })
 
 
+@permission_required("main.change_version", raise_exception=True)
+@permission_required("main.change_team", raise_exception=True)
+@permission_required("main.change_robot", raise_exception=True)
 def edt_team_view(request, team_id):
     team = Team.objects.get(pk=team_id)
     editing_version_id = request.COOKIES.get("rv_id")
@@ -326,6 +343,9 @@ def edt_team_view(request, team_id):
     return response
 
 
+@permission_required("main.change_team", raise_exception=True)
+@permission_required("main.add_version", raise_exception=True)
+@permission_required("main.add_robot", raise_exception=True)
 def edt_select_team_view(request, fight_id):
     name = request.GET.get("name") or ""
     page = request.GET.get("page")
@@ -365,6 +385,10 @@ def edt_select_team_view(request, fight_id):
                    })
 
 
+@permission_required("main.change_fight", raise_exception=True)
+@permission_required("main.change_team", raise_exception=True)
+@permission_required("main.change_version", raise_exception=True)
+@permission_required("main.change_robot", raise_exception=True)
 def edt_select_version_view(request, robot_id):
     robot = Robot.objects.get(id=robot_id)
     if request.COOKIES.get("editing_team"):
@@ -377,6 +401,9 @@ def edt_select_version_view(request, robot_id):
                   {"robot": robot, "obj_type": obj_type, "obj_id": obj_id})
 
 
+@permission_required("main.change_fight", raise_exception=True)
+@permission_required("main.change_version", raise_exception=True)
+@permission_required("main.change_robot", raise_exception=True)
 def edt_signup_version_view(request, fight_id, version_id):
     fight = Fight.objects.get(id=fight_id)
     version = Version.objects.get(id=version_id)
@@ -396,7 +423,25 @@ def edt_signup_version_view(request, fight_id, version_id):
     return redirect("%s?editor=True" % reverse("main:editFightVersion", args=[fight_id, fv.id]))
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.delete_person", raise_exception=True)
+@permission_required("main.delete_team", raise_exception=True)
+@permission_required("main.delete_weight_class", raise_exception=True)
+@permission_required("main.delete_robot", raise_exception=True)
+@permission_required("main.delete_version", raise_exception=True)
+@permission_required("main.delete_franchise", raise_exception=True)
+@permission_required("main.delete_location", raise_exception=True)
+@permission_required("main.delete_event", raise_exception=True)
+@permission_required("main.delete_contest", raise_exception=True)
+@permission_required("main.delete_registration", raise_exception=True)
+@permission_required("main.delete_fight", raise_exception=True)
+@permission_required("main.delete_award", raise_exception=True)
+@permission_required("main.delete_person_team", raise_exception=True)
+@permission_required("main.delete_person_franchise", raise_exception=True)
+@permission_required("main.delete_fight_version", raise_exception=True)
+@permission_required("main.delete_leaderboard", raise_exception=True)
+@permission_required("main.delete_web_link", raise_exception=True)
+@permission_required("main.delete_source", raise_exception=True)
+@permission_required("main.delete_hallofame", raise_exception=True)
 def delete_view(request, model, instance_id=None, next_id=None):
     redir = request.GET.get("redirect")
     if redir != "" and redir is not None:
@@ -440,6 +485,8 @@ def delete_view(request, model, instance_id=None, next_id=None):
         instance = Fight_Version.objects.get(pk=instance_id)
     elif model == "web_link":
         instance = Web_Link.objects.get(pk=instance_id)
+    elif model == "source":
+        instance = Source.objects.get(pk=instance_id)
     else:  # model == "person_franchise":
         instance = Person_Franchise.objects.get(pk=instance_id)
         next_url = reverse("main:profile")
@@ -521,6 +568,13 @@ def event_index_view(request):
             event_list.filter(contest__name__icontains=name)).union(
             event_list.filter(franchise__name__icontains=name))
 
+    countries_list = Event.objects.values("country").distinct()
+    countries = []
+    for country in countries_list:
+        countries.append((country["country"], pycountry.countries.get(alpha_2=country["country"]).name))
+    countries.sort(key=lambda x: x[1])
+    countries = [("", "")] + countries
+
     event_list = event_list.order_by("name").order_by("start_date")
     results = len(event_list)
     event_list = event_list[num * (page - 1):num * page]
@@ -530,7 +584,7 @@ def event_index_view(request):
                    "page": page,
                    "pages": results // num if results % num == 0 else results // num + 1,
                    "weights": [(0, "")] + Weight_Class.LEADERBOARD_VALID,
-                   "countries": [("", "")] + COUNTRY_CHOICES,
+                   "countries": countries,
                    "chosen_country": country_code,
                    "chosen_weight": weight,
                    "name": name,
@@ -544,16 +598,18 @@ def event_index_view(request):
 def event_detail_view(request, slug):
     event = Event.objects.get(slug=slug)
     fran = event.franchise
+    contests = Contest.objects.filter(event=event).order_by("-weight_class__weight_grams")
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
     else:
         can_change = False
     return render(request, "main/event_detail.html",
                   {"event": event,
+                   "contests": contests,
                    "can_change": can_change, })
 
 
-@login_required(login_url='/accounts/login/')  # TODO: FORMS
+@permission_required("main.add_event", raise_exception=True)  # TODO: FORMS
 def new_event_view(request, franchise_id):
     fran = Franchise.objects.get(pk=franchise_id)
     can_change = fran.can_edit(request.user)
@@ -573,7 +629,7 @@ def new_event_view(request, franchise_id):
     return render(request, "main/new_event.html", {"form": form, "fran": fran})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_event", raise_exception=True)
 def modify_event_view(request, event_id):
     event = Event.objects.get(pk=event_id)
     can_change = event.can_edit(request.user)
@@ -607,7 +663,7 @@ def contest_detail_view(request, contest_id):
                    "applied": applied, "approved": approved, "reserve": reserve, "app_ver": app_ver})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.add_contest", raise_exception=True)
 def new_contest_view(request, event_id):
     event = Event.objects.get(pk=event_id)
     can_change = event.can_edit(request.user)
@@ -627,7 +683,7 @@ def new_contest_view(request, event_id):
                                                        "next_url": reverse("main:newContest", args=[event_id])})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_contest", raise_exception=True)
 def edit_contest_view(request, contest_id):
     contest = Contest.objects.get(pk=contest_id)
     can_change = contest.can_edit(request.user)
@@ -644,6 +700,7 @@ def edit_contest_view(request, contest_id):
                                                        "next_url": reverse("main:editContest", args=[contest_id])})
 
 
+@permission_required("main.change_contest", raise_exception=True)
 def register(response):
     if response.method == "POST":
         form = RegistrationForm(response.POST)
@@ -699,7 +756,9 @@ def robot_index_view(request):
 
     if name != "" and name is not None:
         robot_list = robot_list.filter(name__icontains=name).union(
-            robot_list.filter(version__robot_name__icontains=name))
+            robot_list.filter(version__robot_name__icontains=name)).union(
+            robot_list.filter(latin_name__icontains=name)).union(
+            robot_list.filter(version__latin_robot_name__icontains=name))
 
     if weapon != "" and weapon is not None:
         robot_list = robot_list.filter(version__weapon_type__icontains=weapon).distinct()
@@ -714,12 +773,24 @@ def robot_index_view(request):
     robot_list = robot_list.order_by("name")
     results = len(robot_list)
     robot_list = robot_list[num * (page - 1):num * page]
+
+    countries_list = Robot.objects.values("country").distinct()
+    countries = []
+    for country in countries_list:
+        if country["country"] in ["XE", "XS", "XW", "XI", "XX"]:
+            pass
+        else:
+            countries.append((country["country"], pycountry.countries.get(alpha_2=country["country"]).name))
+    countries.extend([('XE', "England"), ('XS', "Scotland"), ('XW', "Wales"), ('XI', "Northern Ireland")])
+    countries.sort(key=lambda x: x[1])
+    countries = [("", "")] + countries
+
     return render(request, "main/robot_index.html",
                   {"robot_list": robot_list,
                    "page": page,
                    "pages": results // num if results % num == 0 else results // num + 1,
                    "weights": [(0, "")] + Weight_Class.LEADERBOARD_VALID,
-                   "countries": [("", "")] + COUNTRY_CHOICES,
+                   "countries": countries,
                    "chosen_country": country_code,
                    "chosen_weight": weight,
                    "name": name,
@@ -731,26 +802,32 @@ def robot_index_view(request):
 def leaderboard(request):
     # CSS Notes: row height up to 20em
     weight = request.GET.get("weight")
+    if not weight or weight not in [x[0] for x in LEADERBOARD_WEIGHTS]:
+        weight = "H"
     year = request.GET.get("year")
     current_year = Event.objects.all().order_by("-end_date")[0].end_date.year
-    years = [x for x in range(1994, current_year + 1)]
+    years = [x['year'] for x in Leaderboard.objects.filter(weight=weight).order_by("year").values("year").distinct()]
+    # years = [x for x in range(1994, current_year + 1)]
     try:
         year = int(year)
     except (ValueError, TypeError):
         year = current_year
+    if not years:
+        years = [current_year]
     if year not in years:
         year = current_year
-    if not weight or weight not in [x[0] for x in LEADERBOARD_WEIGHTS]:
-        weight = "H"
     Leaderboard.update_class(weight)
     robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
+    if year == current_year and robot_list.count() == 0:
+        # Catch to stop the superheavyweight list (or any others that go out of use) from being unreachable in the menu
+        year = years[-1]
+        robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
     top_three = []
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append((robot_list[i],
                           robot_list[i].robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")[
                               0]))
-
-    # robot_list = Leaderboard.get_current(weight)
+    # Leaderboard.objects.filter(weight="H").values("year").distinct()
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
                    "weights": [("H", "")] + LEADERBOARD_WEIGHTS[0:-1],
@@ -758,7 +835,8 @@ def leaderboard(request):
                    "chosen_year": year,
                    "years": years,
                    "top_three": top_three,
-                   "is_this_year": year == current_year
+                   "is_this_year": year == current_year,
+                   "low_classes": ["A", "U", "B", "Y", "F"]
                    })
 
 
@@ -810,6 +888,7 @@ def get_history(robot):
     return history
 
 
+@permission_required("main.change_robot", raise_exception=True)
 @login_required(login_url='/accounts/login/')
 def robot_edit_view(request, robot_id):
     robot = Robot.objects.get(pk=robot_id)
@@ -829,7 +908,9 @@ def robot_edit_view(request, robot_id):
                    "next_url": reverse("main:editRobot", args=[robot_id])})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_version", raise_exception=True)
+@permission_required("main.change_robot", raise_exception=True)
+@permission_required("main.change_team", raise_exception=True)
 def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RIGHT HERE
     fight_id = request.COOKIES.get("editing_fight")  # If not 0, is editor.
     team_id = request.GET.get("team_id")  # TODO: FORM
@@ -864,7 +945,9 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
     return response
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.add_version", raise_exception=True)
+@permission_required("main.change_team", raise_exception=True)
+@permission_required("main.change_robot", raise_exception=True)
 def new_version_view(request, robot_id):  # TODO: FORM
     fight_id = request.COOKIES.get("editing_fight")  # If not 0, is editor.
     team_id = request.GET.get("team_id")
@@ -928,15 +1011,10 @@ def team_detail_view(request, slug):
     pt = None
     if request.user.is_authenticated:
         can_change = team.can_edit(request.user)
-        if can_change:
-            try:
-                pt = Person_Team.objects.get(team=team, person__user=request.user)
-            except ObjectDoesNotExist:
-                pass
     else:
         can_change = False
     return render(request, "main/team_detail.html",
-                  {"team": team, "can_change": can_change, "leave_id": pt.id if pt else 1})
+                  {"team": team, "can_change": can_change})
 
 
 def team_index_view(request):
@@ -979,7 +1057,9 @@ def team_index_view(request):
                    })
 
 
-@login_required(login_url='/accounts/login/')  # TODO: No validation anymore
+@permission_required("main.add_robot", raise_exception=True)
+@permission_required("main.add_version", raise_exception=True)
+@permission_required("main.change_team", raise_exception=True)
 def new_robot_view(request):  # TODO: FORM
     fight_id = request.COOKIES.get("editing_fight")
     team_id = request.GET.get("team")
@@ -1024,7 +1104,8 @@ def version_detail_view(request, version_id):
     return redirect("%s?v=%d" % (reverse("main:robotDetail", args=[robot_slug]), version_id))
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_team", raise_exception=True)
+@permission_required("main.add_team", raise_exception=True)
 def team_modify_view(request, team_id=None):
     fight_id = request.COOKIES.get("editing_fight")
     try:
@@ -1049,8 +1130,6 @@ def team_modify_view(request, team_id=None):
             new = form.save()
             if team_id is None:
                 new.make_slug(save=True)
-                person = Person.objects.get(user=request.user)
-                Person_Team.objects.create(team=new, person=person)
             return redirect("main:edtTeam", new.id)
     else:
         if team_id is None:
@@ -1066,7 +1145,8 @@ def team_modify_view(request, team_id=None):
                            "next_url": reverse("main:editTeam", args=[team_id])})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.add_franchise", raise_exception=True)
+@permission_required("main.change_franchise", raise_exception=True)
 def franchise_modify_view(request, franchise_id=None):
     can_change = True
     if franchise_id is not None:
@@ -1084,8 +1164,6 @@ def franchise_modify_view(request, franchise_id=None):
             new = form.save()
             if franchise_id is None:
                 new.make_slug(save=True)
-                person = Person.objects.get(user=request.user)
-                Person_Franchise.objects.create(franchise=new, person=person)
             return redirect("main:index")
     else:
         if franchise_id is None:
@@ -1134,7 +1212,8 @@ def franchise_index_view(request):
                    })
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.add_fight", raise_exception=True)
+@permission_required("main.change_contest", raise_exception=True)
 def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the same Version to the same fight.
     contest = Contest.objects.get(pk=contest_id)
     can_change = contest.can_edit(request.user)
@@ -1162,7 +1241,7 @@ def new_fight_view(request, contest_id):  # TODO: Make sure you can't add the sa
             return redirect("main:editWholeFight", f.id)
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_fight", raise_exception=True)
 def fight_editj_view(request, fight_id):  # Just the Fight TODO: refactor this to a name that makes more sense
     fight = Fight.objects.get(pk=fight_id)
     can_change = fight.can_edit(request.user)
@@ -1192,7 +1271,7 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
     return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change})
 
 
-@login_required(login_url='/accounts/login/')  # Still Being Used
+@permission_required("main.change_fight", raise_exception=True)
 def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
     # editor = request.GET.get("editor") or ""
     editor = request.COOKIES.get("editing_fight") is not None and request.COOKIES.get("editing_fight") != ""
@@ -1237,7 +1316,7 @@ def award_index_view(request, event_slug):
     return render(request, "main/award_index.html", {"award_list": awards, "event": event, "can_change": can_change})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_contest", raise_exception=True)
 def new_award_view(request, event_id):
     event = Event.objects.get(pk=event_id)
     can_change = event.can_edit(request.user)
@@ -1261,7 +1340,7 @@ def new_award_view(request, event_id):
 
 # TODO: THis is almost identical to edit award should probably make a more generic one esp the template
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_contest", raise_exception=True)
 def award_edit_view(request, award_id):
     a = Award.objects.get(pk=award_id)
     can_change = a.can_edit(request.user)
@@ -1281,7 +1360,8 @@ def award_edit_view(request, award_id):
                       {"form": form, "title": "Edit Award", "next_url": reverse("main:editAward", args=[award_id])})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_person", raise_exception=True)
+@permission_required("main.add_person", raise_exception=True)
 def person_edit_view(request, person_id):
     person = Person.objects.get(pk=person_id)
     can_change = person.can_edit(request.user)
@@ -1339,7 +1419,7 @@ def search_view(request):
                    "team_len": team_len})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.add_weight_class", raise_exception=True)
 def new_weight_class_view(request, return_id):
     if request.method == "POST":
         form = WeightClassForm(request.POST)
@@ -1369,7 +1449,8 @@ def profile_view(request):
                   {"user": user, "person": me, "teams": teams, "franchises": frans})
 
 
-@login_required(login_url='/accounts/login/')
+@permission_required("main.change_team", raise_exception=True)
+@permission_required("main.change_franchise", raise_exception=True)
 def add_member_view(request, obj_type=None, obj_id=None):
     if obj_type == "franchise":
         obj = Franchise.objects.get(pk=obj_id)
@@ -1408,6 +1489,8 @@ def add_member_view(request, obj_type=None, obj_id=None):
         return render(request, "main/add_member.html", {"error": True, "obj_type": obj_type, "obj_id": obj_id})
 
 
+@permission_required("main.change_robot", raise_exception=True)
+@permission_required("main.change_version", raise_exception=True)
 def robot_transfer_view(request, robot_id, team_id=None):
     if not team_id:
         robot = Robot.objects.get(pk=robot_id)
@@ -1575,10 +1658,10 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
     except KeyError:
         rob = Robot()
         rob.name = robotQ[1]
-        rob.set_alphanum(commit=False)
+        rob.set_latin_name(commit=False)
         if robotQ[7] is not None and robotQ[7] != "": # This overwrite is intentional as name needed for alphanum.
             rob.name = robotQ[7]
-            rob.requires_translation = True
+            rob.display_latin_name = True
         rob.country = robotQ[2]
         rob.wins = robotQ[5]
         rob.losses = robotQ[6]
@@ -1599,7 +1682,7 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
     ver.owner = per
     ver.first_fought = date
     ver.last_fought = date
-    ver.set_alphanum(commit=False)
+    ver.set_latin_name(commit=False)
     ver.country = robotQ[2]
 
     try:

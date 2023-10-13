@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
              },
             {
-               	tickPositions: [3.5,10,16.5,23.5,29,33],
+                tickPositions: [3.5,10,16.5,23.5,29,33],
                 linkedTo:0,
                 tickWidth: 0,
                 offset:0,

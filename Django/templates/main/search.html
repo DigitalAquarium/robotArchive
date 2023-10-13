@@ -27,7 +27,15 @@
                         <span>Weight Class: {{ robot.version_set.last.weight_class.weight_string }}</span>
                         {% if robot.awards|length > 0 %}<span> Awards: {{ robot.awards|length }}</span>{% endif %}
                         {% if robot.last_fought %}
-                            <span>Last Competed: {{ robot.last_fought|date:"M Y" }}</span>{% endif %}
+                            <span>Time Competing:
+                                        {% if robot.first_fought|date:"F Y" == robot.last_fought|date:"F Y" %}
+                                            {{ robot.first_fought|date:"F Y" }}
+                                        {% elif robot.first_fought|date:"Y" == robot.last_fought|date:"Y" %}
+                                            {{ robot.first_fought|date:"F" }} - {{ robot.last_fought|date:"F Y" }}
+                                        {%else%}
+                                            {{ robot.first_fought|date:"F Y" }} - {{ robot.last_fought|date:"F Y" }}
+                                        {% endif %}</span>
+                        {%endif%}
                     </span>
                     <span class="hrz-index-description">
                         {% if robot.description %}

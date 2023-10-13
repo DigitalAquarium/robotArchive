@@ -19,18 +19,19 @@
             <input name="name" type="text" value={{ name }}>
         </label>
         <label> Country:
-        <input list="country" name="country">
-            <datalist id="country">
-                {% for country in countries %}
-                    <option value="{{ country|first }}"
-                            {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
-                {% endfor %}
-            </datalist>
+            <select name="country">
+                    {% for country in countries %}
+                        <option value="{{ country|first }}"
+                                {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
+                    {% endfor %}
+            </select>
         </label>
+        {%comment%}
         <label>Include Territories:
             <input name="regions" type="checkbox" checked>
         </label>
-        <label> Standard Weight Class:
+        {%endcomment%}
+        <label> Weight Class:
             <select name="weight">
                 {% for wc in weights %}
                     <option value="{{ wc|first }}"
@@ -38,18 +39,6 @@
                 {% endfor %}
             </select>
         </label>
-        {% comment %}<label>Registration Open
-            <input name="reg_open" type="checkbox" {% if reg_open %}checked{% endif %}>
-    </label>{% endcomment %}
-        {% comment %}<label for="distance">Distance: </label>
-            <select id="distance" name="distance">
-                <option value="0" {% if distance == 0 %}selected{% endif %}></option>
-                <option value="50" {% if distance == 50 %}selected{% endif %}>50 Km </option>
-                <option value="100" {% if distance == 100 %}selected{% endif %}>100 Km </option>
-                <option value="250" {% if distance == 250 %}selected{% endif %}>250 Km </option>
-                <option value="500" {% if distance == 500 %}selected{% endif %}>500 Km </option>
-                <option value="1000" {% if distance == 1000 %}selected{% endif %}>1000 Km </option>
-            </select>{% endcomment %}
         <br>
         <input style="margin: 0.2em" type="submit" value="Search">
     </form>
@@ -97,24 +86,24 @@
 
                     <li>{% if page > 5 %}
                         <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:'-5' }}">{{ page|add:"-5" }}</a>
                     {% endif %}</li>
 
                     <li>{% if page > 1 %}
                         <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:'-1' }}">{{ page|add:"-1" }}</a>
                     {% endif %}</li>
 
                     <li>{{ page }}</li>
 
                     <li>{% if page < pages %}
                         <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:'1' }}">{{ page |add:"1" }}</a>
                     {% endif %}</li>
 
                     <li>{% if page < pages|add:"-5" %}
                         <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
+                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:'5' }}">{{ page |add:"5" }}</a>
                     {% endif %}</li>
 
                     <li>{% if page < pages %}

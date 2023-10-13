@@ -3,10 +3,8 @@
 	margin-inline-end: 0.1em;
 }
 .gridview-row {
-	height: 20em;
-}
-.gridview-square {
-	width:30%;
+	grid-template-rows: 20em;
+    grid-auto-columns: 30%;
 }
 .gridview-title {
 	height: FIT-CONTENT;
@@ -26,4 +24,9 @@
 .lb-table-container{
 	display:flex;
 	justify-content:center;
+}
+.header-warning{
+    margin:0.5em 0 0 0;
+    font-style:italics;
+    color:red;
 }

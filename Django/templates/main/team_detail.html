@@ -29,7 +29,7 @@
             <a href="{{ web.link }}">
                 <img  src="{{ web.get_logo }}" alt="{{ web }}">
                 <span class="spacer"></span>
-                {% if web.type == "WW" %}{{ web.link }}{% else %}{{ web.get_type_display }}{% endif %}
+                {{web.get_display}}
             </a>
             </span>
         {% endfor %}
@@ -47,9 +47,9 @@
                 </p>
 
             {% endif %}{%endcomment%}
-            <h2>Robots:</h2>
+            <br>
             <div class="gridview-row">
-                {% for robot in team.robots|dictsort:"last_fought" %}
+                {% for robot in team.robots|dictsort:"last_fought" %} <!--TODO: This can break if a robot on the team has not fought a match-->
                     <div class="gridview-square">
                         <div class="gridview-title">
                             <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>

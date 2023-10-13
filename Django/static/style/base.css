@@ -148,17 +148,16 @@ th {
 }
 
 .gridview-row {
-  display: inline-flex;
-  width: 100%;
-  height: 15em;
+  display: grid;
   justify-content: center;
-  margin: 1em;
+  grid-auto-flow: column;
+  grid-auto-columns: 20%;
+  grid-template-rows: 15em;
+  margin-bottom:1em;
 }
 
 .gridview-square {
-  width: 20%;
-  height: calc(100% - 2em);
-  padding: 1em;
+  padding: 0.75em;
   text-overflow: ellipsis;
 }
 
@@ -256,5 +255,3 @@ form fieldset legend {
   font-size: 0.7em;
   color: grey;
 }
-
-/*# sourceMappingURL=base.css.map */
