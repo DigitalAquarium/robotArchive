@@ -3,11 +3,19 @@
 {% load static %}
 {% block meta %}
     <title>{{ robot.name }} - Roboteer's Tavern</title>
-    <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
     <script src="{% static 'scripts/robot_detail.js' %}"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="{%static 'scripts/history_chart.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
 {% endblock %}
+
+{% block navbar %}
+    {{block.super}}
+    {% if is_random %}
+        <div class="navlinks"><span class="random-robot"><a href="{% url 'main:randomRobot' %}"><span class="rand-question-mark">?</span></a></span></div>
+    {%endif%}
+{% endblock %}
+
 {% block content %}
     <div class="main-content">
         {% if robot %}

@@ -1,4 +1,5 @@
 import datetime
+import random
 import sqlite3
 import urllib
 import time
@@ -11,6 +12,7 @@ from django.core.validators import URLValidator
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.http import Http404
 
 from main import subdivisions
 from .forms import *
@@ -42,13 +44,12 @@ def edt_home_view(request):
 
 @permission_required("main.add_event", raise_exception=True)
 def edt_new_event_view(request):
-    # TODO: Add verification
     fran_id = request.GET.get("franchise") or ""
     if fran_id:
         fran_id = int(fran_id)
         fran = Franchise.objects.get(pk=fran_id)
         if request.method == "POST":
-            form = NewEventFormEDT(request.POST)
+            form = NewEventFormEDT(request.POST, request.FILES)
             if form.is_valid():
                 event = form.save(fran)
                 event.make_slug(save=True)
@@ -64,7 +65,10 @@ def edt_new_event_view(request):
 @permission_required("main.add_contest", raise_exception=True)
 @permission_required("main.change_event", raise_exception=True)
 def edt_event_view(request, event_id):
-    event = Event.objects.get(pk=event_id)
+    try:
+        event = Event.objects.get(pk=event_id)
+    except Event.DoesNotExist:
+        raise Http404
 
     if request.method == "POST":
         sources = event.source_set.all()
@@ -124,7 +128,10 @@ def edt_fran_view(request):
 @permission_required("main.change_fight", raise_exception=True)
 @permission_required("main.add_fight", raise_exception=True)
 def edt_contest_view(request, contest_id):
-    contest = Contest.objects.get(pk=contest_id)
+    try:
+        contest = Contest.objects.get(pk=contest_id)
+    except Contest.DoesNotExist:
+        raise Http404
     fights = Fight.objects.filter(contest=contest).order_by("number")
     registrations = contest.registration_set.all()
     other_contests = Contest.objects.filter(event=contest.event).exclude(pk=contest_id)
@@ -186,7 +193,10 @@ def edt_contest_view(request, contest_id):
 
 @permission_required("main.change_fight", raise_exception=True)
 def edt_fight_view(request, fight_id):
-    fight = Fight.objects.get(pk=fight_id)
+    try:
+        fight = Fight.objects.get(pk=fight_id)
+    except Fight.DoesNotExist:
+        raise Http404
     has_winner = False
     for fv in fight.fight_version_set.all():
         if fv.won:
@@ -278,7 +288,10 @@ def edt_select_robot_view(request):
 @permission_required("main.change_team", raise_exception=True)
 @permission_required("main.change_robot", raise_exception=True)
 def edt_team_view(request, team_id):
-    team = Team.objects.get(pk=team_id)
+    try:
+        team = Team.objects.get(pk=team_id)
+    except Team.DoesNotExist:
+        raise Http404
     editing_version_id = request.COOKIES.get("rv_id")
     fight_id = request.COOKIES.get("editing_fight") or 0
     robot_or_version = request.COOKIES.get("robot_or_version")
@@ -596,7 +609,11 @@ def event_index_view(request):
 
 
 def event_detail_view(request, slug):
-    event = Event.objects.get(slug=slug)
+    try:
+        event = Event.objects.get(slug=slug)
+    except Event.DoesNotExist:
+        raise Http404
+
     fran = event.franchise
     contests = Contest.objects.filter(event=event).order_by("-weight_class__weight_grams")
     if request.user.is_authenticated:
@@ -647,7 +664,10 @@ def modify_event_view(request, event_id):
 
 
 def contest_detail_view(request, contest_id):
-    contest = Contest.objects.get(pk=contest_id)
+    try:
+        contest = Contest.objects.get(pk=contest_id)
+    except Contest.DoesNotExist:
+        raise Http404
     fights = Fight.objects.filter(contest=contest).order_by("number")
     registrations = contest.registration_set.all().order_by("signup_time")
     applied = False
@@ -800,13 +820,25 @@ def robot_index_view(request):
 
 
 def leaderboard(request):
+    visible_weights = [
+        ("F", "Featherweight"),
+        ("L", "Lightweight"),
+        ("M", "Middleweight"),
+        ("H", "Heavyweight"),
+        ("S", "Super Heavyweight"),
+    ]
+
     # CSS Notes: row height up to 20em
     weight = request.GET.get("weight")
-    if not weight or weight not in [x[0] for x in LEADERBOARD_WEIGHTS]:
+    # Decision made to hide the basically
+    if not weight or weight not in [x[0] for x in visible_weights]: # LEADERBOARD_WEIGHTS]:
         weight = "H"
     year = request.GET.get("year")
     current_year = Event.objects.all().order_by("-end_date")[0].end_date.year
-    years = [x['year'] for x in Leaderboard.objects.filter(weight=weight).order_by("year").values("year").distinct()]
+    if weight == "F":
+        years = [1996, 1997] #TODO: if weight class changes are in place add 1995
+    else:
+        years = [x['year'] for x in Leaderboard.objects.filter(weight=weight).order_by("year").values("year").distinct()]
     # years = [x for x in range(1994, current_year + 1)]
     try:
         year = int(year)
@@ -816,12 +848,15 @@ def leaderboard(request):
         years = [current_year]
     if year not in years:
         year = current_year
-    Leaderboard.update_class(weight)
+    if weight != "F":
+        Leaderboard.update_class(weight)
     robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
+
     if year == current_year and robot_list.count() == 0:
         # Catch to stop the superheavyweight list (or any others that go out of use) from being unreachable in the menu
         year = years[-1]
         robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
+
     top_three = []
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append((robot_list[i],
@@ -830,7 +865,7 @@ def leaderboard(request):
     # Leaderboard.objects.filter(weight="H").values("year").distinct()
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
-                   "weights": [("H", "")] + LEADERBOARD_WEIGHTS[0:-1],
+                   "weights": [("H", "")] + visible_weights, #LEADERBOARD_WEIGHTS[0:-1],
                    "chosen_weight": weight,
                    "chosen_year": year,
                    "years": years,
@@ -841,8 +876,14 @@ def leaderboard(request):
 
 
 def robot_detail_view(request, slug):
-    r = Robot.objects.get(slug=slug)
+    try:
+        r = Robot.objects.get(slug=slug)
+    except Robot.DoesNotExist:
+        raise Http404
+
     v = None
+    is_random = False
+
     if request.user.is_authenticated:
         can_change = r.can_edit(request.user)
     else:
@@ -850,6 +891,7 @@ def robot_detail_view(request, slug):
 
     if request.method == "GET":
         version_id = request.GET.get("v")
+        is_random = request.GET.get("source") == "random"
         try:
             version_id = int(version_id)
             v = Version.objects.get(pk=version_id)
@@ -874,12 +916,18 @@ def robot_detail_view(request, slug):
                    "can_change": can_change,
                    "version_set": r.version_set.all().order_by("number"),
                    "best_lb_entry": best_lb_entry, "leaderboard_entries": leaderboard_entries,
-                   "current_lb_entry": current_lb_entry, })
+                   "current_lb_entry": current_lb_entry, "is_random": is_random})
+
+
+def random_robot_view(unused):
+    random_robot = Robot.objects.all().order_by("?")[0]
+    version_id = random_robot.version_set.all().order_by("?")[0].id
+    return redirect("%s?v=%d&source=random" % (reverse("main:robotDetail", args=[random_robot.slug]), version_id))
 
 
 def get_history(robot):
     fight_versions = Fight_Version.objects.filter(version__robot=robot, fight__fight_type__in=["FC", "NS"]).order_by(
-        "fight__contest__event__start_date")
+        "fight__contest__event__start_date", "fight__number")
     rank = 1000
     history = [rank]
     for fv in fight_versions:
@@ -1007,8 +1055,10 @@ def new_version_view(request, robot_id):  # TODO: FORM
 
 
 def team_detail_view(request, slug):
-    team = Team.objects.get(slug=slug)
-    pt = None
+    try:
+        team = Team.objects.get(slug=slug)
+    except Team.DoesNotExist:
+        raise Http404
     if request.user.is_authenticated:
         can_change = team.can_edit(request.user)
     else:
@@ -1099,7 +1149,10 @@ def new_robot_view(request):  # TODO: FORM
 
 
 def version_detail_view(request, version_id):
-    v = Version.objects.get(pk=version_id)
+    try:
+        v = Version.objects.get(pk=version_id)
+    except Version.DoesNotExist:
+        raise Http404
     robot_slug = v.robot.slug
     return redirect("%s?v=%d" % (reverse("main:robotDetail", args=[robot_slug]), version_id))
 
@@ -1182,7 +1235,10 @@ def franchise_modify_view(request, franchise_id=None):
 
 
 def franchise_detail_view(request, slug):
-    fran = Franchise.objects.get(slug=slug)
+    try:
+        fran = Franchise.objects.get(slug=slug)
+    except Franchise.DoesNotExist:
+        raise Http404
     can_change = True  # TODO: lol
     return render(request, "main/franchise_detail.html",
                   {"fran": fran, "can_change": can_change, "leave_id": 1})  # pf.id or 1}) #TODO: lol
@@ -1263,7 +1319,10 @@ def fight_editj_view(request, fight_id):  # Just the Fight TODO: refactor this t
 
 
 def fight_detail_view(request, fight_id):  # TODO: Sort this better
-    fight = Fight.objects.get(pk=fight_id)
+    try:
+        fight = Fight.objects.get(pk=fight_id)
+    except Fight.DoesNotExist:
+        raise Http404
     if request.user.is_authenticated:
         can_change = fight.can_edit(request.user)
     else:
@@ -1535,6 +1594,46 @@ def hall_of_fame_view(request):
 
 def credits_view(request):
     return render(request, "main/credits.html", {})
+
+
+def weapon_types_view(request):
+    recognised_weapon_types = [
+        'Rammer', 'Wedge', 'Thwackbot', 'Meltybrain',
+        'Horizontal Spinner', 'Undercutter', 'Overhead Spinner', 'Shell Spinner', 'Ring Spinner',
+        'Vertical Spinner', 'Drum Spinner', 'Eggbeater',
+        'Propeller Spinner', 'Angled Spinner', 'Articulated Spinner',
+        'Axe', 'Horizontal Axe', 'Hammersaw', 'Spear',
+        'Lifter', 'Grabber', 'Horizontal Grabber', 'Grabber-Lifter', 'Crusher', 'Horizontal Crusher',
+        'Flipper', 'Front-Hinged Flipper', 'Side-Hinged Flipper',
+        'Saw', 'Chainsaw', 'Drill',
+        'Interchangeable', 'Multibot',
+        'Cannon', 'Entanglement',
+    ]
+    version_dict = {}
+    for w in recognised_weapon_types:
+        if Version.objects.filter(weapon_type=w).exclude(robot__lb_weight_class="X").count() > 0:
+            valid_versions = Version.objects.filter(weapon_type=w).exclude(robot__lb_weight_class="X")
+        else:
+            valid_versions = Version.objects.filter(weapon_type=w)
+        valid_versions = valid_versions.order_by("-robot__ranking", "-number")
+        top_5 = []
+        done_robots = []
+        for v in valid_versions:
+            if v.robot in done_robots:
+                continue
+            most_recent = v.robot.version_set.all().order_by("-number")[0]
+            if most_recent.weapon_type == v.weapon_type:
+                top_5.append(v)
+                if len(top_5) == 5:
+                    break
+            done_robots.append(v.robot)
+
+        if len(top_5) > 0:
+            version_dict[w.replace(" ", "_").replace("-", "_").lower()] = random.choice(top_5)
+        else:
+            version_dict[w.replace(" ", "_").replace("-", "_").lower()] = valid_versions[0]
+
+    return render(request, "main/weapon_types.html", {"version_dict": version_dict})
 
 
 # ------IMPORT FROM OLD DATA--------

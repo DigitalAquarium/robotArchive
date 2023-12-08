@@ -242,11 +242,11 @@ class Robot(models.Model):
         return self.name
 
     def slugify2(self):
-        #if self.slug is not None and self.slug != "": return self.slug
+        # if self.slug is not None and self.slug != "": return self.slug
         SLUG_LEN = 60
 
         desired_slug = self.name[:SLUG_LEN]
-        desired_slug.replace("&","and")
+        desired_slug.replace("&", "and")
         desired_slug = slugify(desired_slug)
         any_letter = re.compile(".*[a-zA-Z].*")
         if not any_letter.match(self.name) or len(desired_slug) < len(self.name) / 3:
@@ -257,8 +257,10 @@ class Robot(models.Model):
             new_slug = desired_slug
         else:
             slug_holder = similar_slugs.get(slug=desired_slug)
-            same_wc = (self.lb_weight_class == slug_holder.lb_weight_class and self.lb_weight_class != 'X' and slug_holder.lb_weight_class != 'X') or \
-                      (self.version_set.last().weight_class.find_lb_class() == slug_holder.version_set.last().weight_class.find_lb_class())
+            same_wc = (
+                              self.lb_weight_class == slug_holder.lb_weight_class and self.lb_weight_class != 'X' and slug_holder.lb_weight_class != 'X') or \
+                      (
+                              self.version_set.last().weight_class.find_lb_class() == slug_holder.version_set.last().weight_class.find_lb_class())
             same_country = self.country == slug_holder.country
             country_dict = {"GB": "-uk", "US": "-usa", "AE": "-uae", "KP": "-north-korea", "KR": "-south-korea",
                             "CD": "-dr-congo", "RU": "-russia", "SY": "-syria", "BO": "-bolivia", "BN": "-benin",
@@ -273,12 +275,12 @@ class Robot(models.Model):
             if self.lb_weight_class == "S":
                 weight_slug = "-shw"
             elif self.lb_weight_class != "X":
-                weight_slug = "-"+self.lb_weight_class.lower()+"w"
+                weight_slug = "-" + self.lb_weight_class.lower() + "w"
             elif self.version_set.last().weight_class.find_lb_class() != "X":
-                weight_slug = "-"+self.version_set.last().weight_class.find_lb_class().lower()+"w"
+                weight_slug = "-" + self.version_set.last().weight_class.find_lb_class().lower() + "w"
             else:
                 weight_slug = "-" + self.version_set.last().weight_class.weight_string()
-                weight_slug = re.sub("\.[0-9]", '', weight_slug) # truncates decimals
+                weight_slug = re.sub("\.[0-9]", '', weight_slug)  # truncates decimals
 
             if same_country and not same_wc:
                 new_slug = desired_slug + weight_slug
@@ -298,7 +300,6 @@ class Robot(models.Model):
             else:
                 new_slug = desired_slug + "-" + hex(similar_slugs.filter(name=self.name).count() + 1)[2:]
         return new_slug
-
 
     def slugify(self):
         if self.slug is not None and self.slug != "": return self.slug
@@ -919,7 +920,7 @@ class Fight(models.Model):
         fvs = Fight_Version.objects.filter(fight=self)
         this_robot = Fight_Version.objects.filter(version__robot=robot, fight=self)
         if this_robot.count() > 1:
-            print("Multiple copies of "+str(robot)+" in "+str(self)) # TODO: log this properly
+            print("Multiple copies of " + str(robot) + " in " + str(self))  # TODO: log this properly
         tag = this_robot[0].tag_team
         out = []
         for fv in fvs:
@@ -1114,8 +1115,11 @@ class Leaderboard(models.Model):
 
     @staticmethod
     def update_all(current_year=None):
-        wcs = [x[0] for x in LEADERBOARD_WEIGHTS]
-        wcs.remove("X")
+        # TODO: if for whatever reason small weight classes come back change this
+        wcs = ["H", "M", "L", "S"]  # x[0] for x in LEADERBOARD_WEIGHTS]
+        # wcs.remove("X")
+        if current_year in [1995, 1996, 1997]:
+            wcs.append("F")
         for wc in wcs:
             Leaderboard.update_class(wc, current_year)
 
@@ -1245,18 +1249,20 @@ class Web_Link(models.Model):
             return link
 
         if self.type == "WW":
-            ret = re.search("(\/|^)[0-9a-zA-Z-.]+(\/|$)",self.link).group(0)
-            ret = ret.replace("/","")
+            ret = re.search("(\/|^)[0-9a-zA-Z-.]+(\/|$)", self.link).group(0)
+            ret = ret.replace("/", "")
             if ret[:4] == "www.":
                 ret = ret[4:]
             return ret
 
         elif self.type == "WA":
-            beginning = re.search("(https?:\/\/)?web\.archive\.org\/web\/(([0-9]{14}([a-z]{2}_)?)|(\*))\/(https?:\/\/)?(www\.)?",self.link)
+            beginning = re.search(
+                "(https?:\/\/)?web\.archive\.org\/web\/(([0-9]{14}([a-z]{2}_)?)|(\*))\/(https?:\/\/)?(www\.)?",
+                self.link)
             beginning = beginning.span()[1]
             ret = self.link[beginning:]
             if "/" in ret:
-                end = re.search("\/.*",ret)
+                end = re.search("\/.*", ret)
                 ret = ret[:end.span()[0]]
             if ret[-3:] == ":80":
                 ret = ret[:-3]
@@ -1304,7 +1310,7 @@ class Web_Link(models.Model):
                 return "Youtube Channel"
             ret = self.link
             if ret[-7:] == "/videos":
-                 ret = ret[:-7]
+                ret = ret[:-7]
             if "https://www.youtube.com/" == ret[:24]:
                 ret = ret[24:]
             if "http://www.youtube.com/" == ret[:23]:
@@ -1390,7 +1396,7 @@ class Source(models.Model):
     def __str__(self):
         return self.name
 
-    def can_edit(self,a): # TODO : lol
+    def can_edit(self, a):  # TODO : lol
         return True
 
 

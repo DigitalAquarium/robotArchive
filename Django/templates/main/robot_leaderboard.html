@@ -31,8 +31,7 @@
         </form>
     </section>
     <div class="main-content">
-        {%if chosen_year < 1998 %}<h3 class="header-warning">Weight classes prior to 1997 do not line up with modern ones, expect weird results</h3>{%endif%}
-        {%if chosen_weight in low_classes %}<h3 class="header-warning">Sub-lightweight classes are mostly undocumented.</h3>{%endif%}
+    {%if chosen_year < 1998 %}<h3 class="header-warning">Weight classes prior to 1997 do not line up with modern ones, expect weird results</h3>{%endif%}
 	{% if robot_list|length == 0%}
 	No data to display
 	{%else%}

@@ -66,3 +66,48 @@
     height: 1em;
     width: 1em;
 }
+
+.random-robot a{
+    border: none;
+    width: 2em;
+    height:1.5em;
+
+    background: linear-gradient(270deg, #dd3d19, #e49003, #efff1c, #0799ec, #02d930, #3a00f0, #a400f0);
+    background-size: 1400% 1400%;
+
+    -webkit-animation: random-animation 30s ease infinite;
+    -moz-animation: random-animation 30s ease infinite;
+    -o-animation: random-animation 30s ease infinite;
+    animation: random-animation 30s ease infinite;
+}
+
+.rand-question-mark{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    color:black;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+@-webkit-keyframes random-animation {
+    0%{background-position:0% 36%}
+    50%{background-position:100% 65%}
+    100%{background-position:0% 36%}
+}
+@-moz-keyframes random-animation {
+    0%{background-position:0% 36%}
+    50%{background-position:100% 65%}
+    100%{background-position:0% 36%}
+}
+@-o-keyframes random-animation {
+    0%{background-position:0% 36%}
+    50%{background-position:100% 65%}
+    100%{background-position:0% 36%}
+}
+@keyframes random-animation {
+    0%{background-position:0% 36%}
+    50%{background-position:100% 65%}
+    100%{background-position:0% 36%}
+}
+

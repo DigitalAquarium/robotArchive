@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+{% block meta %}
+    <title>404! - Combat Robot Archive</title>
+{% endblock %}
+{% block content %}
+    <div class="main-content">
+        <div class="error-container">
+        <div class="error-image"><img src="{%static 'errors/404.png'%}"></div>
+        <div class="error-text">
+        <h1>404: Page not found!</h1>
+        <h3>We've searched the whole arena but can't seem to find it anywhere.</h3>
+        </div>
+        </div>
+    </div>
+{% endblock %}

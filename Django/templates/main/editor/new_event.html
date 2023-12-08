@@ -7,11 +7,11 @@
 {% block content %}
     <div class="main-content">
         {% if fran %}
-            <form method="post" action="{% url 'main:edtNewEvent' %}?franchise={{ fran.id }}">
+            <form method="post" enctype="multipart/form-data" action="{% url 'main:edtNewEvent' %}?franchise={{ fran.id }}">
                 {% csrf_token %}
                 <fieldset>
                     <legend><h1>Create Event</h1></legend>
-                <p>For: {{ fran }} <a href={% url 'main:edtSelectFran' %}>change</a></p>
+                <p>For: {{ fran }} <a href="{% url 'main:edtSelectFran' %}">change</a></p>
                     {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
                     {{ form | crispy }}
                     <input type="submit" value="Submit">
@@ -20,7 +20,7 @@
         {% else %}
             <fieldset>
                     <legend><h1>Select Franchise</h1></legend>
-            <a href={% url 'main:edtSelectFran' %}>Select</a>
+            <a href="{% url 'main:edtSelectFran' %}">Select</a>
             </fieldset>
         {% endif %}
     </div>
