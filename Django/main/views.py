@@ -12,7 +12,7 @@ from django.core.validators import URLValidator
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.http import Http404
+from django.http import Http404, JsonResponse
 
 from main import subdivisions
 from .forms import *
@@ -64,6 +64,8 @@ def edt_new_event_view(request):
 
 @permission_required("main.add_contest", raise_exception=True)
 @permission_required("main.change_event", raise_exception=True)
+@permission_required("main.add_location", raise_exception=True)
+@permission_required("main.change_location", raise_exception=True)
 def edt_event_view(request, event_id):
     try:
         event = Event.objects.get(pk=event_id)
@@ -71,40 +73,71 @@ def edt_event_view(request, event_id):
         raise Http404
 
     if request.method == "POST":
-        sources = event.source_set.all()
-        for i in range(len(sources)):
-            updated_name = request.POST["src-name-" + str(i)]
-            updated_url = request.POST["src-link-" + str(i)]
-            current = sources[i]
-            if updated_url != current.link or updated_name != current.name:
+        if request.POST["save"] == "save-source":
+            sources = event.source_set.all()
+            for i in range(len(sources)):
+                updated_name = request.POST["src-name-" + str(i)]
+                updated_url = request.POST["src-link-" + str(i)]
+                current = sources[i]
+                if updated_url != current.link or updated_name != current.name:
+                    validator = URLValidator()
+                    try:
+                        validator(updated_url)
+                        current.name = updated_name
+                        current.link = updated_url
+                        current.archived = "web.archive.org" in updated_url
+                        current.last_accessed = timezone.now()
+                        current.save()
+                    except ValidationError:
+                        pass
+
+            new_name = request.POST["new-src-name"]
+            new_link = request.POST["new-src-link"]
+            if new_name != "" and new_name is not None and new_link != "" and new_link is not None:
                 validator = URLValidator()
+                src = Source()
                 try:
-                    validator(updated_url)
-                    current.name = updated_name
-                    current.link = updated_url
-                    current.archived = "web.archive.org" in updated_url
-                    current.last_accessed = timezone.now()
-                    current.save()
+                    validator(new_link)
+                    src.name = new_name
+                    src.link = new_link
+                    src.archived = "web.archive.org" in new_link
+                    src.last_accessed = timezone.now()
+                    src.event = event
+                    src.save()
                 except ValidationError:
                     pass
+        elif request.POST["save"] == "save-location":
+            location_dropdown = request.POST["location-id"]
 
-        new_name = request.POST["new-src-name"]
-        new_link = request.POST["new-src-link"]
-        if new_name != "" and new_name is not None and new_link != "" and new_link is not None:
-            validator = URLValidator()
-            src = Source()
-            try:
-                validator(new_link)
-                src.name = new_name
-                src.link = new_link
-                src.archived = "web.archive.org" in new_link
-                src.last_accessed = timezone.now()
-                src.event = event
-                src.save()
-            except ValidationError:
-                pass
+            if location_dropdown == "-1":
+                new_location = Location()
+                new_location.name = request.POST["new-location-name"]
+                new_location.latitude = request.POST["new-location-lat"]
+                new_location.longitude = request.POST["new-location-lng"]
+                new_location.save()
+
+            else:
+                location_dropdown = int(location_dropdown)
+                new_location = Location.objects.get(id=location_dropdown)
+
+            event.location = new_location
+            event.save()
+
+
+
+    locations = Location.objects.all().order_by("name")
     return render(request, "main/editor/event.html",
-                  {"event": event})
+                  {"event": event, "locations": locations})
+
+
+def location_ajax(request):
+    id = request.GET.get("id") or ""
+    try:
+        id = int(id)
+        l = Location.objects.get(id=id)
+        return JsonResponse({"name": l.name, "latitude": l.latitude, "longitude": l.longitude}, status=200)
+    except e:
+        return JsonResponse({"id": id}, status=400)
 
 
 @permission_required("main.change_franchise", raise_exception=True)
@@ -831,14 +864,15 @@ def leaderboard(request):
     # CSS Notes: row height up to 20em
     weight = request.GET.get("weight")
     # Decision made to hide the basically
-    if not weight or weight not in [x[0] for x in visible_weights]: # LEADERBOARD_WEIGHTS]:
+    if not weight or weight not in [x[0] for x in visible_weights]:  # LEADERBOARD_WEIGHTS]:
         weight = "H"
     year = request.GET.get("year")
     current_year = Event.objects.all().order_by("-end_date")[0].end_date.year
     if weight == "F":
-        years = [1996, 1997] #TODO: if weight class changes are in place add 1995
+        years = [1996, 1997]  # TODO: if weight class changes are in place add 1995
     else:
-        years = [x['year'] for x in Leaderboard.objects.filter(weight=weight).order_by("year").values("year").distinct()]
+        years = [x['year'] for x in
+                 Leaderboard.objects.filter(weight=weight).order_by("year").values("year").distinct()]
     # years = [x for x in range(1994, current_year + 1)]
     try:
         year = int(year)
@@ -865,7 +899,7 @@ def leaderboard(request):
     # Leaderboard.objects.filter(weight="H").values("year").distinct()
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
-                   "weights": [("H", "")] + visible_weights, #LEADERBOARD_WEIGHTS[0:-1],
+                   "weights": [("H", "")] + visible_weights,  # LEADERBOARD_WEIGHTS[0:-1],
                    "chosen_weight": weight,
                    "chosen_year": year,
                    "years": years,

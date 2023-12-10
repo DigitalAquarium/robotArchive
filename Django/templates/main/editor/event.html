@@ -5,8 +5,10 @@
     <title>{{ event }} - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
 	<link rel="stylesheet" href="{% static 'style/event_detail.css' %}">
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"/>
-	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{% static 'scripts/edit_event.js' %}"></script>
 {% endblock %}
 {% block content %}
     <div class="main-content">
@@ -124,11 +126,31 @@
                 </td>
             </tr>
             </table>
-            <button class="editor-link" name="save" value="save">Save</button>
+            <button class="editor-link" name="save" value="save-source">Save</button>
             </form>
-		</table>
 		<br>
-		<div id="osm-map" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
+        <div id="map-section" style="display:flex">
+		    <div id="osm-map" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
+                <form method="post" id="map-form" style="display:flex;flex-direction:column">
+                    {% csrf_token %}
+                    <h3>Current Location: {{event.get_location}}</h3>
+                    <div>
+                    <select id="existing-locations" name="location-id">
+                        <option value="-1"></option>
+                        {%for location in locations%}
+                            <option value="{{location.id}}" {%if location == event.location%}selected{%endif%}>{{location}}</option>
+                        {%endfor%}
+                    </select>
+                    </div>
+                    <br>
+                    <div>
+                    <div>Location Name: <input type="text" class="location-input" id="location-name" name="new-location-name" value="{{event.location.name}}"></div>
+                    <div>Location Latitude: <input type="number" class="location-input" id="location-lat" name="new-location-lat" step="any" value="{{event.location.latitude}}"></div>
+                    <div>Location Longitude: <input type="number" class="location-input" id="location-lng" name="new-location-lng" step="any" value="{{event.location.longitude}}"></div>
+                    </div>
+                    <button class="editor-link" name="save" value="save-location">Save</button>
+                </form>
+        </div>
 		<script src="{% static 'scripts/open_street_map.js' %}"></script>
         {% else %}
             Something appears to have gone wrong

@@ -80,3 +80,7 @@ class WebLinkAdmin(admin.ModelAdmin):
 class SourceAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
+    pass
+

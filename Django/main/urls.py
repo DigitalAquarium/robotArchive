@@ -69,4 +69,6 @@ urlpatterns = [
     #path('import', views.importView, name='import'),
     #path('test/graph', views.graph_test, name='graph_test'),
     #path('test/graph_data', views.graph_data, name='graph_test'),
+
+    path('ajax/location-request', views.location_ajax,name='locationAjax')
 ]
