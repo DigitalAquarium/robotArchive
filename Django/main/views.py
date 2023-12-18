@@ -933,8 +933,7 @@ def robot_detail_view(request, slug):
         leaderboard_entries = None
 
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "history": get_history(r), "fights": fights, "awards": awards, "ver": v,
-                   "can_change": can_change,
+                  {"robot": r, "fights": fights, "awards": awards, "ver": v, "can_change": can_change,
                    "version_set": r.version_set.all().order_by("number"),
                    "best_lb_entry": best_lb_entry, "leaderboard_entries": leaderboard_entries,
                    "current_lb_entry": current_lb_entry, "is_random": is_random})
@@ -944,17 +943,6 @@ def random_robot_view(unused):
     random_robot = Robot.objects.all().order_by("?")[0]
     version_id = random_robot.version_set.all().order_by("?")[0].id
     return redirect("%s?v=%d&source=random" % (reverse("main:robotDetail", args=[random_robot.slug]), version_id))
-
-
-def get_history(robot):
-    fight_versions = Fight_Version.objects.filter(version__robot=robot, fight__fight_type__in=["FC", "NS"]).order_by(
-        "fight__contest__event__start_date", "fight__contest__id", "fight__number")
-    rank = 1000
-    history = [rank]
-    for fv in fight_versions:
-        rank += fv.ranking_change
-        history.append(rank)
-    return history
 
 
 @permission_required("main.change_robot", raise_exception=True)
