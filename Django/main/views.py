@@ -17,11 +17,8 @@ from django.http import Http404, JsonResponse
 from main import subdivisions
 from .forms import *
 
-# to do for the old uni system Email stuff (low prio),Fight edit cleanup, auto person merging, Home page, leaderboard still needs smol css
 ONE_HOUR_TIMER = 3600
 
-
-# @login_required(login_url='/accounts/login/')
 @permission_required("main.change_event", raise_exception=True)
 @permission_required("main.add_event", raise_exception=True)
 def edt_home_view(request):
@@ -128,16 +125,6 @@ def edt_event_view(request, event_id):
     locations = Location.objects.all().order_by("name")
     return render(request, "main/editor/event.html",
                   {"event": event, "locations": locations})
-
-
-def location_ajax(request):
-    id = request.GET.get("id") or ""
-    try:
-        id = int(id)
-        l = Location.objects.get(id=id)
-        return JsonResponse({"name": l.name, "latitude": l.latitude, "longitude": l.longitude}, status=200)
-    except e:
-        return JsonResponse({"id": id}, status=400)
 
 
 @permission_required("main.change_franchise", raise_exception=True)
@@ -961,7 +948,7 @@ def random_robot_view(unused):
 
 def get_history(robot):
     fight_versions = Fight_Version.objects.filter(version__robot=robot, fight__fight_type__in=["FC", "NS"]).order_by(
-        "fight__contest__event__start_date", "fight__number")
+        "fight__contest__event__start_date", "fight__contest__id", "fight__number")
     rank = 1000
     history = [rank]
     for fv in fight_versions:
@@ -1860,7 +1847,8 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
 
 def recalc_all(request):
     # Need top update more robots than currently doing to add the X to them
-    Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X")
+    Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X", first_fought=None, last_fought=None)
+    Version.objects.all().update(first_fought=None, last_fought=None)
 
     fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")

@@ -3,7 +3,7 @@ $("#existing-locations").change(function(){
     if ($(this).val() != -1){
         $.ajax({
             type: 'GET',
-            url: "/ajax/location-request",
+            url: "/ajax/get_location",
             data: {"id": $(this).val()},
             success: function (response) {
                 $("#location-name").val(response["name"]);

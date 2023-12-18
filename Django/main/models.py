@@ -50,10 +50,10 @@ def get_flag(code):
 
 def make_slug(slug_text, queryset):
     SLUG_LENGTH = 50
-    slug_text = slugify(slug_text[:50])
+    slug_text = slugify(slug_text[:SLUG_LENGTH])
     if queryset.filter(slug=slug_text).count() > 0:
         uu = "-" + str(uuid.uuid4())
-        slug_text = slug_text[:50 - len(uu)] + uu
+        slug_text = slug_text[:SLUG_LENGTH - len(uu)] + uu
     return slug_text
 
 
@@ -138,9 +138,7 @@ class Weight_Class(models.Model):
         return self.name + ": " + self.weight_string()
 
     def weight_string(self):
-        if self.weight_grams < 400:
-            return str(self.weight_grams) + "g"
-        elif self.weight_grams < 1000:
+        if self.weight_grams < 1000:
             if self.weight_grams == 454:
                 return "1lb"
             else:
@@ -225,7 +223,7 @@ class Robot(models.Model):
     RANKING_DEFAULT = 1000
     name = models.CharField(max_length=255)
     latin_name = models.CharField(max_length=255, blank=True)
-    slug = models.SlugField(max_length=60, allow_unicode=True)
+    slug = models.SlugField(max_length=100, allow_unicode=True)
     display_latin_name = models.BooleanField(default=False)
 
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
@@ -242,8 +240,7 @@ class Robot(models.Model):
         return self.name
 
     def slugify2(self):
-        # if self.slug is not None and self.slug != "": return self.slug
-        SLUG_LEN = 60
+        SLUG_LEN = 50
 
         desired_slug = self.name[:SLUG_LEN]
         desired_slug.replace("&", "and")
@@ -252,54 +249,64 @@ class Robot(models.Model):
         if not any_letter.match(self.name) or len(desired_slug) < len(self.name) / 3:
             desired_slug = slugify(self.name[:SLUG_LEN], allow_unicode=True)
 
-        similar_slugs = Robot.objects.filter(slug__contains=desired_slug)
-        if similar_slugs.filter(slug=desired_slug).count() == 0:
-            new_slug = desired_slug
-        else:
+        similar_slugs = Robot.objects.filter(slug__contains=desired_slug).exclude(id=self.id)
+        if similar_slugs.filter(slug=desired_slug).count() > 0:
             slug_holder = similar_slugs.get(slug=desired_slug)
-            same_wc = (
-                              self.lb_weight_class == slug_holder.lb_weight_class and self.lb_weight_class != 'X' and slug_holder.lb_weight_class != 'X') or \
-                      (
-                              self.version_set.last().weight_class.find_lb_class() == slug_holder.version_set.last().weight_class.find_lb_class())
-            same_country = self.country == slug_holder.country
-            country_dict = {"GB": "-uk", "US": "-usa", "AE": "-uae", "KP": "-north-korea", "KR": "-south-korea",
-                            "CD": "-dr-congo", "RU": "-russia", "SY": "-syria", "BO": "-bolivia", "BN": "-benin",
-                            "FM": "-micronesia", "IR": "-iran", "LA": "-laos", "MF": "-saint-martin",
-                            "SX": "-sint-maartin", "MD": "-moldova", "PS": "-palestine", "VN": "-vietnam",
-                            "TW": "-taiwan", "XE": "-england", "XS": "-scotland", "XW": "-wales",
-                            "XI": "-northern-ireland", "XX": "-unknown"}
-            if self.country in country_dict:
-                country_slug = country_dict[self.country]
-            else:
-                country_slug = "-" + slugify(pycountry.countries.get(alpha_2=self.country))
-            if self.lb_weight_class == "S":
-                weight_slug = "-shw"
-            elif self.lb_weight_class != "X":
-                weight_slug = "-" + self.lb_weight_class.lower() + "w"
-            elif self.version_set.last().weight_class.find_lb_class() != "X":
-                weight_slug = "-" + self.version_set.last().weight_class.find_lb_class().lower() + "w"
-            else:
-                weight_slug = "-" + self.version_set.last().weight_class.weight_string()
-                weight_slug = re.sub("\.[0-9]", '', weight_slug)  # truncates decimals
 
-            if same_country and not same_wc:
-                new_slug = desired_slug + weight_slug
-                if similar_slugs.filter(slug=new_slug).count() > 0:
-                    slug_holder = similar_slugs.get(slug=new_slug)
-                    if self.country == slug_holder.country:
-                        new_slug += "-" + hex(similar_slugs.filter(name=self.name).count() + 1)[2:]
+            same_wc = (self.lb_weight_class == slug_holder.lb_weight_class and self.lb_weight_class != 'X' and slug_holder.lb_weight_class != 'X') or \
+                      (self.version_set.last().weight_class.find_lb_class() == slug_holder.version_set.last().weight_class.find_lb_class())
+            if not same_wc:
+                if self.lb_weight_class == "S":
+                    weight_slug = "-shw"
+                elif self.lb_weight_class == "U":
+                    weight_slug = "-awus"
+                elif self.lb_weight_class == "Y":
+                    weight_slug = "-hbw"
+                elif self.lb_weight_class != "X":
+                    weight_slug = "-" + self.lb_weight_class.lower() + "w"
+                elif self.version_set.last().weight_class.find_lb_class() != "X":
+                    weight_slug = "-" + self.version_set.last().weight_class.find_lb_class().lower() + "w"
+                else:
+                    weight_slug = "-" + self.version_set.last().weight_class.weight_string()
+                    weight_slug = re.sub("\.[0-9]", '', weight_slug)  # truncates decimals
+                desired_slug = desired_slug + weight_slug
+
+            if similar_slugs.filter(slug=desired_slug).count() > 0:
+                slug_holder = similar_slugs.get(slug=desired_slug)
+
+                same_country = self.country == slug_holder.country
+                if not same_country:
+                    country_dict = {"GB": "-uk", "US": "-usa", "AE": "-uae", "KP": "-north-korea", "KR": "-south-korea",
+                                    "CD": "-dr-congo", "RU": "-russia", "SY": "-syria", "BO": "-bolivia", "BN": "-benin",
+                                    "FM": "-micronesia", "IR": "-iran", "LA": "-laos", "MF": "-saint-martin",
+                                    "SX": "-sint-maartin", "MD": "-moldova", "PS": "-palestine", "VN": "-vietnam",
+                                    "TW": "-taiwan", "XE": "-england", "XS": "-scotland", "XW": "-wales",
+                                    "XI": "-northern-ireland", "XX": "-unknown"}
+                    if self.country in country_dict:
+                        country_slug = country_dict[self.country]
                     else:
-                        new_slug += country_slug
+                        country_slug = "-" + slugify(pycountry.countries.get(alpha_2=self.country).name)
+                    desired_slug = desired_slug + country_slug
 
-            elif same_wc and not same_country:
-                new_slug = desired_slug + country_slug
-                if similar_slugs.filter(slug=new_slug).count() > 0:
-                    new_slug = desired_slug + weight_slug + country_slug
-                    if similar_slugs.filter(slug=new_slug).count() > 0:
-                        new_slug += "-" + hex(similar_slugs.filter(name=self.name).count() + 1)[2:]
-            else:
-                new_slug = desired_slug + "-" + hex(similar_slugs.filter(name=self.name).count() + 1)[2:]
-        return new_slug
+            if similar_slugs.filter(slug=desired_slug).count() > 0:
+                matching_regex = "(" + re.escape(desired_slug)+")(-[0-9]*)?"
+                number_of_matches = similar_slugs.filter(slug__regex=matching_regex).count()
+                found_unique_number = False
+                for i in range(2, number_of_matches + 1000):
+                    number_slug = "-" + str(i)
+                    if similar_slugs.filter(slug=desired_slug + number_slug).count() == 0:
+                        found_unique_number = True
+                        break
+                if found_unique_number:
+                    desired_slug = desired_slug + number_slug
+                else:
+                    desired_slug = desired_slug + uuid.uuid4()
+
+        if len(desired_slug) > 100:
+            # Something has probably gone wrong, force a UUID in order to fit in the field.
+            desired_slug = uuid.uuid4()
+
+        return desired_slug
 
     def slugify(self):
         if self.slug is not None and self.slug != "": return self.slug
@@ -695,10 +702,10 @@ class Fight(models.Model):
                 fvs[1].version.robot.ranking -= change
                 fvs[1].ranking_change = -change
 
-            elif not tag and numWinners > 0:
-                # Take an amount of points for a loss against the average of the group, divided by the number of robots
-                # off each robot and then add fair share of that back to the winners. makes it a low stakes loss, but
-                # still a win equal to a normal fight if you're the only winner of the rumble
+            elif not tag:
+                # Take an amount of points for a loss/draw against the average of the group, divided by the number of
+                # robots off each robot and then add fair share of that back to the winners/everyone. Makes it a low
+                # stakes loss, but still a win equal to a normal fight if you're the only winner of the rumble
                 averageRank = 0
                 for fv in fvs:
                     averageRank += fv.version.robot.ranking / numBots
@@ -707,8 +714,11 @@ class Fight(models.Model):
                 for i in range(numBots):
                     q = 10 ** (fvs[i].version.robot.ranking / 400)
                     averageExpected = averageQ / (averageQ + q)
-                    change = (K * (1 - averageExpected)) / numBots
-                    pool += change
+                    if self.method == "DR": # Some elo here may get lost on the floor or gained due to floating points
+                        change = (K * (0.5 - averageExpected)) / numBots
+                    else:
+                        change = (K * (1 - averageExpected)) / numBots
+                        pool += change
                     fvs[i].version.robot.ranking -= change
                     fvs[i].ranking_change = -change
 
@@ -753,7 +763,7 @@ class Fight(models.Model):
                         fv.ranking_change = -change / len(tteams[1])
                         fv.version.robot.ranking -= change / len(tteams[1])
 
-                elif numWinners > 0:
+                else:
                     averageRank = 0
                     for i in range(len(tteams)):
                         averageRank += tteamsAvg[i] / numBots
@@ -762,8 +772,11 @@ class Fight(models.Model):
                     for i in range(len(tteams)):
                         q = 10 ** (tteamsAvg[i] / 400)
                         averageExpected = averageQ / (averageQ + q)
-                        change = (K * (1 - averageExpected)) / len(tteams)
-                        pool += change
+                        if self.method == "DR":
+                            change = (K * (0.5 - averageExpected)) / len(tteams)
+                        else:
+                            change = (K * (1 - averageExpected)) / len(tteams)
+                            pool += change
                         for fv in tteams[i]:
                             fv.version.robot.ranking -= change
                             fv.ranking_change = -change

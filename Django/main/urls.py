@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from . import ajax_views
 
 app_name = 'main'
 urlpatterns = [
@@ -70,5 +71,5 @@ urlpatterns = [
     #path('test/graph', views.graph_test, name='graph_test'),
     #path('test/graph_data', views.graph_data, name='graph_test'),
 
-    path('ajax/location-request', views.location_ajax,name='locationAjax')
+    path('ajax/get_location', ajax_views.get_location, name='ajax_getLocation')
 ]
