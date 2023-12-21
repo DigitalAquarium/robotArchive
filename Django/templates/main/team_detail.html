@@ -49,7 +49,7 @@
             {% endif %}{%endcomment%}
             <br>
             <div class="gridview-row">
-                {% for robot in team.robots|dictsort:"last_fought" %} <!--TODO: This can break if a robot on the team has not fought a match-->
+                {% for robot in robots %}
                     <div class="gridview-square">
                         <div class="gridview-title">
                             <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>

@@ -26,12 +26,12 @@ def get_history(request):
         history = [1000]
         for fv in fight_versions:
             rank += fv.ranking_change
-            fight = {}
-            fight['name'] = str(fv.fight)
-            fight['rank'] = rank
-            fight['year'] = fv.fight.contest.event.start_date.year
-            fight['event_name'] = fv.fight.contest.event.name
-            fight['href'] = reverse("main:fightDetail", args=[fv.fight.id])
+            fight = {'name': str(fv.fight),
+                     'rank': rank,
+                     'year': fv.fight.contest.event.start_date.year,
+                     'event_name': fv.fight.contest.event.name,
+                     'href': reverse("main:fightDetail", args=[fv.fight.id])
+                     }
             fights.append(fight)
             history.append(rank)
         return JsonResponse({"fights": fights, "history": history}, status=200)

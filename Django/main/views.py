@@ -1072,8 +1072,9 @@ def team_detail_view(request, slug):
         can_change = team.can_edit(request.user)
     else:
         can_change = False
+    robots = team.robots().all().order_by("-last_fought")
     return render(request, "main/team_detail.html",
-                  {"team": team, "can_change": can_change})
+                  {"team": team, "robots": robots, "can_change": can_change})
 
 
 def team_index_view(request):
@@ -1616,7 +1617,7 @@ def weapon_types_view(request):
         'Flipper', 'Front-Hinged Flipper', 'Side-Hinged Flipper',
         'Saw', 'Chainsaw', 'Drill',
         'Interchangeable', 'Multibot',
-        'Cannon', 'Entanglement',
+        'Cannon', 'Entanglement', 'Halon Gas'
     ]
     version_dict = {}
     for w in recognised_weapon_types:
@@ -1907,21 +1908,3 @@ def tournament_tree(request):
     print(out)
 
     return render(request, "main/credits.html", {})
-
-
-def graph_test(request):
-    return render(request, 'graph_test.html')
-
-
-def graph_data(request):
-    labels = []
-    data = []
-    wedge = Robot.objects.get(id=88)
-    for version in wedge.version_set.all():
-        for fv in version.fight_version_set.all():
-            labels.append("hi")
-            data.append(fv.ranking_change)
-    return JsonResponse(data={
-        'labels': labels,
-        'data': data,
-    })

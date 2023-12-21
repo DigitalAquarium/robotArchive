@@ -7,29 +7,33 @@ $(document).ready(function(){
          data: {"robot_slug": $("#robot-slug").attr("robot-slug")},
          success: function (response) {
              fights = response["fights"]
-
-              const chart = Highcharts.chart('history-chart', {
-                chart: {
-                    type: 'line'
-                },
-                title: {
-                    text: 'Rank over time'
-                },
-                yAxis: {
+             if (fights.length < 3){
+                $("#history-chart").attr("hidden","hidden")
+             }
+             else{
+                  const chart = Highcharts.chart('history-chart', {
+                    chart: {
+                        type: 'line'
+                    },
                     title: {
-                        text: 'Rank'
-                    }
-                },
-                series: [{
-                    name: document.getElementById("title").innerHTML,
-                    data: response["history"],
-                }],
-                tooltip: {
-                    formatter: function () {
-                        return "<b>" + fights[this.x].rank + "</b>" + "<br>" + fights[this.x].name
-                    }
-                },
-              })
+                        text: 'Rank over time'
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Rank'
+                        }
+                    },
+                    series: [{
+                        name: document.getElementById("title").innerHTML,
+                        data: response["history"],
+                    }],
+                    tooltip: {
+                        formatter: function () {
+                            return "<b>" + fights[this.x].rank + "</b>" + "<br>" + fights[this.x].name
+                        }
+                    },
+                  })
+             }
          },
          error: function (response) {
             console.log(response);

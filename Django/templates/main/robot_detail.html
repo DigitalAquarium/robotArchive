@@ -113,10 +113,8 @@
                 {% endfor %}
                 {% if can_change %}<a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>{% endif %}
             </div>
-        {%if not history|length == 1 %}
         <span id="robot-slug" robot-slug="{{robot.slug}}" hidden="hidden"></span>
         <div id="history-chart" style="width:100%; height:400px;"></div>
-        {%endif%}
 
             {% if awards|length > 0 or robot.hallofame_set.all|length > 0 %}
                 {%if robot.hallofame_set.all|length > 0%}
