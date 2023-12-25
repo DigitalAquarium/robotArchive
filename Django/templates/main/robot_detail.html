@@ -43,7 +43,7 @@
                                     color:  {% if best_lb_entry.position == 1 %}gold
                                             {% elif best_lb_entry.position == 2 %}silver
                                             {% elif best_lb_entry.position == 3 %}darkgoldenrod
-                                            {%else%}purple{% endif %};
+                                            {%else%}black{% endif %};
                                             border:none; padding:0px; background:none; {%if leaderboard_entries%}cursor:pointer{%endif%};
 ">Ranked #{{best_lb_entry.position}} {{best_lb_entry.wc_to_string}} in {{best_lb_entry.year}} {%if leaderboard_entries%}🠟{%endif%}</button>
         <div id="all-lb-entries" style="display:none">
@@ -51,7 +51,7 @@
         <p style="color:  {% if entry.position == 1 %}gold
                                             {% elif entry.position == 2 %}silver
                                             {% elif entry.position == 3 %}darkgoldenrod
-                                            {%else%}purple{% endif %};
+                                            {%else%}black{% endif %};
                                             {%if not forloop.last%}margin:2px 0px{%else%}margin:2px 0px 20px 0px{%endif%}">
             <span {%if entry.position < 10 %}style="margin-right:0.6em"{%endif%}> #{{entry.position}}</span> <span>{{entry.wc_to_string}} in {{entry.year}}</span></p>
             {%endfor%}

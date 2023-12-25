@@ -12,7 +12,7 @@ from django.core.validators import URLValidator
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.http import Http404, JsonResponse
+from django.http import Http404
 
 from main import subdivisions
 from .forms import *
@@ -1137,7 +1137,6 @@ def new_robot_view(request):  # TODO: FORM
         form = NewRobotForm(request.POST, request.FILES)
         if form.is_valid():
             v = form.save(team, Person.objects.get(user=request.user))[1]
-            # TODO: SLug
             if fight_id != 0:
                 response = redirect("main:edtSignupVersion", fight_id, v.id)
                 response.delete_cookie("robot_or_version")
@@ -1586,7 +1585,7 @@ def robot_transfer_view(request, robot_id, team_id=None):
                 "%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this robot."))
 
         if request.GET.get("confirm") == "on":
-            new_version = robot.version_set.last()
+            new_version = robot.last_version()
             new_version.pk = None
             new_version.team = team
             new_version.description += "\nThis version has been transferred to " + team.__str__() + " Please edit it to match your version, but don't delete it or the robot will revert back to previous owners."

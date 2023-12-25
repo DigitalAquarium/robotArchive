@@ -24,7 +24,7 @@
                     </span>
                     <span class="hrz-index-details">
                         {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
-                        <span>Weight Class: {{ robot.version_set.last.weight_class.weight_string }}</span>
+                        <span>Weight Class: {{ robot.last_version.weight_class.weight_string }}</span>
                         {% if robot.awards|length > 0 %}<span> Awards: {{ robot.awards|length }}</span>{% endif %}
                         {% if robot.last_fought %}
                             <span>Time Competing:
@@ -41,7 +41,7 @@
                         {% if robot.description %}
                             {{ robot.description|truncatechars:650 }}
                         {% else %}
-                            {{ robot.version_set.last.description }}
+                            {{ robot.last_version.description }}
                         {% endif %}
                     </span>
                 </div>

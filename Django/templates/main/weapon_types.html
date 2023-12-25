@@ -3,35 +3,7 @@
 {% load static %}
 {% block meta %}
     <title>Weapon Types - Roboteer's Tavern</title>
-    <style>
-        .gridview-row{
-            grid-template-rows:auto;
-        }
-        .gridview-title{
-        font-size:1em;
-        }
-        .gridview-title a{display:flex}
-        .gridview-square{
-            padding:0 0.75em 0 0.75em;
-        }
-        .weapon-category{
-        padding-left:0.25em;
-        border-left:grey;
-        border-left-style:solid;
-        border-left-width:thin;
-        }
-        .weapon-subcategory{
-        margin-left:0.75em;
-        }
-        .weapon-leaf-category{
-        margin-left:0.75em;
-        }
-        .grid-weapon-description{
-        grid-column-start:2;
-        grid-column-end:6;
-        }
-
-    </style>
+    <link rel="stylesheet" href="{% static 'style/weapon_types.css' %}">
 {% endblock %}
 {% block content %}
     <div class="main-content">
@@ -762,7 +734,7 @@
          <div class="weapon-category">
             <h2 id="Banned Weapons">Banned Weapons</h2>
              <p>Robot combat is designed to be both fun and safe to watch, if a weapon is violates one of these rules then it will be banned from being used.</p>
-             <p>Below are some weapons which are illegal to use, starting with ones that were previously allowed.</p>
+             <p>Below are some weapons which are illegal to use, starting with ones that were previously allowed and progressing to some which are commonly suggested as additions to robots, but have never been allowed.</p>
              <div class="weapon-category weapon-subcategory">
                {%with version_dict.entanglement as version%}
                 <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>

@@ -31,6 +31,7 @@ class RegistrationForm(UserCreationForm):
 
 class NewRobotForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
+    slug = forms.CharField(max_length=100, required=False)
     vname = forms.CharField(max_length=255, required=False, label="Name of first version if different from main name")
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
@@ -40,10 +41,17 @@ class NewRobotForm(forms.Form):
                                           required=True)
     opt_out = forms.BooleanField(required=False)
 
+    def clean_slug(self):
+        slug = self.cleaned_data['slug']
+        if Robot.objects.filter(slug=slug).count() > 0:
+            raise ValidationError("This slug is already taken.")
+        return slug
+
     def save(self, team, owner):
         r = Robot()
         v = Version()
         r.name = self.cleaned_data['name']
+        r.slug = self.cleaned_data['slug']
         v.robot_name = self.cleaned_data['vname']
         r.country = self.cleaned_data['country']
         v.country = self.cleaned_data['country']
@@ -57,9 +65,10 @@ class NewRobotForm(forms.Form):
         v.owner = owner
         if team != 0:
             v.team = team
-        r.save()
+        if not r.slug:
+            r.slug = r.slugify()
         v.save()
-        r.slugify()
+        r.save()
         return r, v
 
 
@@ -95,13 +104,26 @@ class NewVersionForm(forms.Form):
 
 
 class RobotForm(forms.ModelForm):
+    slug = forms.CharField(max_length=100, required=False)
+
     class Meta:
         model = Robot
-        fields = ['name', "country", 'description',  "opt_out"]
+        fields = ['name', 'slug', "country", 'description', "opt_out"]
+
+    def clean_slug(self):
+        slug = self.cleaned_data['slug']
+        if Robot.objects.filter(slug=slug).count() > 0:
+            rob = super().save(commit=False)
+            if slug != rob.slug:
+                raise ValidationError("This slug is already taken.")
+        return slug
 
     def save(self, commit=True):
-        rob = super().save()
-        rob.slugify()
+        rob = super().save(commit=False)
+        if not rob.slug:
+            rob.slug = rob.slugify()
+        if commit:
+            rob.save()
 
 
 class VersionForm(forms.ModelForm):
