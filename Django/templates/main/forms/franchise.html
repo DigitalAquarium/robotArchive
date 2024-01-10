@@ -1,0 +1,51 @@
+{% extends "main/forms/generic.html" %}
+{% load bonus_filters %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+{% load static %}
+{%block content%}
+<style>td, tr, table {border:none;}</style>
+<div id="main-content">
+      {%block form%}
+        <form style="flex-direction:column" method="post" {%if has_image%}enctype="multipart/form-data"{%endif%} action="{{next_url}}">
+            {% csrf_token %}
+            <fieldset>
+                <legend><h1>{{title}}</h1></legend>
+                {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+                {{ form|crispy }}
+            </fieldset>
+            {%endblock form%}
+
+{%block belowform%}
+<h2>Web Links:</h2>
+    <table style="border:none">
+        {% for web in franchise.web_link_set.all %}
+        <tr>
+            <td><label for="link{{ forloop.counter0 }}">
+                <a href="{{ web.link }}"><img src="{{ web.get_logo }}" alt="{{ web }}" width="25px" height="25px"></a>
+            </label></td>
+            <td style="width: 750px">
+                <input type="text" id="link{{ forloop.counter0 }}" name="link{{ forloop.counter0 }}" value="{{ web.link }}" style="width: 100%">
+            </td>
+            <td>
+                <a href="{% url 'main:delete_noreturn' 'web_link' web.id%}?redirect={% url 'main:editFranchise' franchise.id %}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Delete Link"></a>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td><label for="new-link">
+                New:
+            </label></td>
+            <td style="width: 750px">
+                <input type="text" id="new-link" name="new-link" style="width: 100%">
+            </td>
+        </tr>
+    </table>
+            <div id="form-buttons" style="display:inline-flex">
+    <button class="editor-link" name="save" value="stay">Save and Add More</button>
+    <button class="editor-link" name="save" value="continue">Save and Continue</button>
+                </div>
+</form>
+{%endblock belowform%}
+</div>
+{%endblock content%}

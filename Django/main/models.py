@@ -1187,6 +1187,42 @@ class Web_Link(models.Model):
         else:
             return settings.STATIC_URL + "web_logos/" + self.type + ".png"
 
+    def can_edit(self, user):  # TODO: Improve this?
+        p = Person.objects.get(user=user)
+        return user.is_staff
+
+    @staticmethod
+    def classify(link):
+        link = link.lower()
+        if "web.archive.org/" in link:
+            return "WA"
+        if "facebook.com/" in link:
+            return "FB"
+        if "twitter.com/" in link or "/x.com/" in link:
+            return "TW"
+        if "instagram.com/" in link:
+            return "IG"
+        if "tiktok.com/" in link:
+            return "TT"
+        if "discord.com/" in link or "discord.gg/" in link:
+            return "DC"
+        if "youtube.com/" in link or "youtu.be/" in link:
+            return "YT"
+        if "weibo.com/" in link or "weibo.cn/" in link:
+            return "SW"
+        if "wechat.com/" in link or "wechat.cn/" in link:
+            return "WC"
+        if "twitch.tv/" in link:
+            return "TV"
+        if "linkedin.com/" in link or "linked.in/" in link:
+            return "LI"
+        if "github.com/" in link:
+            return "GH"
+        if "linktr.ee/" in link:
+            return "LT"
+
+        return "WW"
+
     def get_display(self):
         def preprocess(link):
             if "https://" == link[:8]:
@@ -1269,6 +1305,8 @@ class Web_Link(models.Model):
                 ret = ret[23:]
             if "www.youtube.com/" == ret[:16]:
                 ret = ret[16:]
+            if "c/" == ret[:2]:
+                ret = ret[2:]
             if "user/" == ret[:5]:
                 ret = ret[5:]
             if "@" == ret[0]:
@@ -1302,42 +1340,6 @@ class Web_Link(models.Model):
 
         else:
             return self.link
-
-    def can_edit(self, user):  # TODO: Improve this?
-        p = Person.objects.get(user=user)
-        return user.is_staff
-
-    @staticmethod
-    def classify(link):
-        link = link.lower()
-        if "web.archive.org/" in link:
-            return "WA"
-        if "facebook.com/" in link:
-            return "FB"
-        if "twitter.com/" in link or "/x.com/" in link:
-            return "TW"
-        if "instagram.com/" in link:
-            return "IG"
-        if "tiktok.com/" in link:
-            return "TT"
-        if "discord.com/" in link or "discord.gg/" in link:
-            return "DC"
-        if "youtube.com/" in link or "youtu.be/" in link:
-            return "YT"
-        if "weibo.com/" in link or "weibo.cn/" in link:
-            return "SW"
-        if "wechat.com/" in link or "wechat.cn/" in link:
-            return "WC"
-        if "twitch.tv/" in link:
-            return "TV"
-        if "linkedin.com/" in link or "linked.in/" in link:
-            return "LI"
-        if "github.com/" in link:
-            return "GH"
-        if "linktr.ee/" in link:
-            return "LT"
-
-        return "WW"
 
     def __str__(self):
         if self.franchise:

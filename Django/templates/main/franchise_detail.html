@@ -10,14 +10,8 @@
         <div class="main-content">
         <div class="heading">
             <h1>{{ fran }}</h1>
-            {% if can_change %}
-                <a class="editor-link" href="{% url 'main:editFranchise' fran.id %}">Edit Franchise</a>
-                <a class="delete-link" href="{% url 'main:delete_noreturn' 'franchise' fran.id %}">Delete Franchise</a>
-            {% endif %}
+            <a href="{% url 'main:editFranchise' fran.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Franchise"></a>
         </div>
-        {% if can_change %}
-            <a class="delete-link" href="{% url 'main:delete_noreturn' 'person_franchise' leave_id %}">Leave
-                Franchise</a>{% endif %}
 
         {% if fran.logo %}
             <div class="franchise-logo-image">
@@ -37,6 +31,10 @@
                 {{web.get_display}}
             </a>
             </span>
+            {%if forloop.counter|divisibleby:5 %}
+                </div>
+                <div class="web-links">
+            {%endif%}
         {% endfor %}
         </div>
         {% endif %}
@@ -53,35 +51,35 @@
         {% endif %}
 
 
-
+        {%if fran.event_set.all|length > 0%}
         <h2>Events</h2>
-        {% if can_change %}
-            <a class="editor-link" href="{% url 'main:newEvent' fran.id %}">New Event</a>
-        {% endif %}
         <table>
             <thead>
             <th>Event Name</th>
             <th>Event Date</th>
-            {% if can_change %}
-                <th> Edit Event</th>
-                <th> Delete Event</th>
-            {% endif %}
             </thead>
             <tbody>
             {% for event in fran.event_set.all %}
                 <tr>
                     <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
-                    <td>{{ event.start_date|date:"d M Y" }}</td>
-                    {% if can_change %}
-                        <td><a class="editor-link" href="{% url 'main:editEvent' event.id %}"> Edit </a></td>
-                        <td><a class="delete-link" href="{% url 'main:delete_noreturn' 'event' event.id %}"> Delete </a>
-                        </td>
-                    {% endif %}
+                    <td>
+                        {% if event.start_date|date:"d M Y" == event.end_date|date:"d M Y" %}
+                            {{ event.start_date|date:"d M Y" }}
+                        {% elif event.start_date|date:"M" == event.end_date|date:"M" %}
+                            {{ event.start_date|date:"d" }} - {{ event.end_date|date:"d M Y" }}
+                        {% elif event.start_date|date:"Y" == event.end_date|date:"Y" %}
+                            {{ event.start_date|date:"d M" }} - {{ v.event.end_date|date:"d M Y" }}
+                        {%else%}
+                            {{ event.start_date|date:"d M Y" }} - {{ v.event.end_date|date:"d M Y" }}
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
+        {%endif%}
     {% else %}
         Something has gone wrong.
     {% endif %}
+        </div>
 {% endblock %}

@@ -1210,12 +1210,10 @@ def team_modify_view(request, team_id=None):
 @permission_required("main.add_franchise", raise_exception=True)
 @permission_required("main.change_franchise", raise_exception=True)
 def franchise_modify_view(request, franchise_id=None):
-    can_change = True
-    if franchise_id is not None:
-        franchise = Franchise.objects.get(pk=franchise_id)
-        can_change = franchise.can_edit(request.user)
-    if not can_change:
-        return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this franchise."))
+    redir = request.GET.get("redirect")
+    if redir is None:
+        redir = ""
+
     if request.method == "POST":
         if franchise_id is None:
             form = FranchiseForm(request.POST, request.FILES)
@@ -1226,22 +1224,54 @@ def franchise_modify_view(request, franchise_id=None):
             new = form.save()
             if franchise_id is None:
                 new.make_slug(save=True)
-            return redirect("main:index")
-    else:
-        if franchise_id is None:
-            form = TeamForm()
-        else:
-            franchise = Franchise.objects.get(pk=franchise_id)
-            form = FranchiseForm(instance=franchise)
-    if franchise_id is None:
-        return render(request, "main/forms/generic.html",
-                      {"form": form, "title": "New Franchise", "has_image": True,
-                       "next_url": reverse("main:newFranchise")})
-    else:
-        return render(request, "main/forms/generic.html",
-                      {"form": form, "title": "Edit Franchise", "has_image": True,
-                       "next_url": reverse("main:editFranchise", args=[franchise_id])})
+                franchise_id = new.id
 
+            franchise = new
+            web_links = franchise.web_link_set.all()
+            for i in range(len(web_links)):
+                updated_url = request.POST["link" + str(i)]
+                current = web_links[i]
+                if updated_url != current.link:
+                    validator = URLValidator()
+                    try:
+                        validator(updated_url)
+                        current.link = updated_url
+                        current.type = Web_Link.classify(updated_url)
+                        current.save()
+                    except ValidationError:
+                        pass
+
+            new_link = request.POST["new-link"]
+            if new_link != "" and new_link is not None:
+                validator = URLValidator()
+                wb = Web_Link()
+                try:
+                    validator(new_link)
+                    wb.link = new_link
+                    wb.type = Web_Link.classify(new_link)
+                    wb.franchise = franchise
+                    wb.save()
+                except ValidationError:
+                    pass
+
+            if request.POST["save"] == "continue":
+                if redir == "":
+                    return redirect(reverse("main:franchiseDetail", args=[franchise.slug]))
+                elif redir == "/editor/newEvent":
+                    return redirect("%s?franchise=%s" % (reverse("main:edtNewEvent"), franchise_id))
+
+
+    if franchise_id is None:
+        form = TeamForm()
+        return render(request, "main/forms/franchise.html",
+                      {"form": form, "title": "New Franchise", "has_image": True, "franchise": None,
+                       "next_url": reverse("main:newFranchise") + "?redirect=" + str(redir)})
+    else:
+        franchise = Franchise.objects.get(pk=franchise_id)
+        form = FranchiseForm(instance=franchise)
+        return render(request, "main/forms/franchise.html",
+                      {"form": form, "title": "Edit Franchise", "has_image": True, "franchise": franchise,
+                       "next_url": reverse("main:editFranchise", args=[franchise_id]) + "?redirect=" + redir})
 
 def franchise_detail_view(request, slug):
     try:
