@@ -154,7 +154,6 @@
                         <th>Type</th>
                         <th>Opponents</th>
                         <th>Result</th>
-                        <th>View More</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -168,15 +167,17 @@
                                 {% endif %}
                             {% endwith %}
                             <td>{{ fight.get_fight_type_display }}</td>
-                            <td>{{ fight|fight_opponents:robot }}</td>
+                            <td><a class="fight-link" style="display:inline-flex" href="{% url 'main:fightDetail' fight.id %}">
+                                {{ fight|fight_opponents:robot }}
+                                {%if fight.img_gif_vid == 'image'%}
+                                    <img class="fight-link-icon" src="{%static 'media_icons/image.svg'%}" alt="This fight has an image">
+                                {%elif fight.img_gif_vid == 'gif'%}
+                                    <img class="fight-link-icon fight-link-icon-gif" src="{%static 'media_icons/gif.svg'%}" alt="This fight has a gif">
+                                {%elif fight.img_gif_vid == 'video'%}
+                                    <img class="fight-link-icon" src="{%static 'media_icons/video.svg'%}" alt="This fight has a video">
+                                {%endif%}
+                            </a></td>
                             <td>{{ fight|fight_result:robot }}</td>
-                            <td>
-                                {% if fight.has_video %}
-                                    <a href="{% url 'main:fightDetail' fight.id %}">Video</a>
-                                {% else %}
-                                    <a href="{% url 'main:fightDetail' fight.id %}">Details</a>
-                                {% endif %}
-                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>

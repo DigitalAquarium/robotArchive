@@ -797,8 +797,20 @@ class Fight(models.Model):
                 self.media_type = "UN"
         self.save()
 
-    def has_video(self):
-        return self.media_type in ["LV", "IF", "IG", "TW", "TT", "FB"]
+    def img_gif_vid(self):
+        if self.media_type in ["LV", "IF", "IG", "TW", "TT", "FB"]:
+            return "video"
+        elif self.media_type in ["LI", "EI"]:
+            if self.media_type == "LI":
+                media = self.internal_media.url
+            else:
+                media = self.external_media
+            if media[-4:] == ".gif":
+                return "gif"
+            else:
+                return "image"
+        else:
+            return None
 
     def get_tt_id(self):
         # https: // www.tiktok.com / @ battlebots / video / 7060864801462963502 - Example video
