@@ -1138,7 +1138,11 @@ class Web_Link(models.Model):
         ("YT", "YouTube"),
         ("WC", "WeChat"),
         ("SW", "Sina Weibo"),
-        ("TV", "Twitch")
+        ("TV", "Twitch"),
+        ("LI", "LinkedIn"),
+        ("GH", "GitHub"),
+        ("LT", "Linktree"),
+
     ]
     type = models.CharField(max_length=2, choices=LINK_CHOICES, default="WW")
     link = models.URLField()
@@ -1166,8 +1170,8 @@ class Web_Link(models.Model):
             raise ValidationError("A Web link must be attached to a franchise or team")
 
     def get_logo(self):
-        if self.type == "TV":
-            return settings.STATIC_URL + "web_logos/" + "TwitchGlitchPurple.svg"
+        if self.type in ["TV", "GH"]:
+            return settings.STATIC_URL + "web_logos/" + self.type + ".svg"
         else:
             return settings.STATIC_URL + "web_logos/" + self.type + ".png"
 
@@ -1175,12 +1179,14 @@ class Web_Link(models.Model):
         def preprocess(link):
             if "https://" == link[:8]:
                 link = link[8:]
-            elif "https://" == link[:7]:
+            elif "http://" == link[:7]:
                 link = link[7:]
             if "www." == link[:4]:
                 link = link[4:]
             if "mobile." == link[:7]:
                 link = link[7:]
+            if link[-1] == "/":
+                link = link[:-1]
             return link
 
         if self.type == "WW":
@@ -1219,6 +1225,7 @@ class Web_Link(models.Model):
             if slashlocation != -1:
                 ret = ret[:slashlocation]
             return ret
+
         elif self.type == "FB":
             if "profile.php?id=" in self.link:
                 return "Facebook Profile"
@@ -1236,8 +1243,6 @@ class Web_Link(models.Model):
         elif self.type == "IG":
             ret = preprocess(self.link)
             ret = ret[14:]
-            if ret[-1] == "/":
-                ret = ret[:-1]
             return ret
 
         elif self.type == "YT":
@@ -1261,8 +1266,26 @@ class Web_Link(models.Model):
         elif self.type == "TT":
             ret = preprocess(self.link)
             ret = ret[12:]
-            if ret[-1] == "/":
-                ret = ret[:-1]
+            return ret
+
+        elif self.type == "LI":
+            ret = preprocess(self.link)
+            if "linkedin.com/" == ret[:13]:
+                ret = ret[13:]
+            elif "linked.in/" == ret[:10]:
+                ret = ret[10:]
+            if "company/" == ret[:8]:
+                ret = ret[8:]
+            return ret
+
+        elif self.type == "GH":
+            ret = preprocess(self.link)
+            ret = ret[11:]
+            return ret
+
+        elif self.type == "TR":
+            ret = preprocess(self.link)
+            ret = ret[10:]
             return ret
 
         else:
@@ -1295,6 +1318,13 @@ class Web_Link(models.Model):
             return "WC"
         if "twitch.tv/" in link:
             return "TV"
+        if "linkedin.com/" in link or "linked.in/" in link:
+            return "LI"
+        if "github.com/" in link:
+            return "GH"
+        if "linktr.ee/" in link:
+            return "LT"
+
         return "WW"
 
     def __str__(self):

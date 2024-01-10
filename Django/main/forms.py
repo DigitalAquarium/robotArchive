@@ -66,9 +66,14 @@ class NewRobotForm(forms.Form):
         if team != 0:
             v.team = team
         if not r.slug:
+            r.slug = uuid.uuid4()
+            r.save()
+            v.save()
             r.slug = r.slugify()
-        v.save()
-        r.save()
+            r.save()
+        else:
+            r.save()
+            v.save()
         return r, v
 
 
