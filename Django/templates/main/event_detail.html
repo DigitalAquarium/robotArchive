@@ -11,7 +11,7 @@
         <div class="main-content">
         <div class="heading">
             <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
-            <h1>{{ event.name }}</h1>
+            <h1>{{ event.name }}{%if event.missing_brackets%} ⚠️{%endif%}</h1>
             {% if can_change %}
                 <a href="{% url 'main:edtEvent' event.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Event"></a>
             {% endif %}
@@ -24,6 +24,10 @@
                 <img class="fit-image" src="{{event.get_logo_url}}" alt="logo">
             </div>
         {% endif %}
+
+        {%if event.missing_brackets%}
+            <p style="color:red">⚠️ A complete bracket for this event has not yet been found. It is likely many of the fights from this event are not listed on the site. Fights may have unknown winners, or be listed slightly wrong.</p>
+        {%endif%}
 
 
 

@@ -37,7 +37,7 @@
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
                              src="{{event.get_logo_url}}" alt="{{ event.name }} logo"></td>
                     <td style="text-align: center"><img class="flag-image" src="{{ event.get_flag }}" alt="{{ event.country|upper }} Flag"></td>
-                    <td><a href="{% url 'main:edtEvent' event.id %}">{{ event }}</a></td>
+                    <td><a href="{% url 'main:edtEvent' event.id %}">{%if event.missing_brackets%}⚠️ {%endif%}{{ event }}</a></td>
                     <td style="text-align: center">{{ event.start_date }}</td>
                     <td style="text-align: center">{{ event.end_date }}</td>
                 </tr>

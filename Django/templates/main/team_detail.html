@@ -4,7 +4,6 @@
 {% block meta %}
     <title>{{ team }} - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
-    <link rel="stylesheet" href="{% static 'style/web_links.css' %}">
 {% endblock %}
 {% block content %}
     {% if team %}
@@ -21,20 +20,8 @@
                     <img class="fit-image" src="{{ team.logo.url }}" alt="logo">
                 </div>
             {% endif %}
-        {% if team.web_link_set.all|length > 0 %}
-            <br>
-        <div class="web-links">
-        {% for web in team.web_link_set.all %}
-            <span>
-            <a href="{{ web.link }}">
-                <img  src="{{ web.get_logo }}" alt="{{ web }}">
-                <span class="spacer"></span>
-                {{web.get_display}}
-            </a>
-            </span>
-        {% endfor %}
-        </div>
-        {% endif %}
+
+            {%include "snippets/web_links.html" with link_set=team.web_link_set.all%}
 
             {%comment%}{% if team.members.all|length > 0 %}
                 <h2>Members</h2>

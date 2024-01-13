@@ -883,10 +883,9 @@ def leaderboard(request):
         top_three.append((robot_list[i],
                           robot_list[i].robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")[
                               0]))
-    # Leaderboard.objects.filter(weight="H").values("year").distinct()
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
-                   "weights": [("H", "")] + visible_weights,  # LEADERBOARD_WEIGHTS[0:-1],
+                   "weights": visible_weights,
                    "chosen_weight": weight,
                    "chosen_year": year,
                    "years": years,
@@ -941,8 +940,17 @@ def robot_detail_view(request, slug):
 
 def random_robot_view(unused):
     random_robot = Robot.objects.all().order_by("?")[0]
-    version_id = random_robot.version_set.all().order_by("?")[0].id
-    return redirect("%s?v=%d&source=random" % (reverse("main:robotDetail", args=[random_robot.slug]), version_id))
+    flag = True
+    while flag:
+        for version in random_robot.version_set.all():
+            if version.image:
+                flag = False
+        if flag:
+            random_robot = Robot.objects.all().order_by("?")[0]
+    version = random_robot.version_set.all().order_by("?")[0]
+    while version.image is None:
+        version = random_robot.version_set.all().order_by("?")[0]
+    return redirect("%s?v=%d&source=random" % (reverse("main:robotDetail", args=[random_robot.slug]), version.id))
 
 
 @permission_required("main.change_robot", raise_exception=True)
@@ -1262,7 +1270,7 @@ def franchise_modify_view(request, franchise_id=None):
 
 
     if franchise_id is None:
-        form = TeamForm()
+        form = FranchiseForm()
         return render(request, "main/forms/franchise.html",
                       {"form": form, "title": "New Franchise", "has_image": True, "franchise": None,
                        "next_url": reverse("main:newFranchise") + "?redirect=" + str(redir)})
@@ -1278,9 +1286,9 @@ def franchise_detail_view(request, slug):
         fran = Franchise.objects.get(slug=slug)
     except Franchise.DoesNotExist:
         raise Http404
-    can_change = True  # TODO: lol
+    events = fran.event_set.all().order_by("start_date")
     return render(request, "main/franchise_detail.html",
-                  {"fran": fran, "can_change": can_change, "leave_id": 1})  # pf.id or 1}) #TODO: lol
+                  {"fran": fran, "events": events, "leave_id": 1})  # pf.id or 1}) #TODO: lol
 
 
 def franchise_index_view(request):
@@ -1885,6 +1893,9 @@ def recalc_all(request):
             print("Saving:", contest_cache, fight.contest.event)
         fight.calculate(True)
     return render(request, "main/credits.html", {})
+
+def clean_images(request):
+    pass
 
 
 def tournament_tree(request):

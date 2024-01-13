@@ -161,7 +161,7 @@ class FranchiseForm(forms.ModelForm):  # TODO: Add Web Links
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise']
+        fields = ['name', 'missing_brackets', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise']
 
 
 class ContestForm(forms.ModelForm):
@@ -234,6 +234,7 @@ class TransferRobotForm(forms.Form):
 
 class NewEventFormEDT(forms.Form):
     name = forms.CharField(max_length=255, required=False)
+    missing_brackets = forms.BooleanField(required=True)
     description = forms.CharField(widget=forms.Textarea, required=False)
     logo_img = forms.ImageField(required=False)
     logo_txt = forms.URLField(required=False)
@@ -244,6 +245,7 @@ class NewEventFormEDT(forms.Form):
     def save(self, franchise):
         e = Event()
         e.name = self.cleaned_data['name']
+        e.missing_brackets = self.cleaned_data['missing_brackets']
         e.description = self.cleaned_data['description']
         e.start_date = self.cleaned_data['start_date']
         if not self.cleaned_data['end_date']:

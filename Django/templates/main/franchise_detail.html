@@ -3,7 +3,6 @@
 {% block meta %}
     <title>{{ fran }} - Roboteer's Tavern</title>
     <link rel="stylesheet" href="{% static 'style/franchise_detail.css' %}">
-    <link rel="stylesheet" href="{% static 'style/web_links.css' %}">
 {% endblock %}
 {% block content %}
     {% if fran %}
@@ -21,23 +20,7 @@
 
         <P>{{ fran.description }}</P>
 
-        {% if fran.web_link_set.all|length > 0 %}
-        <div class="web-links">
-        {% for web in fran.web_link_set.all %}
-            <span>
-            <a href="{{ web.link }}">
-                <img  src="{{ web.get_logo }}" alt="{{ web }}">
-                <span class="spacer"></span>
-                {{web.get_display}}
-            </a>
-            </span>
-            {%if forloop.counter|divisibleby:5 %}
-                </div>
-                <div class="web-links">
-            {%endif%}
-        {% endfor %}
-        </div>
-        {% endif %}
+        {%include "snippets/web_links.html" with link_set=fran.web_link_set.all%}
 
         {% if fran.members.all|length > 0 %}
             <h2>Members</h2>
@@ -51,7 +34,7 @@
         {% endif %}
 
 
-        {%if fran.event_set.all|length > 0%}
+        {%if events|length > 0%}
         <h2>Events</h2>
         <table>
             <thead>
@@ -59,7 +42,7 @@
             <th>Event Date</th>
             </thead>
             <tbody>
-            {% for event in fran.event_set.all %}
+            {% for event in events %}
                 <tr>
                     <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
                     <td>
@@ -68,9 +51,9 @@
                         {% elif event.start_date|date:"M" == event.end_date|date:"M" %}
                             {{ event.start_date|date:"d" }} - {{ event.end_date|date:"d M Y" }}
                         {% elif event.start_date|date:"Y" == event.end_date|date:"Y" %}
-                            {{ event.start_date|date:"d M" }} - {{ v.event.end_date|date:"d M Y" }}
+                            {{ event.start_date|date:"d M" }} - {{ event.end_date|date:"d M Y" }}
                         {%else%}
-                            {{ event.start_date|date:"d M Y" }} - {{ v.event.end_date|date:"d M Y" }}
+                            {{ event.start_date|date:"d M Y" }} - {{ event.end_date|date:"d M Y" }}
                         {% endif %}
                     </td>
                 </tr>

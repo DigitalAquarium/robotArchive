@@ -3,7 +3,9 @@
 {% block meta %}
     <title> {{ fight }} - Roboteer's Tavern </title>
     <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
-	<link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
+    <script>
+        
+    </script>
 {% endblock %}
 {% block content %}
     {% if fight %}
@@ -91,61 +93,7 @@
 
 
         <div class="fight-media">
-            {% if fight.internal_media or fight.external_media %}
-                {% if fight.media_type == "LI" %}
-                    <img class="fight-image" src="{{ fight.internal_media.url }}" alt="This Image is Broken, please change it.">
-
-                {% elif fight.media_type == "EI" %}
-                    <img class="fight-image" src="{{ fight.external_media }}" alt="This Image is Broken, please change it.">
-
-                {% elif fight.media_type == "LV" %}
-					<video id="my-video" class="video-js" controls preload="auto" width="800" height="450" data-setup="{}" >     
-						<source src="{{ fight.internal_media.url }}" type="video/mp4" /> 
-						<video src="{{ fight.internal_media.url }}" width="800" height="450" controls></video>
-						<p class="vjs-no-js"> To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
-					</video>
-					<script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
-					
-                {% elif fight.media_type == "FB" %}
-                    <div id="fb-root"></div>
-                    <script async defer crossorigin="anonymous"
-                            src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v13.0"
-                            nonce="DsgXG9yz"></script>
-                    <div class="fb-video" data-href="{{ fight.external_media }}" data-width="800" data-height="450"
-                         data-show-text="false">
-                        <blockquote cite="{{ fight.external_media }}" class="fb-xfbml-parse-ignore">
-                            <a href="{{ fight.external_media }}">Fight Video</a>
-                        </blockquote>
-                    </div>
-
-                {% elif fight.media_type == "IF" %}
-                    <iframe src="{{ fight.external_media }}" width="800px" height="480px" title="Fight Video"
-                            allowfullscreen></iframe>
-
-                {% elif fight.media_type == "IG" %}
-                    <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.external_media }}"
-                                data-instgrm-version="14">
-                        Fight video on Instagram
-                    </blockquote>
-                    <script async src="http://www.instagram.com/embed.js"></script>
-
-                {% elif fight.media_type == "TW" %}
-                    <blockquote style="width: 800px;height:450px" class="twitter-tweet"><a
-                            href="{{ fight.external_media }}">Fight video on Twitter.</a></blockquote>
-                    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-                {% elif fight.media_type == "TT" %}
-                    <blockquote class="tiktok-embed" cite="{{ fight.external_media }}"
-                                data-video-id="{{ fight.get_tt_id }}">
-                        <section></section> <!--This section tag is required, embed will fail without it. -->
-                    </blockquote>
-                    <script async src="https://www.tiktok.com/embed.js"></script>
-
-                {% else %}
-                    <p>We're unsure how to embed this media, here's a <a href="{{ fight.external_media }}">link.</a></p>
-                {% endif %}
-            {% endif %}
-
+            {%include "snippets/fight_media.html" with fight=fight %}
         </div>
 
     {% else %}

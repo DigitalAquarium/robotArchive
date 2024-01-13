@@ -3,13 +3,12 @@
 {% load bonus_filters %}
 {% block meta %}
     <title>Events - Roboteer's Tavern</title>
-    <style>.searchform label {
+    <style>
+    .searchform label {
         display: inline-block;
         margin: 0.3em;
-    }</style>
-    <script>
-
-    </script>
+    }
+    </style>
 {% endblock %}
 {% block content %}
     <form class="search-form" method="get"
@@ -49,32 +48,30 @@
 
     <div class="main-content">
         {% for event in event_list %}
-            <div class="hrz-index-result">
-        <span class="hrz-index-image">
-        <img class="fit-image"
-             src="{{event.get_logo_url}}"
-             alt="Event Logo">
-        </span>
-                <div class="hrz-index-content">
-                <span class="hrz-index-title">
-                <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
-                <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}</a>
+        <div class="hrz-index-result">
+            <span class="hrz-index-image">
+                <img class="fit-image" src="{{event.get_logo_url}}" alt="Event Logo">
             </span>
-                    <div class="hrz-index-details">
-                        <span>{{ event.start_date|date:"jS F Y" }}</span>
+            <div class="hrz-index-content">
+                <span class="hrz-index-title">
+                    <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
+                    <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}{%if event.missing_brackets%} ⚠️{%endif%}</a>
+                </span>
+                <div class="hrz-index-details">
+                    <span>{{ event.start_date|date:"jS F Y" }}</span>
                         {% if event.available_weight_classes|length > 0 %}
                             <span>Weight Classes:
-                            {% for class in event.available_weight_classes %}
-                                {{ class.weight_string }}
-                            {% endfor %}
+                                {% for class in event.available_weight_classes %}
+                                    {{ class.weight_string }}
+                                {% endfor %}
                         {% endif %}
                         </span>
-                    </div>
-                    <span class="hrz-index-description">
+                </div>
+                <span class="hrz-index-description">
                     {{ event.description|truncatechars:650 }}
                 </span>
-                </div>
             </div>
+        </div>
         {% endfor %}
         {% if pages > 1 %}
             <div class="page-nav">

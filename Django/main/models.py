@@ -477,6 +477,7 @@ class Event(models.Model):
     location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=50)
+    missing_brackets = models.BooleanField(default=False)
 
     def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
@@ -1280,7 +1281,7 @@ class Web_Link(models.Model):
             ret = preprocess(self.link)
             if "facebook.com/" == ret[:13]:
                 ret = ret[13:]
-            if "people/" == ret[:7]:
+            if "people/" == ret[:7] or "groups/" == ret[:7]:
                 ret = ret[7:]
             slashlocation = ret.find("/")
             if slashlocation != -1:
@@ -1474,11 +1475,3 @@ except:
         w.save()
     except:
         pass
-
-# TODO: DO THIS ON CREATION
-for e in Event.objects.filter(slug=""):
-    e.slugify()
-for f in Franchise.objects.filter(slug=""):
-    f.slugify()
-for t in Team.objects.filter(slug=""):
-    t.slugify()

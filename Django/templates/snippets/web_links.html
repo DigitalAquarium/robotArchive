@@ -1,0 +1,20 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'style/web_links.css' %}">
+
+{% if link_set|length > 0 %}
+<div class="web-links">
+    {% for web in link_set %}
+        <span>
+            <a href="{{ web.link }}">
+                <img  src="{{ web.get_logo }}" alt="{{ web }}">
+                <span class="spacer"></span>
+                {{web.get_display}}
+            </a>
+        </span>
+        {%if forloop.counter|divisibleby:5 and not forloop.last %}
+            </div>
+            <div class="web-links">
+        {%endif%}
+    {% endfor %}
+</div>
+{%endif%}
