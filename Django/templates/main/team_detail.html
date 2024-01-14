@@ -53,6 +53,29 @@
                     {% endif %}
                 {% endfor %}
                 </div>
+
+            {%if loaners|length > 0%}
+            <h4>{{team}} was {%if robots|length > 0%} also{%endif%} loaned the following robot{%if loaners|length > 1%}s{%endif%}:</h4>
+            <div class="gridview-row">
+                {% for robot in loaners %}
+                    <div class="gridview-square">
+                        <div class="gridview-title">
+                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>
+                        </div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image"
+                                 src="{{robot|image_from_team:team}}"
+                                 alt="Robot Image">
+                        </div>
+                    </div>
+                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
+                        </div>
+                        <div class="gridview-row">
+                    {% endif %}
+                {% endfor %}
+                </div>
+            {%endif%}
+
             {% if member %}
                 <a href="{% url 'main:newRobot' team.id %} ">New Robot</a>
             {% endif %}

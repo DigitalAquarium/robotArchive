@@ -235,8 +235,8 @@ def edt_fight_view(request, fight_id):
             if "save" in request.POST:
                 for fv in fight.fight_version_set.all():
                     if not fv.version.last_fought:
-                        fv.version.last_fought = fight.contest.event.start_date
-                        fv.version.robot.last_fought = fight.contest.event.start_date
+                        fv.version.last_fought = fight.contest.start_date
+                        fv.version.robot.last_fought = fight.contest.start_date
                     Leaderboard.update_robot_weight_class(fv.version.robot)
                 fight.calculate(commit=True)
                 response = redirect("main:edtContest", fight.contest.id)
@@ -719,6 +719,8 @@ def new_contest_view(request, event_id):
             return redirect("main:edtEvent", event.id)
     else:
         form = ContestForm()
+        form.fields["start_date"].initial = event.start_date
+        form.fields["end_date"].initial = event.end_date
     return render(request, "main/forms/generic.html", {"form": form, "title": "New Contest",
                                                        "next_url": reverse("main:newContest", args=[event_id])})
 
@@ -1020,6 +1022,8 @@ def new_version_view(request, robot_id):  # TODO: FORM
         team_id = int(team_id)
     except (ValueError, TypeError):
         team_id = 0
+    if not fight_id:
+        fight_id = 0
 
     robot = Robot.objects.get(pk=robot_id)
     can_change = robot.can_edit(request.user)
@@ -1052,6 +1056,7 @@ def new_version_view(request, robot_id):  # TODO: FORM
     else:
         form = NewVersionForm()
         form.fields['team'].queryset = valid_teams
+        print(fight_id)
         if fight_id != 0:
             form.fields["weight_class"].initial = Fight.objects.get(id=fight_id).contest.weight_class
             selected_team = None
@@ -1080,9 +1085,10 @@ def team_detail_view(request, slug):
         can_change = team.can_edit(request.user)
     else:
         can_change = False
-    robots = team.robots().all().order_by("-last_fought")
+    robots = team.owned_robots().order_by("-last_fought")
+    loaners = team.loaners().order_by("-last_fought")
     return render(request, "main/team_detail.html",
-                  {"team": team, "robots": robots, "can_change": can_change})
+                  {"team": team, "robots": robots, "loaners": loaners, "can_change": can_change})
 
 
 def team_index_view(request):
@@ -1884,10 +1890,10 @@ def recalc_all(request):
             if contest_cache is not None:
                 print("updating robots")
                 for reg in contest_cache.registration_set.all():
-                    Leaderboard.update_robot_weight_class(reg.version.robot, year=contest_cache.event.end_date.year)
-                if contest_cache.event.end_date.year != fight.contest.event.end_date.year:
-                    print("Creating Leaderboard for year: " + str(contest_cache.event.end_date.year))
-                    Leaderboard.update_all(contest_cache.event.end_date.year)
+                    Leaderboard.update_robot_weight_class(reg.version.robot, year=contest_cache.end_date.year)
+                if contest_cache.end_date.year != fight.contest.end_date.year:
+                    print("Creating Leaderboard for year: " + str(contest_cache.end_date.year))
+                    Leaderboard.update_all(contest_cache.end_date.year)
             contest_cache = fight.contest
             event_cache = contest_cache.event
             print("Saving:", contest_cache, fight.contest.event)

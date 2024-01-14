@@ -101,7 +101,15 @@
                                             {{ v.first_fought|date:"F Y" }} - {{ v.last_fought|date:"F Y" }}
                                         {% endif %}</span>
                                 {% if v.team %}
-                                    <span>Team : <a href="{% url 'main:teamDetail' v.team.slug %}">{{ v.team }}</a></span>
+                                    <span>
+                                        {%if v.loaned%}
+                                            <em> Loaned To:
+                                        {%else%}
+                                            Team:
+                                        {%endif%}
+                                        <a href="{% url 'main:teamDetail' v.team.slug %}">{{ v.team }}</a>
+                                        {%if v.loaned%}</em>{%endif%}
+                                    </span>
                                 {% endif %}
                                 </div>
                                 <div class="version-description">

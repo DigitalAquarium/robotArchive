@@ -10,6 +10,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Max
+from django.forms import DateField
 
 from .models import *
 
@@ -134,7 +135,7 @@ class RobotForm(forms.ModelForm):
 class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
-        fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "team", "weight_class"]
+        fields = ["robot_name", "name", "loaned", "country", "description", "image", "weapon_type", "team", "weight_class"]
 
     def save(self, commit=True):
         ver = super().save(commit=False)
@@ -167,7 +168,7 @@ class EventForm(forms.ModelForm):
 class ContestForm(forms.ModelForm):
     class Meta:
         model = Contest
-        fields = ["name", "fight_type", "weight_class"]
+        fields = ["name", "fight_type", "start_date", "end_date", "weight_class"]
 
 
 class FightForm(forms.ModelForm):
@@ -239,7 +240,7 @@ class NewEventFormEDT(forms.Form):
     logo_img = forms.ImageField(required=False)
     logo_txt = forms.URLField(required=False)
     start_date = forms.DateField(required=True)
-    end_date = forms.DateField(required=False)
+    end_date: DateField = forms.DateField(required=False)
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=True)
 
     def save(self, franchise):

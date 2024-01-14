@@ -103,8 +103,14 @@ class Team(models.Model):
                     return version.image.url
         return settings.STATIC_URL + "unknown.png"
 
-    def robots(self):
+    def all_robots(self):
         return Robot.objects.filter(version__team=self).distinct()
+
+    def owned_robots(self):
+        return Robot.objects.filter(version__team=self, version__loaned=False).distinct()
+
+    def loaners(self):
+        return Robot.objects.filter(version__team=self, version__loaned=True).distinct()
 
     def can_edit(self, user):
         p = Person.objects.get(user=user)
@@ -392,6 +398,7 @@ class Version(models.Model):
     last_fought = models.DateField(blank=True, null=True)
 
     robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
+    loaned = models.BooleanField(default=False)
     owner = models.ForeignKey(Person, on_delete=models.CASCADE)
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, blank=True, null=True)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(1))
@@ -526,7 +533,8 @@ class Event(models.Model):
 class Contest(models.Model):
     name = models.CharField(max_length=255, blank=True)
     fight_type = models.CharField(max_length=2, choices=FIGHT_TYPE_CHOICES + [("MU", "Multiple Types")])
-    # auto_awards = models.BooleanField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(1))
 
@@ -719,17 +727,17 @@ class Fight(models.Model):
         # Update when fought
         vupdateFlag = False
         for fv in fvs:
-            if not fv.version.first_fought or fv.version.first_fought > fv.fight.contest.event.start_date:
-                fv.version.first_fought = fv.fight.contest.event.start_date
+            if not fv.version.first_fought or fv.version.first_fought > fv.fight.contest.start_date:
+                fv.version.first_fought = fv.fight.contest.start_date
                 vupdateFlag = True
-            if not fv.version.robot.first_fought or fv.version.robot.first_fought > fv.fight.contest.event.start_date:
-                fv.version.robot.first_fought = fv.fight.contest.event.start_date
+            if not fv.version.robot.first_fought or fv.version.robot.first_fought > fv.fight.contest.start_date:
+                fv.version.robot.first_fought = fv.fight.contest.start_date
 
-            if not fv.version.last_fought or fv.version.last_fought < fv.fight.contest.event.end_date:
-                fv.version.last_fought = fv.fight.contest.event.end_date
+            if not fv.version.last_fought or fv.version.last_fought < fv.fight.contest.end_date:
+                fv.version.last_fought = fv.fight.contest.end_date
                 vupdateFlag = True
-            if not fv.version.robot.last_fought or fv.version.robot.last_fought < fv.fight.contest.event.end_date:
-                fv.version.robot.last_fought = fv.fight.contest.event.end_date
+            if not fv.version.robot.last_fought or fv.version.robot.last_fought < fv.fight.contest.end_date:
+                fv.version.robot.last_fought = fv.fight.contest.end_date
 
         if commit:
             for fv in fvs:
@@ -1334,7 +1342,7 @@ class Web_Link(models.Model):
             ret = ret[11:]
             return ret
 
-        elif self.type == "TR":
+        elif self.type == "LT":
             ret = preprocess(self.link)
             ret = ret[10:]
             return ret
