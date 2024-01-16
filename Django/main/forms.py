@@ -240,7 +240,7 @@ class NewEventFormEDT(forms.Form):
     logo_img = forms.ImageField(required=False)
     logo_txt = forms.URLField(required=False)
     start_date = forms.DateField(required=True)
-    end_date: DateField = forms.DateField(required=False)
+    end_date = forms.DateField(required=False)
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=True)
 
     def save(self, franchise):

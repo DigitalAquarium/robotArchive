@@ -872,7 +872,9 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        Leaderboard.update_class(weight)
+        #Leaderboard.update_class(weight) TODO: Fix this function to prevent it from removing the "left leaderboard" entries
+        pass
+
     robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
 
     if year == current_year and robot_list.count() == 0:
@@ -882,9 +884,9 @@ def leaderboard(request):
 
     top_three = []
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
-        top_three.append((robot_list[i],
-                          robot_list[i].robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")[
-                              0]))
+        top_three.append(robot_list[i])
+
+
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
                    "weights": visible_weights,
@@ -1056,7 +1058,6 @@ def new_version_view(request, robot_id):  # TODO: FORM
     else:
         form = NewVersionForm()
         form.fields['team'].queryset = valid_teams
-        print(fight_id)
         if fight_id != 0:
             form.fields["weight_class"].initial = Fight.objects.get(id=fight_id).contest.weight_class
             selected_team = None
@@ -1899,6 +1900,55 @@ def recalc_all(request):
             print("Saving:", contest_cache, fight.contest.event)
         fight.calculate(True)
     return render(request, "main/credits.html", {})
+
+'''for year2 in [1994,1995,1996,1997,1998,1999,2000,2001,2002,2003]:
+        weights = ["L","M","H","S"]
+        if year2 == 1996:
+            weights.append("F")
+        if year2 == 1998:
+            weights = weights[:-1]
+        for weight2 in weights:
+            robot_list = Leaderboard.objects.filter(weight=weight2, year=year2, position__lt=101).order_by("-ranking")
+            previous_year = Leaderboard.objects.filter(weight=weight2, year=year2 - 1, position__lt=101)
+            still_here = []
+            for lb in robot_list:
+                prev_entry = previous_year.filter(robot=lb.robot)
+                flag = False
+                if prev_entry.count() > 0:
+                    flag = True
+                    prev_entry = prev_entry[0]
+                    still_here.append(prev_entry.id)
+                    lb.difference = prev_entry.position - lb.position
+                else:
+                    lb.difference = 101
+                print(year2,weight2,lb.robot, prev_entry.position if flag else "x","->",lb.position,lb.difference)
+                lb.save()
+
+            for lb in previous_year:
+                if lb.id not in still_here:
+                    if Leaderboard.objects.filter(year=year2, robot=lb.robot).count() > 0:
+                        #reason = "Switched Weight Class"
+                        diff = -103
+                    elif lb.robot.version_set.filter(last_fought__gte=datetime.date(year2 - 5, 12, 31)).count() == 0:  # TODO: Hardcoded year cutoff
+                        #reason = "Too Old: Timed Out"
+                        diff = -102
+                    else:
+                        #reason = "Rank Too Low: Eliminated"
+                        diff = -101
+                    print(year2,weight2,lb.robot, lb.position, "->", "x", diff)
+                    new_entry = Leaderboard()
+                    new_entry.year = year2
+                    new_entry.weight = weight2
+                    new_entry.robot = lb.robot
+                    new_entry.ranking = 0
+                    new_entry.position = 101
+                    try:
+                        new_entry.version = lb.robot.version_set.filter(first_fought__year__lte=year2).order_by("-last_fought")[0]
+                    except:
+                        print("---------Crashy LB: ",lb)
+                        new_entry.version = lb.robot.last_version()
+                    new_entry.difference = diff
+                    new_entry.save()'''
 
 def clean_images(request):
     pass

@@ -37,23 +37,19 @@
 	{%else%}
 	<div class="gridview-row">
 		{% for entry in top_three %}
-			{%with entry|first as lb%}
-			{%with entry|last as version%}
             <div class="gridview-square">
 				<div class="gridview-title">
-                    <img class="big-trophy" src="{% if forloop.counter == 1 %}{% static 'awards/trophy_gold.png' %}{% elif forloop.counter == 2 %}{% static 'awards/trophy_silver.png' %}{%else%}{% static 'awards/trophy_bronze.png' %}{%endif%}" alt="Flag">
-                    <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
+                    <img class="big-trophy" src="{% if forloop.counter == 1 %}{% static 'awards/trophy_gold.png' %}{% elif forloop.counter == 2 %}{% static 'awards/trophy_silver.png' %}{%else%}{% static 'awards/trophy_bronze.png' %}{%endif%}" alt="Trophy">
+                    <a href="{% url 'main:versionDetail' entry.version.id %}">{{ entry.version }}</a>
                 </div>
                 <div class="gridview-subtitle">
-                    <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
-                    <p>{{ lb.ranking|floatformat:2 }}</p>
+                    <img class="flag-image" src="{{ entry.version.get_flag }}" alt="Flag">
+                    <p>{{ entry.ranking|floatformat:2 }}</p>
                 </div>
                 <div class="gridview-image-container">
-                    <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="Robot Image">
+                    <img class="fit-image" src="{% if entry.version.image %} {{ entry.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="Robot Image">
                 </div>
             </div>
-		{% endwith %}
-		{% endwith %}
 		{% endfor %}
     </div>
 	{% if robot_list|length > 3%}
@@ -65,6 +61,7 @@
                 <th>Score</th>
                 <th></th>
                 <th>Robot</th>
+                <th>Difference</th>
 				{%if is_this_year%}
                 <th>Wins</th>
                 <th>Losses</th>
@@ -79,8 +76,27 @@
 					{% if forloop.counter > 3 %}
                     <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
-                    <td style="text-align: center"><img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag"></td>
-                    <td><a href="{% url 'main:robotDetail' lb.robot.slug %}">{{ lb.robot }}</a></td>
+                    <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="Flag"></td>
+                    <td><a href="{% url 'main:versionDetail' lb.version.id %}">
+                        {%if lb.version.team == lb.robot.first_version.team%} {{lb.robot}}
+                        {%else%} {{ lb.version }}
+                        {%endif%}
+                    </a></td>
+                    <td>
+                        {%if lb.difference == 101%}✚ new
+                        {%elif lb.difference == -101%}<span>x</span> eliminated
+                        {%elif lb.difference == -102%}🕚 timed out
+                        {%elif lb.difference == -103%}▶ moved weight class
+                        {%elif lb.difference == 0%}─
+                        {%else%}
+                            {%if lb.difference <= -20 %}⯯
+                            {%elif lb.difference < 0 %}▼
+                            {%elif lb.difference < 20 %}▲ +
+                            {%else%} ⯭
+                            {%endif%}
+                        {{lb.difference}}
+                        {%endif%}
+                    </td>
 					{%if is_this_year%}
                     <td style="text-align: center">{{ lb.robot.wins }}</td>
                     <td style="text-align: center">{{ lb.robot.losses }}</td>

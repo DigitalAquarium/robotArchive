@@ -1020,7 +1020,11 @@ class Leaderboard(models.Model):
     ranking = models.FloatField()
     weight = models.CharField(max_length=1, choices=LEADERBOARD_WEIGHTS)
     year = models.IntegerField()
+    difference = models.SmallIntegerField()
     robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
+    version = models.ForeignKey(Version, on_delete=models.CASCADE)
+
+    # lb.robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")
 
     @staticmethod
     def update_class(wc, current_year=None):
