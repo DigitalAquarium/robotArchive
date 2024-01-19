@@ -24,7 +24,7 @@ def fight_result(fight, robot):
 
 @register.filter
 def fights_event_number(fights, this_fight):
-    this_event_fights = fights.filter(contest__event=this_fight.contest.event)
+    this_event_fights = fights.filter(contest__event=this_fight.contest.event, contest__start_date=this_fight.contest.start_date)
     if this_event_fights.first() != this_fight:
         return -1
     else:

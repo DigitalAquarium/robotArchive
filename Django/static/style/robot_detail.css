@@ -67,24 +67,6 @@
     width: 1em;
 }
 
-td, th{
-    height:1.5em;
-}
-
-.fight-link{
-    display: inline-flex;
-    align-items: center;
-}
-
-.fight-link-icon{
-    padding-left:0.5em;
-}
-
-.fight-link-icon-gif{
-    height: 2em;
-    margin: -0.5em 0 -0.5em 0;
-}
-
 .random-robot a{
     border: none;
     width: 2em;

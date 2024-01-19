@@ -872,30 +872,34 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        #Leaderboard.update_class(weight) TODO: Fix this function to prevent it from removing the "left leaderboard" entries
+        Leaderboard.update_class(weight)
         pass
 
-    robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
+    robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
 
     if year == current_year and robot_list.count() == 0:
         # Catch to stop the superheavyweight list (or any others that go out of use) from being unreachable in the menu
         year = years[-1]
-        robot_list = Leaderboard.objects.filter(weight=weight, year=year).order_by("-ranking")
+        robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
+
+    eliminations = Leaderboard.objects.filter(weight=weight, year=year, position=101).order_by("difference")
+
 
     top_three = []
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
-
 
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
                    "weights": visible_weights,
                    "chosen_weight": weight,
                    "chosen_year": year,
+                   "first_year": not Leaderboard.objects.filter(weight=weight,year=year-1).exists(),
                    "years": years,
                    "top_three": top_three,
                    "is_this_year": year == current_year,
-                   "low_classes": ["A", "U", "B", "Y", "F"]
+                   "low_classes": ["A", "U", "B", "Y", "F"],
+                   "eliminations":eliminations,
                    })
 
 
@@ -921,7 +925,7 @@ def robot_detail_view(request, slug):
             v = Version.objects.get(pk=version_id)
         except (ValueError, TypeError):
             v = None
-    fights = Fight.objects.filter(competitors__robot=r).order_by("contest__event__start_date", "contest__id", "number")
+    fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date", "contest__id", "number")
     awards = Award.objects.filter(version__robot=r)
 
     leaderboard_entries = Leaderboard.objects.filter(robot=r, ranking__gt=Robot.RANKING_DEFAULT).order_by("position",
@@ -1942,11 +1946,7 @@ def recalc_all(request):
                     new_entry.robot = lb.robot
                     new_entry.ranking = 0
                     new_entry.position = 101
-                    try:
-                        new_entry.version = lb.robot.version_set.filter(first_fought__year__lte=year2).order_by("-last_fought")[0]
-                    except:
-                        print("---------Crashy LB: ",lb)
-                        new_entry.version = lb.robot.last_version()
+                    new_entry.version = lb.robot.version_set.filter(first_fought__year__lte=year2).order_by("-last_fought")[0]
                     new_entry.difference = diff
                     new_entry.save()'''
 

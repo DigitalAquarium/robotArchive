@@ -32,7 +32,7 @@
                 {% csrf_token %}
                 {% for fight in fights %}
                     <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
-                        <td><a href="{% url 'main:edtFightOverview' fight.id %}">{{ fight|truncatechars:55 }} </a></td>
+                        <td><a href="{% url 'main:edtFightOverview' fight.id %}" style="display:inline-flex">{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %} </a></td>
                         <td>{{ fight.get_fight_type_display }}</td>
                         <td>
                             {% if fight.winners|length > 0 %}

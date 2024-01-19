@@ -30,3 +30,24 @@
     font-style:italics;
     color:red;
 }
+
+.robot-name-cell{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.material-symbols-outlined{
+            position:relative;
+            bottom: -0.115em
+       }
+
+.lb-positive{
+    color:limegreen;
+}
+.lb-neutral{
+    color:black;
+}
+.lb-negative{
+    color:red;
+}

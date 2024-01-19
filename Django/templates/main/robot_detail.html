@@ -177,13 +177,7 @@
                             <td>{{ fight.get_fight_type_display }}</td>
                             <td><a class="fight-link" style="display:inline-flex" href="{% url 'main:fightDetail' fight.id %}">
                                 {{ fight|fight_opponents:robot }}
-                                {%if fight.img_gif_vid == 'image'%}
-                                    <img class="fight-link-icon" src="{%static 'media_icons/image.svg'%}" alt="This fight has an image">
-                                {%elif fight.img_gif_vid == 'gif'%}
-                                    <img class="fight-link-icon fight-link-icon-gif" src="{%static 'media_icons/gif.svg'%}" alt="This fight has a gif">
-                                {%elif fight.img_gif_vid == 'video'%}
-                                    <img class="fight-link-icon" src="{%static 'media_icons/video.svg'%}" alt="This fight has a video">
-                                {%endif%}
+                                {% include "snippets/fight_icon.html" with fight=fight %}
                             </a></td>
                             <td>{{ fight|fight_result:robot }}</td>
                         </tr>

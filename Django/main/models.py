@@ -1028,6 +1028,9 @@ class Leaderboard(models.Model):
 
     @staticmethod
     def update_class(wc, current_year=None):
+        # WARNING: Only to be used with a current_year value if recalculating all fights. This function assumes that
+        # each robot's elo is the elo it currently has on the system which is NOT TRUE for old leaderboards. On a
+        # full database this function ONLY WORKS on the LATEST YEAR on record.
         valid = [x[0] for x in LEADERBOARD_WEIGHTS]
         valid.remove("X")
         if wc not in valid:
@@ -1051,14 +1054,19 @@ class Leaderboard(models.Model):
             except IndexError:
                 current_year = Event.objects.filter(start_date__lt=timezone.now()).order_by("-end_date")[
                     0].start_date.year
+        previous_year = Leaderboard.objects.filter(weight=wc, year=current_year - 1, position__lt=101)
         i = 0
         update_list = []
+        still_here = []
         for robot in top_100:
             if i < lb.count():
                 to_update = lb[i]
                 to_update.robot = robot
+                to_update.version = robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[0]
                 to_update.ranking = robot.ranking
                 to_update.position = i + 1
+                to_update.difference = -1000
+                entry = to_update
                 update_list.append(to_update)
             else:
                 new_entry = Leaderboard()
@@ -1067,11 +1075,58 @@ class Leaderboard(models.Model):
                 new_entry.weight = wc
                 new_entry.year = current_year
                 new_entry.robot = robot
+                new_entry.version = robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[0]
+                new_entry.difference = -1000
+                entry = new_entry
                 new_entry.save()
+
+            prev_entry = previous_year.filter(robot=robot)
+            if prev_entry.exists():
+                prev_entry = prev_entry[0]
+                still_here.append(prev_entry.id)
+                if entry.difference == -1000:
+                    entry.difference = prev_entry.position - entry.position
+                    update_list.append(entry)
+            elif Leaderboard.objects.filter(robot=robot, year=current_year-1).exclude(weight=wc).exists():
+                if entry.difference == -1000:
+                    entry.difference = 102
+                    update_list.append(entry)
+            else:
+                if entry.difference == -1000:
+                    entry.difference = 101
+                    update_list.append(entry)
             i += 1
-        Leaderboard.objects.bulk_update(update_list, ["robot", "ranking", "position"])
+
+        for entry in previous_year:
+            if entry.id not in still_here:
+                if Leaderboard.objects.filter(year=current_year, robot=entry.robot).count() > 0:
+                    # reason = "Switched Weight Class"
+                    diff = -103
+                elif entry.robot.version_set.filter(last_fought__gte=five_years_ago).count() == 0:
+                    # reason = "Too Old: Timed Out"
+                    diff = -102
+                else:
+                    # reason = "Rank Too Low: Eliminated"
+                    diff = -101
+                if not lb.filter(robot=entry.robot, position=101).exists():
+                    new_entry = Leaderboard()
+                    new_entry.year = current_year
+                    new_entry.weight = wc
+                    new_entry.robot = entry.robot
+                    new_entry.ranking = 0
+                    new_entry.position = 101
+                    new_entry.version = entry.robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[
+                        0]
+                    new_entry.difference = diff
+                    new_entry.save()
+
+        for entry in lb.filter(position=101):
+            if entry.robot in lb.filter(position__lte=100):
+                entry.delete()
+
+        Leaderboard.objects.bulk_update(update_list, ["robot", "ranking", "position", "version", "difference"])
         # if leaderboard shrinks for some reason, delete garbage data at the end
-        lb.filter(position__gt=top_100.count()).delete()
+        lb.filter(position__gt=top_100.count(), position__lt=101).delete()
 
     @staticmethod
     def update_all(current_year=None):
