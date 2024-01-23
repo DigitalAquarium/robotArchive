@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block meta %}
+    <title>Weight Classes - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static 'style/weight_class.css' %}">
+{% endblock %}
+{% block content %}
+<div class="main-content">
+  <div id="wc-sidebar">
+    <div class="std-wc-colour-block small-wc" id="wc-AW"><p>AW</p></div>
+    <div class="std-wc-colour-block small-wc" id="wc-UW"><p>US AW</p></div>
+    <div class="std-wc-colour-block small-wc" id="wc-BW"><p>BW</p></div>
+    <div class="std-wc-colour-block" id="wc-YW"><p>HbyW</p></div>
+    <div class="std-wc-colour-block" id="wc-FW"><p>FW</p></div>
+    <div class="std-wc-colour-block" id="wc-LW"><p>LW</p></div>
+    <div class="std-wc-colour-block" id="wc-MW"><p>MW</p></div>
+    <div class="std-wc-colour-block" id="wc-HW"><p>HW</p></div>
+    <div class="std-wc-colour-block" id="wc-SW"><p>SHW</p></div>
+
+    {% for percent, class in weights.items %}
+      <span class="graph-notch" style="top:calc({{percent}}% - 1px)"></span>
+    {% endfor %}
+  </div>
+
+  <div id="wc-content-container">
+    <div id="wc-spacer"></div>
+    <div id="wc-main-page">
+      <h1>Weight Classes</h1>
+      <p>Some text here</p>
+    </div>
+  </div>
+</div>
+{%endblock%}

@@ -127,6 +127,7 @@ class Team(models.Model):
 
 
 class Weight_Class(models.Model):
+    BOUNDARY_AMOUNT = 0.21
     LEADERBOARD_VALID = [(150, "UK Antweight / US Fairyweight"),
                          (454, "US Antweight"),
                          (1361, "Beetleweight"),
@@ -191,7 +192,6 @@ class Weight_Class(models.Model):
     def find_lb_class(self):
         grams = self.weight_grams
         # [2,3,4,5,6,7,8,9]
-        BOUNDARY_AMOUNT = 0.21
         nearest_weight_class = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - grams))
         if abs(nearest_weight_class - grams) <= nearest_weight_class * BOUNDARY_AMOUNT:
             # This class is close enough to a valid weight class

@@ -1693,6 +1693,60 @@ def weapon_types_view(request):
 
     return render(request, "main/weapon_types.html", {"version_dict": version_dict})
 
+def weight_class_view(unused):
+    wc = Weight_Class.objects.filter(recommended=True)
+
+    rename_this = []
+    for x in Weight_Class.LEADERBOARD_VALID_GRAMS:
+        rename_this.append(
+            {
+                "value": x,
+                "ub": x + 0.21 * x,
+                "lb": x - 0.21 * x,
+            }
+        )
+
+    placement_dict = {}
+    for w in wc:
+        nearest_class_g = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - w.weight_grams))
+
+        offset = 0
+        for i in range(len(rename_this)):
+            if nearest_class_g < rename_this[i]["lb"]:
+                if i == 0:
+                    lb = 0
+                else:
+                    lb = rename_this[i-1]["ub"]
+                ub = rename_this[i]["lb"]
+                percentage = (w.weight_grams - lb) / (ub - lb)
+                if i == 0:
+                    percentage = percentage * 5
+                else:
+                    percentage = offset + percentage * 2
+                break
+
+            offset += 5 if i == 0 else 2 if i != 8 else 0
+
+            if nearest_class_g < rename_this[i]["ub"]:
+                lb = rename_this[i]["lb"]
+                ub = rename_this[i]["ub"]
+                percentage = (w.weight_grams - lb) / (ub - lb)
+                if i <= 2:
+                    percentage = offset + percentage * 7
+                else:
+                    percentage = offset + percentage * 10
+                break
+
+            offset += 7 if i <= 2 else 10
+
+        if percentage in placement_dict:
+            placement_dict[percentage].append(w)
+        else:
+            placement_dict[percentage] = [w]
+
+
+    return render(unused, "main/weight_class.html", {"weights":placement_dict})
+
 
 # ------IMPORT FROM OLD DATA--------
 """

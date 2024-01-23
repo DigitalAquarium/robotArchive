@@ -1,0 +1,104 @@
+.main-content{
+    padding:0px;
+  }
+  #wc-spacer{
+    width:100px;
+    margin-right:calc(15% - 100px);
+  }
+  @media only screen and (max-width: 999px) {
+    #wc-spacer {
+      margin-right: 20px !important;
+    }
+    .main-content{
+      padding:0px !important;
+    }
+  }
+
+  #wc-sidebar{
+    /*--max-log: log(186600,10);
+    --positioning-value: 1000px / (var(--max-log) - 2);*/
+    position:fixed;
+    height:900px;
+    width:100px;
+  }
+
+  .std-wc-colour-block{
+    height:10%;
+    box-shadow: -20px 0px 10px 5px white inset;
+    position:absolute;
+    width:100px;
+    display:flex;
+    align-items:center;
+  }
+  .std-wc-colour-block p{
+    margin-left:10%;
+    font-size:1.2em;
+  }
+  /*#wc-AW{
+  --top-location: var(--positioning-value) * (log(119,10) - 2);
+    top: calc(var(--top-location));
+    height:calc(var(--positioning-value) * (log(181,10) - 2) - var(--top-location));
+    background:pink;
+  }*/
+  .small-wc{
+    height:7%
+  }
+
+  /* Sub AW: 0-5% */
+  #wc-AW{
+    /* AW: 5-11%*/
+    top:5%;
+    background:pink;
+  }
+
+  /*Sub UW: 11-14% */
+
+  #wc-UW{
+    /* UW: 14-21%  */
+    top:14%;
+    background:lightgrey;
+  }
+
+  /* Sub BW: 21-23% */
+
+  #wc-BW{
+    /* BW 23-29% */
+    top:23%;
+    background:limegreen;
+  }
+  #wc-YW{
+    top:32%;
+    background:orange;
+  }
+  #wc-FW{
+    top:44%;
+    background:blueviolet;
+  }
+  #wc-LW{
+    top:56%;
+    background:yellow;
+  }
+  #wc-MW{
+    top:68%;
+    background:red;
+  }
+  #wc-HW{
+    top:80%;
+    background:cornflowerblue;
+  }
+  #wc-SW{
+    top:90%;
+    background:darkblue;
+    color:darkgrey;
+  }
+  #wc-content-container{
+    display:flex;
+  }
+
+  .graph-notch{
+    position: absolute;
+    height: 2px;
+    width: 10px;
+    background: black;
+    margin-left: 70px;
+  }

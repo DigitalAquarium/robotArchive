@@ -49,6 +49,7 @@ urlpatterns = [
     path('<str:obj_type>/add_member/<int:obj_id>', views.add_member_view, name="addMember"),
     path('hall-of-fame', views.hall_of_fame_view, name="hallOfFame"),
     path('weapon-types', views.weapon_types_view, name="weaponTypes"),
+    path('weight-classes', views.weight_class_view, name="weightClasses"),
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
     path('credits', views.credits_view, name='credits'),
