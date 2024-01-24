@@ -19,6 +19,7 @@ from .forms import *
 
 ONE_HOUR_TIMER = 3600
 
+
 @permission_required("main.change_event", raise_exception=True)
 @permission_required("main.add_event", raise_exception=True)
 def edt_home_view(request):
@@ -119,8 +120,6 @@ def edt_event_view(request, event_id):
 
             event.location = new_location
             event.save()
-
-
 
     locations = Location.objects.all().order_by("name")
     return render(request, "main/editor/event.html",
@@ -546,12 +545,11 @@ def delete_view(request, model, instance_id=None, next_id=None):
 
 
 def index_view(request):
-    events = Event.objects.filter(start_date__gte=datetime.date.today()).order_by("start_date")[:5]
-    try:
-        random_robot = Robot.objects.order_by("?")[0]
-    except:
-        random_robot = None
-    return render(request, "main/index.html", {"upcoming_event_list": events, "r": random_robot})
+    events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
+              "mechwars-iii", "robotica-season-1"]
+    robot_image = Robot.objects.filter(hallofame__full_member=1).order_by("?")[0].get_image()
+    event_image = Event.objects.get(slug=random.choice(events)).get_logo_url()
+    return render(request, "main/index.html", {"robot_image": robot_image, "event_image": event_image})
 
 
 def event_index_view(request):
@@ -884,7 +882,6 @@ def leaderboard(request):
 
     eliminations = Leaderboard.objects.filter(weight=weight, year=year, position=101).order_by("difference")
 
-
     top_three = []
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
@@ -894,12 +891,12 @@ def leaderboard(request):
                    "weights": visible_weights,
                    "chosen_weight": weight,
                    "chosen_year": year,
-                   "first_year": not Leaderboard.objects.filter(weight=weight,year=year-1).exists(),
+                   "first_year": not Leaderboard.objects.filter(weight=weight, year=year - 1).exists(),
                    "years": years,
                    "top_three": top_three,
                    "is_this_year": year == current_year,
                    "low_classes": ["A", "U", "B", "Y", "F"],
-                   "eliminations":eliminations,
+                   "eliminations": eliminations,
                    })
 
 
@@ -1279,7 +1276,6 @@ def franchise_modify_view(request, franchise_id=None):
                 elif redir == "/editor/newEvent":
                     return redirect("%s?franchise=%s" % (reverse("main:edtNewEvent"), franchise_id))
 
-
     if franchise_id is None:
         form = FranchiseForm()
         return render(request, "main/forms/franchise.html",
@@ -1291,6 +1287,7 @@ def franchise_modify_view(request, franchise_id=None):
         return render(request, "main/forms/franchise.html",
                       {"form": form, "title": "Edit Franchise", "has_image": True, "franchise": franchise,
                        "next_url": reverse("main:editFranchise", args=[franchise_id]) + "?redirect=" + redir})
+
 
 def franchise_detail_view(request, slug):
     try:
@@ -1651,7 +1648,18 @@ def hall_of_fame_view(request):
 
 
 def credits_view(request):
-    return render(request, "main/credits.html", {})
+    random_country = "XX"
+    while random_country == "XX":
+        random_country = random.choice(COUNTRY_CHOICES)[0]
+    google_icon_choices = ["home", "query_stats", "destruction", "favorite", "scale", "hourglass", "gif",
+                           "imagesmode", "videocam", "new_label", "where_to_vote", "close", "timer", "wrong_location",
+                           "stat_minus_3", "stat_minus_1", "stat_3", "stat_1", "remove"]
+
+    return render(request, "main/credits.html", {
+        "flag": get_flag(random_country),
+        "trophy": settings.STATIC_URL + "awards/trophy_" + random.choice(["bronze", "silver", "gold"]) + ".png",
+        "google_icon": random.choice(google_icon_choices),
+    })
 
 
 def weapon_types_view(request):
@@ -1693,6 +1701,7 @@ def weapon_types_view(request):
 
     return render(request, "main/weapon_types.html", {"version_dict": version_dict})
 
+
 def weight_class_view(unused):
     wc = Weight_Class.objects.filter(recommended=True)
 
@@ -1716,7 +1725,7 @@ def weight_class_view(unused):
                 if i == 0:
                     lb = 0
                 else:
-                    lb = rename_this[i-1]["ub"]
+                    lb = rename_this[i - 1]["ub"]
                 ub = rename_this[i]["lb"]
                 percentage = (w.weight_grams - lb) / (ub - lb)
                 if i == 0:
@@ -1744,8 +1753,15 @@ def weight_class_view(unused):
         else:
             placement_dict[percentage] = [w]
 
+    return render(unused, "main/weight_class.html", {"weights": placement_dict})
 
-    return render(unused, "main/weight_class.html", {"weights":placement_dict})
+
+def futures_features_view(request):
+    pass
+
+
+def ranking_system_view(request):
+    pass
 
 
 # ------IMPORT FROM OLD DATA--------
@@ -1938,7 +1954,8 @@ def versionFunc(cursor, az, robotDict, versionDict, per, weightClassDict, date, 
 
 def recalc_all(request):
     # Need top update more robots than currently doing to add the X to them
-    Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X", first_fought=None, last_fought=None)
+    Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X", first_fought=None,
+                               last_fought=None)
     Version.objects.all().update(first_fought=None, last_fought=None)
 
     fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
@@ -1958,6 +1975,7 @@ def recalc_all(request):
             print("Saving:", contest_cache, fight.contest.event)
         fight.calculate(True)
     return render(request, "main/credits.html", {})
+
 
 '''for year2 in [1994,1995,1996,1997,1998,1999,2000,2001,2002,2003]:
         weights = ["L","M","H","S"]
@@ -2003,6 +2021,7 @@ def recalc_all(request):
                     new_entry.version = lb.robot.version_set.filter(first_fought__year__lte=year2).order_by("-last_fought")[0]
                     new_entry.difference = diff
                     new_entry.save()'''
+
 
 def clean_images(request):
     pass

@@ -1,16 +1,133 @@
 {% extends "base.html" %}
+{% load static %}
 {% block meta %}
     <title>Credits - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
 {% endblock %}
 {% block content %}
     <div class="main-content">
         <h1>Credits</h1>
-        <p>Question Mark Icon: <a href="https://www.flaticon.com/free-icons/question" title="question icons">Question
-            icons created by Dave Gandy - Flaticon</a></p>
-        <p>Flags: <a href="https://flagicons.lipis.dev">Lipis Flag Icons</a></p>
-        <p>Medal Icon: <a href="https://www.flaticon.com/free-icons/trophy" title="trophy icons">Trophy icons created by
-            Freepik - Flaticon</a> : https://www.flaticon.com/premium-icon/medal_3113054</p>
-        <p>Trophy Icon: <a href="https://www.flaticon.com/free-icons/trophy" title="trophy icons">Trophy icons created
-            by Pixel perfect - Flaticon</a> : https://www.flaticon.com/free-icon/trophy_889518#</p>
+        <div class="credit-row">
+            <a href="https://flagicons.lipis.dev/">
+                <img src="{{flag}}" alt="Flag of a Random Country">
+                <p>Flag set created by GitHub user "lipis"</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://fonts.google.com/icons">
+                <span class="material-symbols-outlined">{{google_icon}}</span>
+                <p>Various misc icons are from Google's icon font set</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/question-mark-on-a-circular-black-background_25400">
+                <img src="{%static 'unknown.png'%}" alt="Question Mark">
+                <p>Unknown image by Dave Gandy via Flaticon</p>
+            </a>
+        </div>
+        Award Icons
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/trophy_889518">
+                <img src="{{trophy}}" alt="Trophy">
+                <p>Trophy icon by Pixel Perfect via Flaticon (Colour edited by myself)</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/premium-icon/medal_3113054">
+                <img src="{%static 'awards/medal.png'%}" alt="Medal">
+                <p>Generic award icon by Freepik via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/frame_1438689">
+                <img src="{%static 'awards/frame2.png'%}" alt="Golden picture frame">
+                <p>Hall of fame icon by Freepik via Flaticon</p>
+            </a>
+        </div>
+        Web Link Icons
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/globe_2301129">
+                <img src="{%static 'web_logos/WW.png'%}" alt="Web Globe">
+                <p>World Wide Web icon by Vitaly Gorbachev via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/inbox_262591">
+                <img src="{%static 'web_logos/WA.png'%}" alt="Filing Cabinet Drawer">
+                <p>Archived Site icon by Freepik via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/youtube_1384060">
+                <img src="{%static 'web_logos/YT.png'%}" alt="YouTube Logo">
+                <p>YouTube logo sourced from Freepik via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/twitter_1384065">
+                <img src="{%static 'web_logos/TW.png'%}" alt="Twitter Logo">
+                <p>Twitter logo sourced from Freepik via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/facebook_174848">
+                <img src="{%static 'web_logos/FB.png'%}" alt="Facebook Logo">
+                <p>Facebook logo sourced from Freepik via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/instagram_174855">
+                <img src="{%static 'web_logos/IG.png'%}" alt="Instagram Logo">
+                <p>Instagram logo sourced from Freepik via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/tik-tok_3046121">
+                <img src="{%static 'web_logos/TT.png'%}" alt="TikTok Logo">
+                <p>TikTok logo sourced from Freepik via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://github.com/logos">
+                <img src="{%static 'web_logos/GH.svg'%}" alt="GitHub Logo">
+                <p>GitHub logo sourced from GitHub's "Logos and Usage" page</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://uxwing.com/linktree-logo-icon/">
+                <img src="{%static 'web_logos/LT.png'%}" alt="Linktree Logo">
+                <p>Linktree logo sourced from uxwing</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://brand.linkedin.com/downloads">
+                <img src="{%static 'web_logos/LI.png'%}" alt="LinkedIn Logo">
+                <p>LinkedIn logo sourced from LinkedIn's brand page</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://brand.twitch.tv/">
+                <img src="{%static 'web_logos/TV.svg'%}" alt="Twitch Logo">
+                <p>Twitch logo sourced from Twitch's brand page</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/discord_5968756/">
+                <img src="{%static 'web_logos/DC.png'%}" alt="Discord Logo">
+                <p>Discord logo sourced from Freepik via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/sina-weibo_2111599">
+                <img src="{%static 'web_logos/SW.png'%}" alt="Weibo Logo">
+                <p>Sina Weibo logo sourced from Picture Perfect via Flaticon</p>
+            </a>
+        </div>
+        <div class="credit-row">
+            <a href="https://www.flaticon.com/free-icon/wechat_889153">
+                <img src="{%static 'web_logos/WC.png'%}" alt="WeChat Logo">
+                <p>WeChat logo sourced from Freepik via Flaticon</p>
+            </a>
+        </div>
     </div>
 {% endblock %}

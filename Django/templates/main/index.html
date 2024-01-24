@@ -2,51 +2,117 @@
 {% load static %}
 {% block meta %}
     <title>Home - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <style>
+        .text-in-gridview{
+            font-size:5em;
+            color: black
+        }
+        .gridview-square{
+            box-shadow: black 0 0 0.5em;
+            height: 100%;
+            border-radius: 0.5em;
+        }
+    </style>
 {% endblock %}
 {% block content %}
     <div class="main-content">
-        <h1>Roboteer's Tavern</h1>
-        <div class="other_nonsense" style="width: 48%; height: 100%; display: inline-flex; flex-direction: column">
-            <p>Welcome to roboteer's tavern, a site for management of events for robot combat.</p>
-            <a href="{% url 'main:leaderboard' %}">Leaderboard</a>
-            <a href="{% url 'main:credits' %}">Asset Credits</a>
+        <h1>The Robot Combat Archive</h1>
+        <div>
+           <p> {% lorem %}</p>
         </div>
 
+        <div>
+            <div class="gridview-row">
 
-        <div class="upcoming-events" style="width: 49%; display: inline-flex;flex-direction: column">
-            <h3>Next 5 upcoming events:</h3>
-            {% if upcoming_event_list %}
-                {% for event in upcoming_event_list %}
-                    <div class="hrz-index-result" style="height:7em">
-        <span class="hrz-index-image">
-        <img class="fit-image"
-             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
-             alt="Event Logo">
-        </span>
-                        <div class="hrz-index-content">
-                <span class="hrz-index-title">
-                <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
-                <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}</a>
-            </span>
-                            <div class="hrz-index-details">
-                                <span>{{ event.start_date|date:"jS F Y" }}</span>
-                                {% if event.available_weight_classes|length > 0 %}
-                                    <span>Weight Classes:
-                                    {% for class in event.available_weight_classes %}
-                                        {{ class.weight_string }}
-                                    {% endfor %}
-                                {% endif %}
-                                </span>
-                            </div>
-                            <span class="hrz-index-description">
-                    {{ event.description|truncatechars:650 }}
-                </span>
-                        </div>
+                <a href="{% url 'main:robotIndex'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Robots</div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="{{robot_image}}">
                     </div>
-                {% endfor %}
-            {% else %}
-            {% endif %}
-            <a href="{% url 'main:eventIndex' %}">View More</a>
+                </div>
+                </a>
+
+                <a href="{% url 'main:eventIndex'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Events</div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="{{event_image}}">
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:leaderboard'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Leaderboard</div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="{%static 'awards/trophy_gold.png' %}">
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:randomRobot'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Random Robot</div>
+                    <div class="gridview-image-container">
+                        <p class="text-in-gridview">?</p>
+                    </div>
+                </div>
+                </a>
+
+            </div>
+
+            <div class="gridview-row">
+                <a href="{% url 'main:leaderboard'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Ranking System</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">query_stats</span>
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:weaponTypes'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Weapon Types</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">destruction</span>
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:weightClasses'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Weight Classes</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">scale</span>
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:randomRobot'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Future Ambitions</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">hourglass</span>
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:credits'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Credits</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">favorite</span>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div>Weapon Types</div>
+            <div>Weight Classes</div>
+            <div>Ranking System</div>
+            <div>Future</div>
         </div>
     </div>
 {% endblock %}

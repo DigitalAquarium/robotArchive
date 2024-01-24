@@ -514,7 +514,7 @@ class Event(models.Model):
     def can_edit(self, user):
         return self.franchise.can_edit(user)
 
-    def get_logo_url(self):  # TODO: Make a thing similar to this for robots & versoins?
+    def get_logo_url(self):
         if self.logo:
             return self.logo.url
         if self.franchise.logo:
