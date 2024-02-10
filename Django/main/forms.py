@@ -235,7 +235,7 @@ class TransferRobotForm(forms.Form):
 
 class NewEventFormEDT(forms.Form):
     name = forms.CharField(max_length=255, required=False)
-    missing_brackets = forms.BooleanField(required=True)
+    missing_brackets = forms.BooleanField(required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
     logo_img = forms.ImageField(required=False)
     logo_txt = forms.URLField(required=False)

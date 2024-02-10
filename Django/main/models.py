@@ -86,7 +86,7 @@ class Team(models.Model):
     logo = models.ImageField(upload_to='team_logos/%Y/', blank=True)
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     members = models.ManyToManyField(Person, through="Person_Team")
-    slug = models.SlugField(max_length=50)
+    slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
@@ -193,7 +193,7 @@ class Weight_Class(models.Model):
         grams = self.weight_grams
         # [2,3,4,5,6,7,8,9]
         nearest_weight_class = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - grams))
-        if abs(nearest_weight_class - grams) <= nearest_weight_class * BOUNDARY_AMOUNT:
+        if abs(nearest_weight_class - grams) <= nearest_weight_class * self.BOUNDARY_AMOUNT:
             # This class is close enough to a valid weight class
             return LEADERBOARD_WEIGHTS[Weight_Class.LEADERBOARD_VALID_GRAMS.index(nearest_weight_class)][0]
         else:
@@ -234,7 +234,7 @@ class Robot(models.Model):
     RANKING_DEFAULT = 1000
     name = models.CharField(max_length=255)
     latin_name = models.CharField(max_length=255, blank=True)
-    slug = models.SlugField(max_length=100, allow_unicode=True)
+    slug = models.SlugField(max_length=100, allow_unicode=True, unique=True)
     display_latin_name = models.BooleanField(default=False)
 
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
@@ -359,12 +359,12 @@ class Robot(models.Model):
 
     def get_representitive(self, team=None):
         if team:
-            valid_version_set = self.version_set.filter(team=team)
+            valid_version_set = self.version_set.filter(team=team).order_by("-number")
         else:
-            valid_version_set = self.version_set
+            valid_version_set = self.version_set.order_by("-number")
 
         identically_named_versions = valid_version_set.filter(
-            robot_name__regex="(^|" + self.name + " ([MDCLXVI]+|[mdclxvi]+|[0-9]+))$").order_by("-number")
+            robot_name__regex="(^|" + self.name + " ([MDCLXVI]+|[mdclxvi]+|[0-9]+))$")
         # This regex also classes numbered versions as identical, will show "Tiberius 6" over Tiberius or "Firestorm V" over "Firestorm"
         # TODO: Should probably contain an exact name match
 
@@ -414,6 +414,18 @@ class Version(models.Model):
         else:
             return self.robot.latin_name
 
+    def english_readable_name(self):
+        if self.robot_name == "":
+            if self.robot.display_latin_name:
+                return self.robot.latin_name
+            else:
+                return self.robot.name
+        else:
+            if self.display_latin_name:
+                return self.latin_robot_name
+            else:
+                return self.robot_name
+
     def get_flag(self):
         return get_flag(self.country)
 
@@ -439,7 +451,7 @@ class Franchise(models.Model):
     logo = models.ImageField(upload_to='franchise_logos/%Y/', blank=True)
     description = models.TextField(blank=True)
     members = models.ManyToManyField(Person, through="Person_Franchise")
-    slug = models.SlugField(max_length=50)
+    slug = models.SlugField(max_length=50, unique=True)
 
     def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
@@ -483,7 +495,7 @@ class Event(models.Model):
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
-    slug = models.SlugField(max_length=50)
+    slug = models.SlugField(max_length=50, unique=True)
     missing_brackets = models.BooleanField(default=False)
 
     def make_slug(self, save=False):
@@ -898,15 +910,14 @@ class Fight(models.Model):
                     out += " & "
                 else:
                     out += ", "
-            out += fv.version.__str__()
+            out += fv.version.english_readable_name()
 
             last = fv
             i += 1
 
         return out
 
-    def __str__(self):
-        # This can cause a recursion error
+    def string_name(self, english_readable=False):
         try:
             if self.name is not None and self.name != "":
                 return self.name
@@ -922,25 +933,32 @@ class Fight(models.Model):
                     for tt in tags.values():
                         teamname = ""
                         for version in tt:
-                            if version.robot_name != "" and version.robot_name is not None:
-                                teamname += " & " + version.robot_name  # __str__()
+                            if english_readable:
+                                teamname += " & " + version.english_readable_name()
                             else:
-                                teamname += " & " + version.robot.name
+                                teamname += " & " + version.__str__()
                         ret += teamname[3:] + " vs "
                     return ret[:-4]
 
                 else:
                     for version in self.competitors.all():
-                        if version.robot_name != "" and version.robot_name is not None:
-                            ret += " vs " + version.robot_name  # __str__()
+                        if english_readable:
+                            ret += " vs " + version.english_readable_name()
                         else:
-                            ret += " vs " + version.robot.name
+                            ret += " vs " + version.__str__()
                     return ret[4:]
             else:
                 return "A fight with less than two robots"
         except Exception as e:
             print(e)
             return "Trying to name this fight is causing errors (Oh no!)"
+
+    def non_latin_name(self):
+        return self.string_name(False)
+
+    def __str__(self):
+        return self.string_name(True)
+
 
     def can_edit(self, user):
         return self.contest.can_edit(user)

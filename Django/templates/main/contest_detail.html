@@ -12,6 +12,7 @@
                 <a href="{% url 'main:edtContest' contest.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Contest"></a>
             {% endif %}
         </div>
+            {%if fights|length > 0%}
                 <table>
                     <thead>
                     <tr>
@@ -21,6 +22,7 @@
                     </tr>
                     </thead>
                     <tbody>
+
                     {% for fight in fights %}
                         <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
                             <td><a href="{% url 'main:fightDetail' fight.id %}" style="display:inline-flex">{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %}</a></td>
@@ -41,8 +43,10 @@
                             </td>
                         </tr>
                     {% endfor %}
+
                     </tbody>
                 </table>
+            {%endif%}
 
             {% if applications %}
                 <h2>Competitors</h2>

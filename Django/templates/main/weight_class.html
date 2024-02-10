@@ -18,16 +18,14 @@
     <div class="std-wc-colour-block" id="wc-SW"><p>SHW</p></div>
 
     {% for percent, class in weights.items %}
-      <span class="graph-notch" style="top:calc({{percent}}% - 1px)"></span>
+      <span class="graph-notch" style="top:calc({{percent}}% - 1px)"><!--{{class}}--></span>
     {% endfor %}
   </div>
 
   <div id="wc-content-container">
-    <div id="wc-spacer"></div>
-    <div id="wc-main-page">
       <h1>Weight Classes</h1>
-      <p>Some text here</p>
-    </div>
+      <p>In order to ensure that fights are fair, all robots compete in a weight class </p>
+      <p>{%lorem 4%}</p>
   </div>
 </div>
 {%endblock%}

@@ -121,11 +121,13 @@ body {
 }
 
 .fit-image {
-  width: 100%;
-  height: 100%;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+.gridview-image-container .fit-image{
+  width: 100%;
+  height: 100%;
 }
 
 .main-content {
@@ -266,4 +268,12 @@ form fieldset legend {
 .alphanum {
   font-size: 0.7em;
   color: grey;
+}
+
+.robot-title {
+    display: inline-flex;
+    align-items: center;
+}
+.robot-title-text{
+    margin-left: 0.3em;
 }

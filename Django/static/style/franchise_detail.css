@@ -3,10 +3,6 @@
     justify-content: center;
     max-height: 700px;
 }
-.fit-image {
-    width:auto;
-    height:auto;
-}
 /*.grid-row {
     display: inline-flex;
     width: 100%;

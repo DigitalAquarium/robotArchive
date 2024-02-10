@@ -19,14 +19,13 @@
 {% block content %}
     <div class="main-content">
         {% if robot %}
-            <div class="heading">
-                <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                <h1 id="title">{{ robot.name }} {% if robot.display_latin_name %} <span class="alphanum">({{ robot.latin_name }})</span> {% endif %} </h1>
-                {% if can_change %}
+        <div class="heading">
+            <h1 id="title">{{robot|generate_title}}</h1>
+            {% if can_change %}
                 <a href="{% url 'main:editRobot' robot.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Robot"></a>
                 <a href="{% url 'main:delete' 'robot' robot.id 0%}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Delete Robot"></a>
-                {% endif %}
-            </div>
+            {% endif %}
+        </div>
             {% if not robot.opt_out %}
                 <h2>Rank: {{ robot.ranking|floatformat:2 }}
                     <span style="color:  {% if current_lb_entry.position == 1 %}gold
@@ -73,13 +72,11 @@
                     <div class="version-block" id="ver-{{ v.id }}" {% if ver == v %}style="display:block"
                          {% elif not ver and forloop.last %}style="display:block"{% endif %}>
                         <div class="version-header">
-                            <img class="flag-image" src="{{ v.get_flag }}" alt="Flag">
-                            <p>{{ v }} {% if v.display_latin_name %}<span class="alphanum">({{ v.get_latin_name }})</span> {% endif %}
-                                {% if can_change %}
+                            {{v|generate_title}}
+                            {% if can_change %}
                                 <a href="{% url 'main:editVersion' v.id %}"><img class="inline-image" style="height:0.75em" src="{% static 'edit.png' %}" alt="Edit Version"></a>
                                 <a href="{% url 'main:delete' 'version' v.id robot.id %}"><img class="inline-image" style="height:0.75em" src="{% static 'bin.png' %}" alt="Delete Version"></a>
-                                {%endif%}
-                            </p>
+                            {%endif%}
                         </div>
 
                         <div class="version-content">

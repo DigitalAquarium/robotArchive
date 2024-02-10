@@ -18,10 +18,17 @@ $(document).ready(function(){
                     title: {
                         text: 'Rank over time'
                     },
+                    legend:{ enabled:false },
                     yAxis: {
                         title: {
                             text: 'Rank'
-                        }
+                        },
+                        plotLines: [{
+                            value: 1000,
+                            color: 'darkgrey',
+                            dashStyle: 'longdash',
+                            width: 2,
+                        }],
                     },
                     series: [{
                         name: document.getElementById("title").innerHTML,

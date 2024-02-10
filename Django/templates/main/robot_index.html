@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-
+{%load bonus_filters%}
 {% block meta %}
     <title>Robots - Roboteer's Tavern</title>
     <style>.searchform label {
@@ -55,18 +55,7 @@
                 </span>
                 <div class="hrz-index-content">
                     <span class="hrz-index-title">
-                    <a style="display:flex; color:inherit" href="{% url 'main:robotDetail' robot.slug %}">
-                        <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                        <span>
-                            {%comment%}{%if robot.lb_rank != 0%}<span style="font-weight: bold;font-style: italic;
-                                    color:  {% if robot.lb_rank == 1 %}gold
-                                            {% elif robot.lb_rank == 2 %}silver
-                                            {% elif robot.lb_rank == 3 %}darkgoldenrod
-                                            {%else%}purple{% endif %};">#{{ robot.lb_rank }}</span>{% endif %}{%endcomment%}
-                            <span>{{ robot.name }}</span>
-                            {% if robot.requires_translation %} <span class="alphanum">({{ robot.name_alphanum }})</span>{% endif %}
-                        </span>
-                    </a>
+                    <a href="{% url 'main:robotDetail' robot.slug %}">{{robot|generate_title}}</a>
                     </span>
                     <span class="hrz-index-details">
                         {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}

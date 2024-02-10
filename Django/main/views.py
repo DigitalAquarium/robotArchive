@@ -545,9 +545,13 @@ def delete_view(request, model, instance_id=None, next_id=None):
 
 
 def index_view(request):
+    editor_stay = request.GET.get("edt") or ""
+    if request.user.is_authenticated and request.user.is_superuser and editor_stay != "stay":
+        return redirect("main:edtHome")
+
     events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
               "mechwars-iii", "robotica-season-1"]
-    robot_image = Robot.objects.filter(hallofame__full_member=1).order_by("?")[0].get_image()
+    robot_image = Robot.objects.filter(hallofame__full_member=True).order_by("?")[0].get_image()
     event_image = Event.objects.get(slug=random.choice(events)).get_logo_url()
     return render(request, "main/index.html", {"robot_image": robot_image, "event_image": event_image})
 
@@ -1703,7 +1707,7 @@ def weapon_types_view(request):
 
 
 def weight_class_view(unused):
-    wc = Weight_Class.objects.filter(recommended=True)
+    wc = Weight_Class.objects.all().order_by("weight_grams")
 
     rename_this = []
     for x in Weight_Class.LEADERBOARD_VALID_GRAMS:
@@ -1717,11 +1721,9 @@ def weight_class_view(unused):
 
     placement_dict = {}
     for w in wc:
-        nearest_class_g = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - w.weight_grams))
-
         offset = 0
         for i in range(len(rename_this)):
-            if nearest_class_g < rename_this[i]["lb"]:
+            if (0 if i == 0 else rename_this[i - 1]["ub"]) <= w.weight_grams < rename_this[i]["lb"]:
                 if i == 0:
                     lb = 0
                 else:
@@ -1736,7 +1738,7 @@ def weight_class_view(unused):
 
             offset += 5 if i == 0 else 2 if i != 8 else 0
 
-            if nearest_class_g < rename_this[i]["ub"]:
+            if rename_this[i]["lb"] <= w.weight_grams < rename_this[i]["ub"]:
                 lb = rename_this[i]["lb"]
                 ub = rename_this[i]["ub"]
                 percentage = (w.weight_grams - lb) / (ub - lb)

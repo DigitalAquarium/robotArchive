@@ -1,7 +1,9 @@
 from django import template
 from django.template.defaultfilters import stringfilter
+from django.utils.safestring import mark_safe
 
 from main.models import *
+from django.utils.html import format_html
 
 register = template.Library()
 
@@ -24,7 +26,8 @@ def fight_result(fight, robot):
 
 @register.filter
 def fights_event_number(fights, this_fight):
-    this_event_fights = fights.filter(contest__event=this_fight.contest.event, contest__start_date=this_fight.contest.start_date)
+    this_event_fights = fights.filter(contest__event=this_fight.contest.event,
+                                      contest__start_date=this_fight.contest.start_date)
     if this_event_fights.first() != this_fight:
         return -1
     else:
@@ -37,13 +40,33 @@ def fight_opponents(fight, robot):
 
 
 @register.filter
-def image_from_team(robot,team):
+def image_from_team(robot, team):
     return robot.get_image(team)
 
+
 @register.filter
-def name_from_team(robot,team):
+def name_from_team(robot, team):
     version = robot.get_representitive(team)
     if version.robot_name:
         return version.robot_name
     else:
         return robot.name
+
+
+@register.filter
+def generate_title(rob_or_ver, display_latin=True):
+    flag = rob_or_ver.get_flag()
+    country = rob_or_ver.country
+    name = rob_or_ver.__str__()
+    html_to_return = format_html('<div class="robot-title"> <img class="flag-image" src="{}" alt="{} Flag"> '
+                                 '<span class="robot-title-text">{}', flag, country, name)
+    latin = ""
+    if display_latin:
+        if isinstance(rob_or_ver, Robot):
+            latin = rob_or_ver.latin_name
+        else:
+            latin = rob_or_ver.latin_robot_name
+    if latin != "":
+        html_to_return += format_html('<span class="alphanum"> ({}) </span>', latin)
+    html_to_return += mark_safe('</span> </div>')
+    return html_to_return

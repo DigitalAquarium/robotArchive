@@ -1,13 +1,14 @@
 .main-content{
     padding:0px;
   }
-  #wc-spacer{
-    width:100px;
-    margin-right:calc(15% - 100px);
+  #wc-content-container{
+    padding: 0 15%;
+    position:fixed;
   }
   @media only screen and (max-width: 999px) {
-    #wc-spacer {
-      margin-right: 20px !important;
+    #wc-content-container {
+      padding: 0px !important;
+      padding-left: 120px !important;
     }
     .main-content{
       padding:0px !important;
@@ -17,8 +18,8 @@
   #wc-sidebar{
     /*--max-log: log(186600,10);
     --positioning-value: 1000px / (var(--max-log) - 2);*/
-    position:fixed;
-    height:900px;
+    position:absolute;
+    height:2000px;
     width:100px;
   }
 
@@ -90,9 +91,6 @@
     top:90%;
     background:darkblue;
     color:darkgrey;
-  }
-  #wc-content-container{
-    display:flex;
   }
 
   .graph-notch{

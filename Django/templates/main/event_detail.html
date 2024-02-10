@@ -60,7 +60,7 @@
                     {% for contest in contests %}
                         <tr>
                             <td>
-                                {%if contest.fight_set.all|length > 0%}
+                                {%if contest.fight_set.all|length > 0 or contest.registration_set.all|length > 0%}
                                     <a href="{% url 'main:contestDetail' contest.id %}">{{ contest }}</a>
                                 {%else%}
                                     {{ contest }}
