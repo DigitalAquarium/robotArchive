@@ -61,12 +61,14 @@ def generate_title(rob_or_ver, display_latin=True):
     html_to_return = format_html('<div class="robot-title"> <img class="flag-image" src="{}" alt="{} Flag"> '
                                  '<span class="robot-title-text">{}', flag, country, name)
     latin = ""
-    if display_latin:
+    if display_latin and rob_or_ver.display_latin_name:
         if isinstance(rob_or_ver, Robot):
             latin = rob_or_ver.latin_name
         else:
-            latin = rob_or_ver.latin_robot_name
-    if latin != "":
+            if rob_or_ver.latin_robot_name != "":
+                latin = rob_or_ver.latin_robot_name
+            else:
+                latin = rob_or_ver.robot.latin_name
         html_to_return += format_html('<span class="alphanum"> ({}) </span>', latin)
     html_to_return += mark_safe('</span> </div>')
     return html_to_return

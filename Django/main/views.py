@@ -289,6 +289,8 @@ def edt_select_robot_view(request):
     if name != "" and name is not None:
         robot_list = robot_list.filter(name__icontains=name).union(
             robot_list.filter(version__robot_name__icontains=name)).union(
+            robot_list.filter(latin_name__icontains=name)).union(
+            robot_list.filter(version__latin_robot_name__icontains=name)).union(
             robot_list.filter(version__team__name__icontains=name))
 
     robot_list = robot_list.order_by("name")

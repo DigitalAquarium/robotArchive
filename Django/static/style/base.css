@@ -274,6 +274,9 @@ form fieldset legend {
     display: inline-flex;
     align-items: center;
 }
+.robot-title .flag-image {
+    margin: 3px;
+}
 .robot-title-text{
     margin-left: 0.3em;
 }
