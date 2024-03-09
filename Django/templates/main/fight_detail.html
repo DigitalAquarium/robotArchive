@@ -1,11 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 {% block meta %}
-    <title> {{ fight.non_latin_name }} - Roboteer's Tavern </title>
+    <title> {{ fight.non_latin_name }} - Robot Combat Archive </title>
     <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
-    <script>
-
-    </script>
 {% endblock %}
 {% block content %}
     {% if fight %}
@@ -26,14 +23,14 @@
                     {% endif %}
                     <div class="gridview-square competitor-square">
                         <div class="gridview-title">
-                            <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
                             <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image" src="
 
                                     {% if version.image %}{{ version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
-                                 alt="Robot Image">
+                                 alt="{%if version.image%}Robot {{version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
                         </div>
                     </div>
 
@@ -54,14 +51,14 @@
                         {% endif %}
                         <div class="gridview-square">
                             <div class="gridview-title">
-                                <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
                                 <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
                             </div>
                             <div class="gridview-image-container">
                                 <img class="fit-image" src="
 
                                         {% if version.image %}{{ version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
-                                     alt="Robot Image">
+                                     alt="{%if version.image%}Robot {{version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
                             </div>
                         </div>
                         {% if forloop.counter|divisibleby:3 and not forloop.last %}

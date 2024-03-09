@@ -2,7 +2,7 @@
 {% load bonus_filters %}
 {% load static %}
 {% block meta %}
-    <title>{{ robot.name }} - Roboteer's Tavern</title>
+    <title>{{ robot.name }} - Robot Combat Archive</title>
     <script src="{% static 'scripts/robot_detail.js' %}"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="{%static 'scripts/history_chart.js' %}"></script>
@@ -83,7 +83,7 @@
                             <div class="version-image">
                                 <img class="fit-image"
                                      src="{% if v.image %} {{ v.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}"
-                                     alt="Version Image">
+                                     alt="{% if v.image %} {{ v }} {% else %} Black Circle with White Question Mark Inside {% endif %}">
                             </div>
                             <div class="version-text">
                                 <div class="version-mini-head">
@@ -136,12 +136,21 @@
                     </tr>
                     </thead>
                     {%if robot.hallofame_set.all|length > 0%}
-                    <td><img class="award-icon" src="{%static 'awards/frame2.png'%}" alt="award icon"></td>
+                    <td><img class="award-icon" src="{%static 'awards/frame2.png'%}" alt="Golden Picture Frame Icon"></td>
                     <td colspan="2" style="text-align:center"><a href="{%url 'main:hallOfFame' %}">{%if robot.hallofame_set.first.full_member%}Hall of Fame Member{%else%}Hall of Fame Honorable Mention{%endif%}</a></td>
                     {% endif %}
                     {% for award in awards %}
                         <tr>
-                            <td><img class="award-icon" src="{{ award.get_icon }}" alt="award icon"></td>
+                            <td><img class="award-icon" src="{{ award.get_icon }}"
+                                     {%if award_type == 0%}
+                                        alt="Medal with Red Ribbon"
+                                     {%elif award_type == 1%}
+                                        alt="Golden Trophy"
+                                     {%elif award_type == 2%}
+                                        alt="Silver Trophy"
+                                     {%elif award_type == 3%}
+                                        alt="Bronze Trophy"
+                                     {%endif%}></td>
                             <td>{{ award }}</td>
                             <td>{{ award.contest.event }}</td>
                         </tr>

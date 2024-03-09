@@ -50,6 +50,17 @@ body {
 .navbar .navtitle {
   float: left;
 }
+.home-icon{
+    display: inline-flex;
+}
+.home-icon a{
+    border:none;
+}
+.home-icon img{
+    bottom: 5px;
+    height: 30px;
+    position: absolute;
+}
 
 .content {
   padding-top: 3em;

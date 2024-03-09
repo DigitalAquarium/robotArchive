@@ -1277,6 +1277,14 @@ class Web_Link(models.Model):
         p = Person.objects.get(user=user)
         return user.is_staff
 
+    def alt(self):
+        if self.type == "WW":
+            return "Grid Sphere Icon"
+        elif self.type == "WA":
+            return "Filing Cabinet Icon"
+        else:
+            return self.get_type_display() + " Logo"
+
     @staticmethod
     def classify(link):
         link = link.lower()

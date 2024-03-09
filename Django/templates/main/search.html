@@ -2,7 +2,7 @@
 {% load static %}
 {%load bonus_filters%}
 {% block meta %}
-    <title>"{{ search_term }}" - Roboteer's Tavern</title>
+    <title>"{{ search_term }}" - Robot Combat Archive</title>
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
 {% endblock %}
 {% block content %}
@@ -16,7 +16,7 @@
                 <span class="hrz-index-image">
                     <img class="fit-image"
                          src="{{robot.get_image}}"
-                         alt="Robot Image">
+                         alt="{{robot}}">
                 </span>
                 <div class="hrz-index-content">
                     <span class="hrz-index-title">
@@ -61,7 +61,7 @@
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
-                <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
+                <img class="flag-image" src="{{ event.get_flag }}" alt="{{event.country}} Flag">
                 <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}</a>
             </span>
                     <span class="hrz-index-details">

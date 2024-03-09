@@ -20,7 +20,8 @@ def get_history(request):
         robot = Robot.objects.get(slug=robot_slug)
         fight_versions = Fight_Version.objects.filter(version__robot=robot,
                                                       fight__fight_type__in=["FC", "NS"]).order_by(
-            "fight__contest__event__start_date", "fight__contest__id", "fight__number")
+            "fight__contest__event__start_date", "fight__contest__id", "fight__number").exclude(
+            fight__method__in=["NW", "WU"])
         rank = 1000
         fights = [{"name": "Initial Rank", "rank": 1000, "year": None, "event_name": None, "href": None}]
         history = [1000]

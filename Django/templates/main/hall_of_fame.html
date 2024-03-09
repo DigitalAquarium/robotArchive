@@ -17,13 +17,13 @@
                 {% for robot in members %}
                     <div class="gridview-square">
                         <div class="gridview-title">
-                             <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
+                             <img class="flag-image" src="{{ robot.get_flag }}" alt="{{robot.country}} Flag">
                             <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"
                                  src="{{robot.get_image}}"
-                                 alt="Robot Image">
+                                 alt="{{robot}}">
                         </div>
                     </div>
                     {% if forloop.counter|divisibleby:5 and not forloop.last %}
@@ -37,7 +37,7 @@
                 {% for robot in honoraries %}
                     <div class="gridview-square">
                         <div class="gridview-title">
-                             <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
+                             <img class="flag-image" src="{{ robot.get_flag }}" alt="{{robot.country}} Flag">
                             <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
                         </div>
                         <div class="gridview-image-container">

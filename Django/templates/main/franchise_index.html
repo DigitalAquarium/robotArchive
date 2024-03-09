@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block meta %}
-    <title>Franchises - Roboteer's Tavern</title>
+    <title>Franchises - Robot Combat Archive</title>
 {% endblock %}
 {% block content %}
     <form class="search-form" style="display:block; padding-left: 10%; padding-right: 10%; text-align: center"
@@ -19,7 +19,7 @@
         <span class="hrz-index-image">
         <img class="fit-image"
              src="{{franchise.get_logo_url}}"
-             alt="Franchise Logo">
+             alt="{{franchise}} Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">

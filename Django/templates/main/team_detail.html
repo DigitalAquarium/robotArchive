@@ -2,14 +2,14 @@
 {% load static %}
 {% load bonus_filters %}
 {% block meta %}
-    <title>{{ team }} - Roboteer's Tavern</title>
+    <title>{{ team }} - Robot Combat Archive</title>
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
 {% endblock %}
 {% block content %}
     {% if team %}
         <div class="main-content">
             <div class="team-heading">
-                <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+                <img class="flag-image" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
                 <h1>{{ team }}</h1>
                 {% if can_change %}
                     <a href="{% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Team"></a>
@@ -17,7 +17,7 @@
             </div>
             {% if team.logo %}
                 <div class="team-logo-image">
-                    <img class="fit-image" src="{{ team.logo.url }}" alt="logo">
+                    <img class="fit-image" src="{{ team.logo.url }}" alt="Logo">
                 </div>
             {% endif %}
 
@@ -44,7 +44,7 @@
                         <div class="gridview-image-container">
                             <img class="fit-image"
                                  src="{{robot|image_from_team:team}}"
-                                 alt="Robot Image">
+                                 alt="{{robot}}">
                         </div>
                     </div>
                     {% if forloop.counter|divisibleby:5 and not forloop.last %}
@@ -65,7 +65,7 @@
                         <div class="gridview-image-container">
                             <img class="fit-image"
                                  src="{{robot|image_from_team:team}}"
-                                 alt="Robot Image">
+                                 alt="{{robot}}">
                         </div>
                     </div>
                     {% if forloop.counter|divisibleby:5 and not forloop.last %}

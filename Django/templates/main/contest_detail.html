@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block meta %}
-    <title>{{ contest }} - Roboteer's Tavern</title>
+    <title>{{ contest }}: {{contest.event}} - Robot Combat Archive</title>
 {% endblock %}
 {% block content %}
     {% if contest %}
@@ -38,7 +38,13 @@
                                         {{ fight.winners|length|add:-2 }} more…
                                     {% endif %}
                                 {% else %}
-                                    None
+                                    {% if fight.method == "DR" %}
+                                        Draw
+                                    {% elif fight.method == "WU" %}
+                                        Unknown
+                                    {% else %}
+                                        None
+                                    {% endif %}
                                 {% endif %}
                             </td>
                         </tr>
@@ -54,13 +60,13 @@
                         {% for app in applications %}
                             <div class="gridview-square">
                                 <div class="gridview-title">
-                                    <img class="flag-image" src="{{ app.version.get_flag }}" alt="Flag">
+                                    <img class="flag-image" src="{{ app.version.get_flag }}" alt="{{app.version.country}} Flag">
                                     <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
                                 </div>
                                 <div class="gridview-image-container">
-                                    <img class="fit-image"
+                                    <img class="fit-image" loading="lazy"
                                          src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
-                                         alt="Robot Image">
+                                         alt="Competitor &quot;{{app.version}}&quot; at {{contest.event}}">
                                 </div>
                             </div>
                             {% if forloop.counter|divisibleby:5 and not forloop.last %}

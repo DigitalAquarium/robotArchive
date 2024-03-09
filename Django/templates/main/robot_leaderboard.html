@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block meta %}
-    <title>Leaderboard - Roboteer's Tavern</title>
+    <title>Leaderboard - Robot Combat Archive</title>
 	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}"/>
     <link rel="stylesheet" href="{% static 'style/tooltip.css' %}"/>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
@@ -42,15 +42,15 @@
 		{% for entry in top_three %}
             <div class="gridview-square">
 				<div class="gridview-title">
-                    <img class="big-trophy" src="{% if forloop.counter == 1 %}{% static 'awards/trophy_gold.png' %}{% elif forloop.counter == 2 %}{% static 'awards/trophy_silver.png' %}{%else%}{% static 'awards/trophy_bronze.png' %}{%endif%}" alt="Trophy">
+                    <img class="big-trophy" {% if forloop.counter == 1 %} src="{% static 'awards/trophy_gold.png' %}" alt="Gold Trophy" {% elif forloop.counter == 2 %} src="{% static 'awards/trophy_silver.png' %}" alt="Silver Trophy"{%else%} src="{% static 'awards/trophy_bronze.png' %}" alt="Bronze Trophy"{%endif%} >
                     <a href="{% url 'main:versionDetail' entry.version.id %}">{{ entry.version }}</a>{% include "snippets/leaderboard_difference_icon.html" with lb=entry first_year=first_year %}
                 </div>
                 <div class="gridview-subtitle">
-                    <img class="flag-image" src="{{ entry.version.get_flag }}" alt="Flag">
+                    <img class="flag-image" src="{{ entry.version.get_flag }}" alt="{{entry.version.country}} Flag">
                     <p>{{ entry.ranking|floatformat:2 }}</p>
                 </div>
                 <div class="gridview-image-container">
-                    <img class="fit-image" src="{% if entry.version.image %} {{ entry.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="Robot Image">
+                    <img class="fit-image" src="{% if entry.version.image %} {{ entry.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="{{entry.version}}">
                 </div>
             </div>
 		{% endfor %}
@@ -78,7 +78,7 @@
 					{% if forloop.counter > 3 %}
                     <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
-                    <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="Flag"></td>
+                    <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="{{lb.robot.country}} Flag"></td>
                     <td>
                         <span class="robot-name-cell">
                         <a href="{% url 'main:versionDetail' lb.version.id %}">
@@ -113,7 +113,7 @@
             {% for lb in eliminations %}
                 <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %}
                     style="background-color: #eeeeee"{% endif %}>
-                    <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="Flag"></td>
+                    <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="{{lb.robot.country}} Flag"></td>
                     <td>
                         <span class="robot-name-cell">
                         <a href="{% url 'main:versionDetail' lb.version.id %}">

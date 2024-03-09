@@ -2,7 +2,7 @@
 {% load static %}
 {% load bonus_filters %}
 {% block meta %}
-    <title>Events - Roboteer's Tavern</title>
+    <title>Events - Robot Combat Archive</title>
     <style>
     .searchform label {
         display: inline-block;
@@ -50,11 +50,11 @@
         {% for event in event_list %}
         <div class="hrz-index-result">
             <span class="hrz-index-image">
-                <img class="fit-image" src="{{event.get_logo_url}}" alt="Event Logo">
+                <img class="fit-image" src="{{event.get_logo_url}}" alt="{{event|truncatechars100}} Logo">
             </span>
             <div class="hrz-index-content">
                 <span class="hrz-index-title">
-                    <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
+                    <img class="flag-image" src="{{ event.get_flag }}" alt="{{event.get_flag}} Flag">
                     <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}{%if event.missing_brackets%} ⚠️{%endif%}</a>
                 </span>
                 <div class="hrz-index-details">

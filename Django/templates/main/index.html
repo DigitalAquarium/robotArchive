@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block meta %}
-    <title>Home - Roboteer's Tavern</title>
+    <title>Robot Combat Archive Home</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
     <style>
         .text-in-gridview{
@@ -29,7 +29,7 @@
                 <div class="gridview-square">
                     <div class="gridview-title">Robots</div>
                     <div class="gridview-image-container">
-                        <img class="fit-image" src="{{robot_image}}">
+                        <img class="fit-image" src="{{example_robot.get_image}}" alt="Example Robot: {{example_robot}}">
                     </div>
                 </div>
                 </a>
@@ -38,7 +38,7 @@
                 <div class="gridview-square">
                     <div class="gridview-title">Events</div>
                     <div class="gridview-image-container">
-                        <img class="fit-image" src="{{event_image}}">
+                        <img class="fit-image" src="{{example_event.get_logo_url}}" alt="Example Event Logo from &quot{{example_event}}&quot">
                     </div>
                 </div>
                 </a>
@@ -47,7 +47,7 @@
                 <div class="gridview-square">
                     <div class="gridview-title">Leaderboard</div>
                     <div class="gridview-image-container">
-                        <img class="fit-image" src="{%static 'awards/trophy_gold.png' %}">
+                        <img class="fit-image" src="{%static 'awards/trophy_gold.png' %}" alt="Gold Trophy">
                     </div>
                 </div>
                 </a>

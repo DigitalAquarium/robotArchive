@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block meta %}
-    <title>Teams - Roboteer's Tavern</title>
+    <title>Teams - Robot Combat Archive</title>
     <style>.searchform label {
         display: inline-block;
         margin: 0.3em;
@@ -36,11 +36,11 @@
         <span class="hrz-index-image">
         <img class="fit-image"
              src="{{team.get_logo_url}}"
-             alt="Team Logo">
+             alt="{{team}} Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
-                <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+                <img class="flag-image" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
                 <a href="{% url 'main:teamDetail' team.slug %}">{{ team.name }}</a>
             </span>
                     <span class="hrz-index-details">

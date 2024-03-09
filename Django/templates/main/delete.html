@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block meta %}
-    <title>Delete {{ instance }} - Roboteer's Tavern</title>
+    <title>Delete {{ instance }} - Robot Combat Archive</title>
 {% endblock %}
 {% block content %}
     <div class="main-content">
         <h1>Are you sure you want to delete {{ instance }}?</h1>
         <form method="get" {% if next_id %}
-              action="{% url "main:delete" model instance.id next_id %}"
+              action="{% url 'main:delete' model instance.id next_id %}"
         {% else %}
-              action="{% url "main:delete_noreturn" model instance.id %}"
+              action="{% url 'main:delete_noreturn' model instance.id %}"
         {% endif %}
               style="flex-direction: column">
             <label> Confirm Deletion

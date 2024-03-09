@@ -3,15 +3,16 @@
 {% load static %}
 
 {% block meta %}
-    <title>Editor Home - Roboteer's Tavern</title>
+    <title>Editor Home - Robot Combat Archive</title>
 {% endblock %}
 
 {% block content %}
+    {%block home_button%} <span class="home-icon"><a href="{%url 'main:index' %}?edt=stay"><img class="fit-image" src="{% static 'home_icon_google.svg'%}" alt="Home Icon"></a></span> {%endblock home_button%}
     <section class="search-params">
         <form class="search-form" method="get"
           action="{% url 'main:edtHome' %}">
              <label> Search Term:
-                <input name="name" type="text" value={{ name }}>
+                <input name="name" type="text" value="{{ name }}">
             </label>
             <br>
             <input type="submit" value="Search">

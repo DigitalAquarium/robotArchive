@@ -54,6 +54,15 @@ def edt_new_event_view(request):
                 return redirect("main:edtEvent", event.id)
         else:
             form = NewEventFormEDT()
+            if fran.event_set.count() > 0:
+                countries = fran.event_set.values('country')
+                cdict = {}
+                for c in countries:
+                    if c['country'] in cdict:
+                        cdict[c['country']] += 1
+                    else:
+                        cdict[c['country']] = 1
+                form.fields["country"].initial = max(cdict, key=cdict.get)
     else:
         fran = None
         form = NewEventFormEDT()
@@ -553,9 +562,9 @@ def index_view(request):
 
     events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
               "mechwars-iii", "robotica-season-1"]
-    robot_image = Robot.objects.filter(hallofame__full_member=True).order_by("?")[0].get_image()
-    event_image = Event.objects.get(slug=random.choice(events)).get_logo_url()
-    return render(request, "main/index.html", {"robot_image": robot_image, "event_image": event_image})
+    robot = Robot.objects.filter(hallofame__full_member=True).order_by("?")[0]
+    event = Event.objects.get(slug=random.choice(events))
+    return render(request, "main/index.html", {"example_robot": robot, "example_event": event})
 
 
 def event_index_view(request):
