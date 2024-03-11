@@ -1,3 +1,4 @@
+#from os import listdir, remove
 import random
 
 from django.contrib.auth.decorators import login_required, permission_required
@@ -1840,9 +1841,46 @@ def recalc_all(request):
                     new_entry.difference = diff
                     new_entry.save()'''
 
+#This shouldn't delete any data that is in use but just in case here's some permissions.
+@permission_required("main.change_robot", raise_exception=True)
+@permission_required("main.change_team", raise_exception=True)
+@permission_required("main.change_event", raise_exception=True)
+@permission_required("main.change_franchise", raise_exception=True)
+@permission_required("main.change_fight", raise_exception=True)
+def prune_media(request):
+    bad_images = []
 
-def clean_media(request):
-    robot_images = Robot.objects.all.values("image")
+    def check_media(used_files, dir):
+        year = datetime.date.today().year
+        filenames = listdir(settings.MEDIA_ROOT + "/" + dir + str(year))
+        for filename in filenames:
+            f = dir + str(year) + "/" + filename
+            if f not in used_files:
+                bad_images.append(f)
+
+    robot_images = Version.objects.all().values("image").distinct()
+    robot_images = [i['image'] for i in robot_images]
+    check_media(robot_images, "robot_images/")
+
+    team_logos = Team.objects.all().values("logo").distinct()
+    team_logos = [i['logo'] for i in team_logos]
+    check_media(team_logos, "team_logos/")
+
+    franchise_logos = Franchise.objects.all().values("logo").distinct()
+    franchise_logos = [i['logo'] for i in franchise_logos]
+    check_media(franchise_logos, "franchise_logos/")
+
+    event_logos = Event.objects.all().values("logo").distinct()
+    event_logos = [i['logo'] for i in event_logos]
+    check_media(event_logos, "event_logos/")
+
+    fight_media = Fight.objects.all().values("internal_media").distinct()
+    fight_media = [i['internal_media'] for i in fight_media]
+    check_media(fight_media, "fight_media/")
+
+    print("deleting", bad_images)
+    for i in bad_images:
+        remove(settings.MEDIA_ROOT + "/" + i)
 
 
 def tournament_tree(request):
