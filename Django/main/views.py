@@ -1777,7 +1777,7 @@ def recalc_all(request):
                                last_fought=None)
     Version.objects.all().update(first_fought=None, last_fought=None)
 
-    fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
+    fights = Fight.objects.all().order_by("contest__start_date", "contest__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")
     contest_cache = None
     for fight in fights:
