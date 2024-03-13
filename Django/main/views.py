@@ -879,7 +879,7 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        Leaderboard.update_class(weight)
+        #Leaderboard.update_class(weight)
         pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
@@ -1777,7 +1777,7 @@ def recalc_all(request):
                                last_fought=None)
     Version.objects.all().update(first_fought=None, last_fought=None)
 
-    fights = Fight.objects.all().order_by("contest__event__start_date", "contest__event__end_date",
+    fights = Fight.objects.all().order_by("contest__start_date", "contest__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")
     contest_cache = None
     for fight in fights:
@@ -1795,51 +1795,6 @@ def recalc_all(request):
         fight.calculate(True)
     return render(request, "main/credits.html", {})
 
-
-'''for year2 in [1994,1995,1996,1997,1998,1999,2000,2001,2002,2003]:
-        weights = ["L","M","H","S"]
-        if year2 == 1996:
-            weights.append("F")
-        if year2 == 1998:
-            weights = weights[:-1]
-        for weight2 in weights:
-            robot_list = Leaderboard.objects.filter(weight=weight2, year=year2, position__lt=101).order_by("-ranking")
-            previous_year = Leaderboard.objects.filter(weight=weight2, year=year2 - 1, position__lt=101)
-            still_here = []
-            for lb in robot_list:
-                prev_entry = previous_year.filter(robot=lb.robot)
-                flag = False
-                if prev_entry.count() > 0:
-                    flag = True
-                    prev_entry = prev_entry[0]
-                    still_here.append(prev_entry.id)
-                    lb.difference = prev_entry.position - lb.position
-                else:
-                    lb.difference = 101
-                print(year2,weight2,lb.robot, prev_entry.position if flag else "x","->",lb.position,lb.difference)
-                lb.save()
-
-            for lb in previous_year:
-                if lb.id not in still_here:
-                    if Leaderboard.objects.filter(year=year2, robot=lb.robot).count() > 0:
-                        #reason = "Switched Weight Class"
-                        diff = -103
-                    elif lb.robot.version_set.filter(last_fought__gte=datetime.date(year2 - 5, 12, 31)).count() == 0:  # TODO: Hardcoded year cutoff
-                        #reason = "Too Old: Timed Out"
-                        diff = -102
-                    else:
-                        #reason = "Rank Too Low: Eliminated"
-                        diff = -101
-                    print(year2,weight2,lb.robot, lb.position, "->", "x", diff)
-                    new_entry = Leaderboard()
-                    new_entry.year = year2
-                    new_entry.weight = weight2
-                    new_entry.robot = lb.robot
-                    new_entry.ranking = 0
-                    new_entry.position = 101
-                    new_entry.version = lb.robot.version_set.filter(first_fought__year__lte=year2).order_by("-last_fought")[0]
-                    new_entry.difference = diff
-                    new_entry.save()'''
 
 #This shouldn't delete any data that is in use but just in case here's some permissions.
 @permission_required("main.change_robot", raise_exception=True)
@@ -1881,55 +1836,3 @@ def prune_media(request):
     print("deleting", bad_images)
     for i in bad_images:
         remove(settings.MEDIA_ROOT + "/" + i)
-
-
-def tournament_tree(request):
-    # 97
-    # 3216
-    contest = Contest.objects.get(pk=97)
-    all_fights = Fight.objects.filter(contest=contest)
-    entry = Fight.objects.get(pk=3216)
-    fights = [entry]
-    links = {}
-    out = ""
-    entrantDict = {}
-    for i, version in enumerate(Version.objects.filter(fight__in=all_fights).distinct()):
-        entrantDict[version.id] = i + 1
-
-    for fight in fights:
-        # print(fight)
-        for fv in fight.fight_version_set.all():
-            prev = all_fights.filter(fight_version__version=fv.version)
-            prev = prev.exclude(number__gte=fight.number).order_by("-number")
-            if len(prev) > 0:
-                fights.append(prev[0])
-                links[prev[0].fight_version_set.get(version=fv.version)] = fight
-    localIDDict = {}
-    i = 0
-    # print(links)
-    for fight in all_fights:
-        out += "<fight"
-        try:
-            localID = localIDDict[fight]
-        except KeyError:
-            i += 1
-            localID = localIDDict[fight] = i
-        out += ' id="' + str(localID) + '">\n'
-        out += "\t<db_id>" + str(fight.id) + "</db_id>\n"
-        for fv in fight.fight_version_set.all():
-            out += '\t<competitor entrant="' + str(entrantDict[fv.version.id]) + '">\n'
-            try:
-                next_fight = links[fv]
-                try:
-                    nextLocalID = localIDDict[next_fight]
-                except KeyError:
-                    i += 1
-                    nextLocalID = localIDDict[next_fight] = i
-                out += "\t\t<next>" + str(nextLocalID) + "</next>\n"
-            except KeyError:
-                out += "\t\t<eliminated/>\n"
-            out += "\t</competitor>\n"
-        out += "</fight>\n"
-    print(out)
-
-    return render(request, "main/credits.html", {})
