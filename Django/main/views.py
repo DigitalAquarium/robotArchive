@@ -1,4 +1,4 @@
-#from os import listdir, remove
+# from os import listdir, remove
 import random
 
 from django.contrib.auth.decorators import login_required, permission_required
@@ -236,10 +236,8 @@ def edt_fight_view(request, fight_id):
             f.set_media_type()
             if "save" in request.POST:
                 for fv in fight.fight_version_set.all():
-                    if not fv.version.last_fought:
-                        fv.version.last_fought = fight.contest.start_date
-                        fv.version.robot.last_fought = fight.contest.start_date
-                    Leaderboard.update_robot_weight_class(fv.version.robot)
+                    fv.version.update_fought_range(fight.contest)
+                    Leaderboard.update_robot_weight_class(fv.version.robot)  # TODO: See if we need to do this
                 fight.calculate(commit=True)
                 response = redirect("main:edtContest", fight.contest.id)
                 response.delete_cookie("editing_fight")
@@ -879,7 +877,7 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        #Leaderboard.update_class(weight)
+        # Leaderboard.update_class(weight)
         pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
@@ -1391,7 +1389,14 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
         can_change = fight.can_edit(request.user)
     else:
         can_change = False
-    return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change})
+
+    next_fight = previous_fight = None
+    if Fight.objects.filter(contest=fight.contest, number__gt=fight.number).exists():
+        next_fight = Fight.objects.filter(contest=fight.contest, number__gt=fight.number).order_by("number")[0]
+    if Fight.objects.filter(contest=fight.contest, number__lt=fight.number).exists():
+        previous_fight = Fight.objects.filter(contest=fight.contest, number__lt=fight.number).order_by("-number")[0]
+    return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change,
+                                                      "next_fight": next_fight, "previous_fight": previous_fight})
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -1529,17 +1534,32 @@ def search_view(request):
         team_len = len(teams)
         teams = teams[:10]
         robots = Robot.objects.filter(name__icontains=search_term).union(
-            Robot.objects.filter(version__robot_name__icontains=search_term))
+            Robot.objects.filter(version__robot_name__icontains=search_term)).union(
+            Robot.objects.filter(latin_name__icontains=search_term)).union(
+            Robot.objects.filter(version__latin_robot_name__icontains=search_term))
         robot_len = len(robots)
         robots = robots[:10]
         events = Event.objects.filter(name__icontains=search_term).union(
             Event.objects.filter(contest__name__icontains=search_term))
         event_len = len(events)
         events = events[:10]
-    return render(request, "main/search.html",
-                  {"events": events, "robots": robots, "teams": teams, "franchises": franchises,
-                   "search_term": search_term, "fran_len": fran_len, "event_len": event_len, "robot_len": robot_len,
-                   "team_len": team_len})
+
+    if fran_len + team_len + robot_len + event_len == 1:
+        redir = None
+        if fran_len == 1:
+            redir = redirect("main:franchiseDetail", franchises[0].slug)
+        elif team_len == 1:
+            redir = redirect("main:teamDetail", teams[0].slug)
+        elif robot_len == 1:
+            redir = redirect("main:robotDetail", robots[0].slug)
+        elif event_len == 1:
+            redir = redirect("main:eventDetail", events[0].slug)
+        return redir
+    else:
+        return render(request, "main/search.html",
+                      {"events": events, "robots": robots, "teams": teams, "franchises": franchises,
+                       "search_term": search_term, "fran_len": fran_len, "event_len": event_len, "robot_len": robot_len,
+                       "team_len": team_len})
 
 
 @permission_required("main.add_weight_class", raise_exception=True)
@@ -1772,6 +1792,22 @@ def ranking_system_view(request):
 
 
 def recalc_all(request):
+    def save_contest(contest_cache):
+        vers_up = []
+        robs_up = []
+        print("updating robots")
+        for reg in contest_cache.registration_set.all():
+            if reg.version.update_fought_range(contest_cache, False):
+                vers_up.append(reg.version)
+                robs_up.append(reg.version.robot)
+        Version.objects.bulk_update(vers_up, ["first_fought", "last_fought"])
+        Robot.objects.bulk_update(robs_up, ["first_fought", "last_fought"])
+        robs_up = []
+        for reg in contest_cache.registration_set.all():
+            robs_up.append(Leaderboard.update_robot_weight_class(reg.version.robot, commit=False,
+                                                                 year=contest_cache.end_date.year))
+        Robot.objects.bulk_update(robs_up, ["lb_weight_class"])
+
     # Need top update more robots than currently doing to add the X to them
     Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X", first_fought=None,
                                last_fought=None)
@@ -1783,20 +1819,24 @@ def recalc_all(request):
     for fight in fights:
         if contest_cache != fight.contest:
             if contest_cache is not None:
-                print("updating robots")
-                for reg in contest_cache.registration_set.all():
-                    Leaderboard.update_robot_weight_class(reg.version.robot, year=contest_cache.end_date.year)
+                save_contest(contest_cache)
                 if contest_cache.end_date.year != fight.contest.end_date.year:
                     print("Creating Leaderboard for year: " + str(contest_cache.end_date.year))
                     Leaderboard.update_all(contest_cache.end_date.year)
             contest_cache = fight.contest
-            event_cache = contest_cache.event
             print("Saving:", contest_cache, fight.contest.event)
         fight.calculate(True)
+
+    # Final Pass
+    print("Final Pass: updating robots")
+    save_contest(contest_cache)
+    print("Creating Leaderboard for year: " + str(contest_cache.end_date.year))
+    Leaderboard.update_all(contest_cache.end_date.year)
     return render(request, "main/credits.html", {})
 
 
-#This shouldn't delete any data that is in use but just in case here's some permissions.
+
+# This shouldn't delete any data that is in use but just in case here's some permissions.
 @permission_required("main.change_robot", raise_exception=True)
 @permission_required("main.change_team", raise_exception=True)
 @permission_required("main.change_event", raise_exception=True)

@@ -8,10 +8,12 @@
     <img class="fight-image" src="{{ fight.external_media }}" alt="{{fight}}">
 
 {% elif fight.media_type == "LV" %}
-    <video id="fight-video" class="video-js" width="800" height="450" data-setup='{"controls": true, "autoplay": false, "preload": "auto"}' onloadstart="this.volume=0.20" >
+    <div class="vidjs-container">
+    <video id="fight-video" class="video-js vjs-fill" data-setup='{"controls": true, "autoplay": false, "preload": "auto"}' onloadstart="this.volume=0.20" >
         <source src="{{ fight.internal_media.url }}" type="video/mp4"/>
         <p class="vjs-no-js"> To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
-    </video>
+    </video></div>
+
     <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet"/>
     <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
 					
@@ -22,14 +24,13 @@
   <div
     id="fight-video-fb"
     class="fb-video"
+    data-height="800"
     data-href="{{fight.external_media}}"
-    data-width="800"
-    data-height="480"
     data-show-text="false"
     data-allowfullscreen="true"></div>
 
 {% elif fight.media_type == "IF" %}
-    <iframe src="{{ fight.external_media }}" width="800px" height="480px" title="Fight Video" allowfullscreen></iframe>
+    <iframe width="100%" height="800px" src="{{ fight.external_media }}" title="Fight Video" allowfullscreen></iframe>
 
 {% elif fight.media_type == "IG" %}
     <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.external_media }}" data-instgrm-version="14">

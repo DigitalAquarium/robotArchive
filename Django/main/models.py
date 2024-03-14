@@ -49,6 +49,7 @@ for line in robot_slug_blacklist_file:
     robot_slug_blacklist.append(line.replace("\n", ""))
 robot_slug_blacklist_file.close()
 
+
 def get_flag(code):
     return settings.STATIC_URL + "flags/4x3/" + code.lower() + ".svg"
 
@@ -264,8 +265,10 @@ class Robot(models.Model):
         if similar_slugs.filter(slug=desired_slug).count() > 0:
             slug_holder = similar_slugs.get(slug=desired_slug)
 
-            same_wc = (self.lb_weight_class == slug_holder.lb_weight_class and self.lb_weight_class != 'X' and slug_holder.lb_weight_class != 'X') or \
-                      (self.last_version().weight_class.find_lb_class() == slug_holder.version_set.last().weight_class.find_lb_class())
+            same_wc = (
+                              self.lb_weight_class == slug_holder.lb_weight_class and self.lb_weight_class != 'X' and slug_holder.lb_weight_class != 'X') or \
+                      (
+                              self.last_version().weight_class.find_lb_class() == slug_holder.version_set.last().weight_class.find_lb_class())
             if not same_wc:
                 if self.lb_weight_class == "S":
                     weight_slug = "-shw"
@@ -288,7 +291,8 @@ class Robot(models.Model):
                 same_country = self.country == slug_holder.country
                 if not same_country:
                     country_dict = {"GB": "-uk", "US": "-usa", "AE": "-uae", "KP": "-north-korea", "KR": "-south-korea",
-                                    "CD": "-dr-congo", "RU": "-russia", "SY": "-syria", "BO": "-bolivia", "BN": "-benin",
+                                    "CD": "-dr-congo", "RU": "-russia", "SY": "-syria", "BO": "-bolivia",
+                                    "BN": "-benin",
                                     "FM": "-micronesia", "IR": "-iran", "LA": "-laos", "MF": "-saint-martin",
                                     "SX": "-sint-maartin", "MD": "-moldova", "PS": "-palestine", "VN": "-vietnam",
                                     "TW": "-taiwan", "XE": "-england", "XS": "-scotland", "XW": "-wales",
@@ -300,7 +304,7 @@ class Robot(models.Model):
                     desired_slug = desired_slug + country_slug
 
         if similar_slugs.filter(slug=desired_slug).count() > 0 or desired_slug in robot_slug_blacklist:
-            matching_regex = "(" + re.escape(desired_slug)+")(-[0-9]*)?"
+            matching_regex = "(" + re.escape(desired_slug) + ")(-[0-9]*)?"
             number_of_matches = similar_slugs.filter(slug__regex=matching_regex).count()
             found_unique_number = False
             for i in range(2, number_of_matches + 1000):
@@ -407,6 +411,31 @@ class Version(models.Model):
         self.latin_robot_name = asciify(self.robot_name, "Version", self.id)
         if commit:
             self.save()
+
+    def update_fought_range(self, contest, commit=True):
+        v_update_flag = False
+        r_update_flag = False
+
+        if not self.first_fought or self.first_fought > contest.start_date:
+            self.first_fought = contest.start_date
+            v_update_flag = True
+        if not self.robot.first_fought or self.robot.first_fought > contest.start_date:
+            self.robot.first_fought = contest.start_date
+            v_update_flag = True
+
+        if not self.last_fought or self.last_fought < contest.end_date:
+            self.last_fought = contest.end_date
+            v_update_flag = True
+        if not self.robot.last_fought or self.robot.last_fought < contest.end_date:
+            self.robot.last_fought = contest.end_date
+            r_update_flag = True
+
+        if commit:
+            if v_update_flag:
+                self.save()
+            if r_update_flag:
+                self.robot.save()
+        return v_update_flag or r_update_flag
 
     def get_latin_name(self):
         if self.robot_name != "":
@@ -620,8 +649,8 @@ class Fight(models.Model):
             return
         K = 25
         if self.fight_type == "NS":
-            # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a spinner
-            # and those robots typically do more fights anyway due to being less destroyed.
+            # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a
+            # spinner and those robots typically do more fights anyway due to being less destroyed.
             K /= 2
         fvs = self.fight_version_set.all()
         numBots = len(fvs)  # Must be len and not count because lazy loading causes the robot to not save otherwise
@@ -657,7 +686,7 @@ class Fight(models.Model):
                 for i in range(numBots):
                     q = 10 ** (fvs[i].version.robot.ranking / 400)
                     averageExpected = averageQ / (averageQ + q)
-                    if self.method == "DR": # Some elo here may get lost on the floor or gained due to floating points
+                    if self.method == "DR":  # Some elo here may get lost on the floor or gained due to floating points
                         change = (K * (0.5 - averageExpected)) / numBots
                     else:
                         change = (K * (1 - averageExpected)) / numBots
@@ -736,27 +765,19 @@ class Fight(models.Model):
                 else:
                     fv.version.robot.losses += 1
 
-        # Update when fought
-        vupdateFlag = False
+        rank_changed = False
         for fv in fvs:
-            if not fv.version.first_fought or fv.version.first_fought > fv.fight.contest.start_date:
-                fv.version.first_fought = fv.fight.contest.start_date
-                vupdateFlag = True
-            if not fv.version.robot.first_fought or fv.version.robot.first_fought > fv.fight.contest.start_date:
-                fv.version.robot.first_fought = fv.fight.contest.start_date
+            if fv.ranking_change != 0:
+                rank_changed = True
+                break
 
-            if not fv.version.last_fought or fv.version.last_fought < fv.fight.contest.end_date:
-                fv.version.last_fought = fv.fight.contest.end_date
-                vupdateFlag = True
-            if not fv.version.robot.last_fought or fv.version.robot.last_fought < fv.fight.contest.end_date:
-                fv.version.robot.last_fought = fv.fight.contest.end_date
-
-        if commit:
+        if commit and rank_changed:
+            robs = []
             for fv in fvs:
-                if vupdateFlag:
-                    fv.version.save()
-                fv.version.robot.save()
-                fv.save()
+                robs.append(fv.version.robot)
+            Robot.objects.bulk_update(robs, ["ranking", "wins", "losses"])
+            Fight_Version.objects.bulk_update(fvs, ["ranking_change"])
+
         return fvs
 
     def format_external_media(self):  # TODO: Youtube Shorts
@@ -959,7 +980,6 @@ class Fight(models.Model):
     def __str__(self):
         return self.string_name(True)
 
-
     def can_edit(self, user):
         return self.contest.can_edit(user)
 
@@ -1080,7 +1100,8 @@ class Leaderboard(models.Model):
             if i < lb.count():
                 to_update = lb[i]
                 to_update.robot = robot
-                to_update.version = robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[0]
+                to_update.version = \
+                    robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[0]
                 to_update.ranking = robot.ranking
                 to_update.position = i + 1
                 to_update.difference = -1000
@@ -1093,7 +1114,8 @@ class Leaderboard(models.Model):
                 new_entry.weight = wc
                 new_entry.year = current_year
                 new_entry.robot = robot
-                new_entry.version = robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[0]
+                new_entry.version = \
+                    robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[0]
                 new_entry.difference = -1000
                 entry = new_entry
                 new_entry.save()
@@ -1105,7 +1127,7 @@ class Leaderboard(models.Model):
                 if entry.difference == -1000:
                     entry.difference = prev_entry.position - entry.position
                     update_list.append(entry)
-            elif Leaderboard.objects.filter(robot=robot, year=current_year-1).exclude(weight=wc).exists():
+            elif Leaderboard.objects.filter(robot=robot, year=current_year - 1).exclude(weight=wc).exists():
                 if entry.difference == -1000:
                     entry.difference = 102
                     update_list.append(entry)
@@ -1133,8 +1155,9 @@ class Leaderboard(models.Model):
                     new_entry.robot = entry.robot
                     new_entry.ranking = 0
                     new_entry.position = 101
-                    new_entry.version = entry.robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[
-                        0]
+                    new_entry.version = \
+                        entry.robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[
+                            0]
                     new_entry.difference = diff
                     new_entry.save()
 

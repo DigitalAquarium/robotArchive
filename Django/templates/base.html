@@ -11,8 +11,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="keywords" content="Robot Wars, BattleBots, Robogames, Robot Combat, Combots, Robots, Technology, Fighting Sports">
     {% block description %}
-        <meta name="description" content="A website for archiving and ranking robots competing in robot combat events such as Robot Wars and BattleBots, but also live events such as Robogames and Extreme Robots and even lesser known overseas competitions such as King of Bots, Robot Power and Bitva Robotov. Archive currently complete up to 2003">
+        <meta name="description" content="A website for archiving and ranking robots competing in robot combat events from Robot Wars and BattleBots to live events such as Robogames and Extreme Robots and even lesser known overseas competitions such as King of Bots, Robot Power and Bitva Robotov. Archive currently complete up to 2003">
     {% endblock %}
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{%static 'favicon/apple-touch-icon.png'%}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{%static 'favicon/favicon-32x32.png'%}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{%static 'favicon/favicon-16x16.png'%}">
+    <link rel="manifest" href="{%static 'favicon/site.webmanifest' %}">
 </head>
 
 <body>
@@ -23,7 +28,7 @@
                 <span class="home-icon"><a href="{%url 'main:index' %}"><img class="fit-image" src="{% static 'home_icon_google.svg'%}" alt="Home Icon"></a></span>
             {% endblock home_button %}
         </div>
-    <span style="padding-left:10%;font-size:0.8em;">Data accurate up to 2003</span>
+    <span style="padding-left:5%;font-size:0.8em;">Data accurate up to 2003</span>
         <div class="navlinks">
             <ul>
                 <li>

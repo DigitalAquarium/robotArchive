@@ -1,4 +1,3 @@
-import datetime
 import urllib
 import time
 from io import BytesIO
@@ -8,9 +7,7 @@ from django.core.files import File
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db.models import Max
-from django.forms import DateField
+from django.core.exceptions import ObjectDoesNotExist
 
 from .models import *
 
