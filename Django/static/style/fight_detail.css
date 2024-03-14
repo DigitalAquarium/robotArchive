@@ -4,6 +4,9 @@
     display: flex;
     justify-content: center;
 }
+.winners-box{
+    box-shadow: inset limegreen 0 0 0.1em 0.3em;
+}
 
 h1 {
     margin-block: -0.2em;
@@ -12,6 +15,11 @@ h1 {
 .gridview-row {
     grid-template-rows: 20em;
     grid-auto-columns: 30%;
+    margin-bottom: 0;
+}
+
+.gridview-title{
+    margin-left:0.2em;
 }
 
 .competitor-title {
@@ -35,19 +43,41 @@ h1 {
 }
 
 .fight-media {
-    text-align: center
+    text-align: center;
+    margin-top:0.6em;
+    max-width: 100%;
+    max-height:800px;
 }
 .fight-image {
     max-width: 100%;
+    max-height:800px;
 }
 
+.vidjs-container{
+    width:100%; height:800px;
+}
 .instagram-media {
     background: #FFF;
     border: 0;
     border-radius: 3px;
     box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.5), 0 1px 10px 0 rgba(0, 0, 0, 0.15);
     margin: 1px;
-    width: 800px;
+    width: 100%;
     min-width: 326px;
     padding: 0;
+}
+
+.fight-nav{
+    display: flex;
+    justify-content: space-between;
+    width:100%
+}
+
+.fight-nav-text p{
+    font-size:0.8em;
+    margin:0;
+}
+
+.fnt-right{
+    text-align:right;
 }

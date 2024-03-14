@@ -7,30 +7,34 @@
 {% block content %}
     {% if fight %}
         <div class="main-content">
-        <h1> {{ fight.non_latin_name }}
-            {% if can_change %}
-                <a href="{% url 'main:edtFightOverview' fight.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Fight"></a>
-            {% endif %}
-        </h1>
+            <h1> {{ fight.non_latin_name }}
+                {% if can_change %}
+                    <a href="{% url 'main:edtFightOverview' fight.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Fight"></a>
+                {% endif %}
+            </h1>
+            <h4 style="font-weight:normal">A {% if fight.fight_type == "NC" %}round of{% else %}fight at{% endif %} the <a href="{% url 'main:contestDetail' fight.contest.id %}">{{fight.contest}}</a> contest at <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{fight.contest.event}}</a></h4>
+
+            <div class="fight-media">
+                {%include "snippets/fight_media.html" with fight=fight %}
+            </div>
+
         <h4>{{ fight.get_fight_type_display }} </h4>
         {% if fight.fight_version_set.last.tag_team == 0 %}
             <div class="gridview-row competitor-row">
-                {% for version in fight.competitors.all %}
+                {% for fv in fight.fight_version_set.all %}
                     {% if forloop.counter == 2 and forloop.last %}
                         <div class="competitor-vs">
                             <p>vs</p>
                         </div>
                     {% endif %}
-                    <div class="gridview-square competitor-square">
+                    <div class="gridview-square competitor-square {%if fv.won%} winners-box{%endif%}">
                         <div class="gridview-title">
-                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
-                            <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
+                            <img class="flag-image" src="{{ fv.version.get_flag }}" alt="{{fv.version.country}} Flag">
+                            <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
                         </div>
                         <div class="gridview-image-container">
-                            <img class="fit-image" src="
-
-                                    {% if version.image %}{{ version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
-                                 alt="{%if version.image%}Robot {{version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
+                            <img class="fit-image" src="{% if fv.version.image %}{{ fv.version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
+                                 alt="{%if fv.version.image %}Robot {{fv.version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
                         </div>
                     </div>
 
@@ -51,13 +55,12 @@
                         {% endif %}
                         <div class="gridview-square">
                             <div class="gridview-title">
+                                {%if
                                 <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
                                 <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
                             </div>
                             <div class="gridview-image-container">
-                                <img class="fit-image" src="
-
-                                        {% if version.image %}{{ version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
+                                <img class="fit-image" src="{% if version.image %}{{ version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
                                      alt="{%if version.image%}Robot {{version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
                             </div>
                         </div>
@@ -87,12 +90,22 @@
                 {{ fight.get_method_display }}
             </p>
         </div>
-
-
-        <div class="fight-media">
-            {%include "snippets/fight_media.html" with fight=fight %}
-        </div>
-
+            <br>
+            <br>
+            <div class="fight-nav">
+                <div class="fight-nav-text">
+                {%if previous_fight %}
+                    <a href="{%url 'main:fightDetail' previous_fight.id %}"><< Previous {% if previous_fight.fight_type == "NC" %}Round{% else %}Fight{% endif %}</a>
+                    <p>{{previous_fight}}</p>
+                {%endif%}
+                </div>
+                <div class="fight-nav-text fnt-right">
+                {%if next_fight %}
+                    <a href="{%url 'main:fightDetail' next_fight.id %}">Next {% if next_fight.fight_type == "NC" %}Round{% else %}Fight{% endif %} >></a>
+                    <p>{{next_fight}}</p>
+                {%endif%}
+                </div>
+            </div>
     {% else %}
         something has gone wrong
     {% endif %}

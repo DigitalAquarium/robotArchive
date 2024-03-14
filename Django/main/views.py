@@ -877,7 +877,7 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        #Leaderboard.update_class(weight)
+        # Leaderboard.update_class(weight)
         pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
@@ -1389,7 +1389,14 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
         can_change = fight.can_edit(request.user)
     else:
         can_change = False
-    return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change})
+
+    next_fight = previous_fight = None
+    if Fight.objects.filter(contest=fight.contest, number__gt=fight.number).exists():
+        next_fight = Fight.objects.filter(contest=fight.contest, number__gt=fight.number).order_by("number")[0]
+    if Fight.objects.filter(contest=fight.contest, number__lt=fight.number).exists():
+        previous_fight = Fight.objects.filter(contest=fight.contest, number__lt=fight.number).order_by("-number")[0]
+    return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change,
+                                                      "next_fight": next_fight, "previous_fight": previous_fight})
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -1527,17 +1534,32 @@ def search_view(request):
         team_len = len(teams)
         teams = teams[:10]
         robots = Robot.objects.filter(name__icontains=search_term).union(
-            Robot.objects.filter(version__robot_name__icontains=search_term))
+            Robot.objects.filter(version__robot_name__icontains=search_term)).union(
+            Robot.objects.filter(latin_name__icontains=search_term)).union(
+            Robot.objects.filter(version__latin_robot_name__icontains=search_term))
         robot_len = len(robots)
         robots = robots[:10]
         events = Event.objects.filter(name__icontains=search_term).union(
             Event.objects.filter(contest__name__icontains=search_term))
         event_len = len(events)
         events = events[:10]
-    return render(request, "main/search.html",
-                  {"events": events, "robots": robots, "teams": teams, "franchises": franchises,
-                   "search_term": search_term, "fran_len": fran_len, "event_len": event_len, "robot_len": robot_len,
-                   "team_len": team_len})
+
+    if fran_len + team_len + robot_len + event_len == 1:
+        redir = None
+        if fran_len == 1:
+            redir = redirect("main:franchiseDetail", franchises[0].slug)
+        elif team_len == 1:
+            redir = redirect("main:teamDetail", teams[0].slug)
+        elif robot_len == 1:
+            redir = redirect("main:robotDetail", robots[0].slug)
+        elif event_len == 1:
+            redir = redirect("main:eventDetail", events[0].slug)
+        return redir
+    else:
+        return render(request, "main/search.html",
+                      {"events": events, "robots": robots, "teams": teams, "franchises": franchises,
+                       "search_term": search_term, "fran_len": fran_len, "event_len": event_len, "robot_len": robot_len,
+                       "team_len": team_len})
 
 
 @permission_required("main.add_weight_class", raise_exception=True)

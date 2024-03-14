@@ -12,6 +12,7 @@
                 <a href="{% url 'main:edtContest' contest.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Contest"></a>
             {% endif %}
         </div>
+            <h4 style="font-weight:normal">A contest at <a href="{% url 'main:eventDetail' contest.event.slug %}">{{contest.event}}</a></h4>
             {%if fights|length > 0%}
                 <table>
                     <thead>
