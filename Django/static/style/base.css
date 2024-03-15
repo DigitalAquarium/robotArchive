@@ -242,12 +242,19 @@ form fieldset legend {
     margin-left: 0.3em;
 }
 
+.mobile-show{
+    visibility:hidden;
+}
+
 @media (max-width: 700px){
     body{
         font-size:0.8em;
     }
     .mobile-hide{
         display:none;
+    }
+    .mobile-show{
+        visibility:visible;
     }
     .hrz-index-result{
         flex-direction:column-reverse;

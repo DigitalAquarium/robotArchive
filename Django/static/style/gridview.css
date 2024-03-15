@@ -1,10 +1,18 @@
-.gridview-row {
+/* Default gridview width: 5 */
+.gridview-container {
   display: grid;
   justify-content: center;
-  grid-auto-flow: column;
-  grid-auto-columns: 20%;
-  grid-template-rows: 15em;
-  margin-bottom:1em;
+  align-items:center;
+  grid-template-columns: repeat(auto-fit,20%);
+}
+.grid-width-4 {
+  grid-template-columns: repeat(auto-fit,25%);
+}
+.grid-width-3 {
+  grid-template-columns: repeat(auto-fit,33%);
+}
+.grid-width-2 {
+  grid-template-columns: repeat(auto-fit,50%);
 }
 
 .gridview-square {
@@ -14,10 +22,11 @@
   display:flex;
   flex-direction: column;
   justify-content: space-around;
+  aspect-ratio:1;
 }
 
 .gridview-title {
-  font-size: 24px;
+  font-size: 1.3em;
   width: 100%;
   display: flex;
   align-items:center;
@@ -46,4 +55,25 @@
 .gridview-image-container .fit-image{
   width: 100%;
   height: 100%;
+}
+
+@media (min-width: 2000px){
+    .gridview-container {
+        grid-template-columns: repeat(auto-fit,16%);
+    }
+}
+
+@media (max-width: 1079px){
+    .gridview-container {
+        grid-template-columns: repeat(auto-fit,33%);
+    }
+}
+
+@media (max-width: 700px){
+  .gridview-container {
+    grid-template-columns: repeat(auto-fit,50%);
+  }
+  .gridview-title {
+    font-size: 1.25em;
+  }
 }

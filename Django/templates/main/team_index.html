@@ -40,7 +40,7 @@
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
-                <img class="flag-image" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
+                <img class="flag-image" loading="lazy" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
                 <a href="{% url 'main:teamDetail' team.slug %}">{{ team.name }}</a>
             </span>
                     <span class="hrz-index-details">

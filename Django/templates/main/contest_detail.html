@@ -19,7 +19,7 @@
                     <thead>
                     <tr>
                         <th>Fight</th>
-                        <th>Type</th>
+                        <th class="mobile-hide">Type</th>
                         <th>Winners</th>
                     </tr>
                     </thead>
@@ -28,7 +28,7 @@
                     {% for fight in fights %}
                         <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
                             <td><a href="{% url 'main:fightDetail' fight.id %}" style="display:inline-flex">{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %}</a></td>
-                            <td>{{ fight.get_fight_type_display }}</td>
+                            <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
                             <td>
                                 {% if fight.winners|length > 0 %}
                                     {% if fight.winners|length == 1 %}
@@ -58,11 +58,11 @@
 
             {% if applications %}
                 <h2>Competitors</h2>
-                    <div class="gridview-row">
+                    <div class="gridview-container">
                         {% for app in applications %}
                             <div class="gridview-square">
                                 <div class="gridview-title">
-                                    <img class="flag-image" src="{{ app.version.get_flag }}" alt="{{app.version.country}} Flag">
+                                    <img class="flag-image" loading="lazy" src="{{ app.version.get_flag }}" alt="{{app.version.country}} Flag">
                                     <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
                                 </div>
                                 <div class="gridview-image-container">
@@ -71,10 +71,6 @@
                                          alt="Competitor &quot;{{app.version}}&quot; at {{contest.event}}">
                                 </div>
                             </div>
-                            {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                                </div>
-                                <div class="gridview-row">
-                            {% endif %}
                         {% endfor %}
                         </div>
             {% endif %}
