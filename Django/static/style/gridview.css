@@ -1,0 +1,49 @@
+.gridview-row {
+  display: grid;
+  justify-content: center;
+  grid-auto-flow: column;
+  grid-auto-columns: 20%;
+  grid-template-rows: 15em;
+  margin-bottom:1em;
+}
+
+.gridview-square {
+  padding: 0.375em;
+  margin: 0.375em;
+  text-overflow: ellipsis;
+  display:flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.gridview-title {
+  font-size: 24px;
+  width: 100%;
+  display: flex;
+  align-items:center;
+  height: 1.2em;
+}
+.gridview-title .flag-image {
+    margin: 0px;
+    margin-right: 5px;
+}
+
+.gridview-title a {
+  display: inline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gridview-image-container {
+  width: 100%;
+  height: calc(90% - 0.75em);
+  display: flex;
+  align-items:center;
+  justify-content: center;
+}
+
+.gridview-image-container .fit-image{
+  width: 100%;
+  height: 100%;
+}

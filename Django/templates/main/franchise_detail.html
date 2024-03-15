@@ -2,6 +2,7 @@
 {% load static %}
 {% block meta %}
     <title>{{ fran }} - Robot Combat Archive</title>
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/franchise_detail.css' %}">
 {% endblock %}
 {% block content %}
@@ -9,7 +10,9 @@
         <div class="main-content">
         <div class="heading">
             <h1>{{ fran }}</h1>
+            {%if can_edit %}
             <a href="{% url 'main:editFranchise' fran.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Franchise"></a>
+            {%endif%}
         </div>
 
         {% if fran.logo %}

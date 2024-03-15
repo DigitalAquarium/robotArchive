@@ -1,0 +1,13 @@
+.robot-title-text{
+    margin-left: 0.3em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    }
+.robot-title{
+    width:100%;
+}
+.searchform label {
+        display: inline-block;
+        margin: 0.3em;
+    }

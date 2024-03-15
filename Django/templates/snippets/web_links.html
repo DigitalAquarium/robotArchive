@@ -11,10 +11,6 @@
                 {{web.get_display}}
             </a>
         </span>
-        {%if forloop.counter|divisibleby:5 and not forloop.last %}
-            </div>
-            <div class="web-links">
-        {%endif%}
     {% endfor %}
 </div>
 {%endif%}

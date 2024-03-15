@@ -4,31 +4,3 @@
     max-height: 700px;
     margin: 0.5em;
 }
-/*.grid-row {
-    display: inline-flex;
-    width: 100%;
-    height: 15em;
-    justify-content: center;
-    margin:15px;
-}
-
-.grid-square{
-    width: 25%;
-    height:100%;
-    margin-inline:15px;
-    border: fuchsia solid;
-}
-
-.grid-title{
-    font-size:16px;
-    display: flex;
-    max-height: 1.2em;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.image-container{
-    width:100%;
-    height:90%;
-    display:flex;
-    justify-content: center;
-}*/

@@ -2,6 +2,7 @@
 {% load static %}
 {% block meta %}
     <title>{{ contest }}: {{contest.event}} - Robot Combat Archive</title>
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 {% endblock %}
 {% block content %}
     {% if contest %}
