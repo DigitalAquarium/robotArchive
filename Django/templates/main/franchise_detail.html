@@ -9,7 +9,9 @@
         <div class="main-content">
         <div class="heading">
             <h1>{{ fran }}</h1>
-            <a href="{% url 'main:editFranchise' fran.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Franchise"></a>
+            {% if can_change %}
+                <a href="{% url 'main:editFranchise' fran.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Franchise"></a>
+            {%endif%}
         </div>
 
         {% if fran.logo %}
