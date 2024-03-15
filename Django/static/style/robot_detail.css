@@ -17,7 +17,6 @@
 
 .version-header {
     font-size: 2em;
-    /*height:  calc(1em + 6px);*/
     width: calc(100%);
     display: flex;
 }
@@ -48,7 +47,7 @@
 }
 
 .version-mini-head {
-    font-size: 18px;
+    font-size: 1.125em;
     display: flex;
     flex-direction: column;
 }
@@ -69,8 +68,16 @@
 
 .random-robot a{
     border: none;
+}
+
+.rand-question-mark{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color:black;
+    font-size: 1.2em;
+    font-weight: bold;
     width: 2em;
-    height:1.5em;
 
     background: linear-gradient(270deg, #dd3d19, #e49003, #efff1c, #0799ec, #02d930, #3a00f0, #a400f0);
     background-size: 1400% 1400%;
@@ -79,15 +86,6 @@
     -moz-animation: random-animation 30s ease infinite;
     -o-animation: random-animation 30s ease infinite;
     animation: random-animation 30s ease infinite;
-}
-
-.rand-question-mark{
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    color:black;
-    font-size: 1.2em;
-    font-weight: bold;
 }
 
 @-webkit-keyframes random-animation {
@@ -109,5 +107,36 @@
     0%{background-position:0% 36%}
     50%{background-position:100% 65%}
     100%{background-position:0% 36%}
+}
+@media (max-width: 700px){
+    h2{
+        display:flex;
+        flex-direction:column;
+    }
+    .rand-question-mark{
+        width: 100%;
+        height:2em;
+        }
+    .version-block {
+        height:auto;
+    }
+    .version-content {
+        flex-direction: column;
+        height: auto;
+        }
+    .version-image{
+        width:auto;
+        height:auto;
+        max-height:350px;
+    }
+    .version-mini-head span{
+        margin-bottom:0.5em;
+    }
+    .version-description{
+        height:auto;
+        overflow:auto;
+        margin-bottom:1.5em;
+    }
+}
 }
 

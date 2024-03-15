@@ -1,4 +1,20 @@
 var fb_app_id = '282093964915903'
+
+$(document).ready(function(){
+function facebookEmbedWidth(mobile) {
+  if (mobile.matches) {
+    $("#fight-video-fb").attr("data-height",400);
+  } else {
+    $("#fight-video-fb").attr("data-height",800);
+  }
+}
+var mobile = window.matchMedia("(max-width: 700px)")
+facebookEmbedWidth(mobile);
+mobile.addEventListener("change", function() {
+  facebookEmbedWidth(mobile);
+});
+
+
 window.fbAsyncInit = function() {
       FB.init({
         appId      : fb_app_id,
@@ -24,3 +40,4 @@ window.fbAsyncInit = function() {
         }
       });
     };
+    });

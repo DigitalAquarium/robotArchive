@@ -2,6 +2,7 @@
 {% load static %}
 {% block meta %}
     <title> {{ fight.non_latin_name }} - Robot Combat Archive </title>
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
 {% endblock %}
 {% block content %}
@@ -20,14 +21,14 @@
 
         <h4>{{ fight.get_fight_type_display }} </h4>
         {% if fight.fight_version_set.last.tag_team == 0 %}
-            <div class="gridview-row competitor-row">
+            <div class="gridview-container{%if fight.fight_version_set.all|length == 2%} vs-is-present{%endif%}">
                 {% for fv in fight.fight_version_set.all %}
                     {% if forloop.counter == 2 and forloop.last %}
                         <div class="competitor-vs">
                             <p>vs</p>
                         </div>
                     {% endif %}
-                    <div class="gridview-square competitor-square {%if fv.won%} winners-box{%endif%}">
+                    <div class="gridview-square competitor-square {%if fv.won%} winners-box {%endif%}">
                         <div class="gridview-title">
                             <img class="flag-image" src="{{ fv.version.get_flag }}" alt="{{fv.version.country}} Flag">
                             <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
@@ -37,17 +38,12 @@
                                  alt="{%if fv.version.image %}Robot {{fv.version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
                         </div>
                     </div>
-
-                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
         {% elif fight.competitors.all|length > 2 and fight.fight_version_set.last.tag_team > 0 %}
-            {% for team in fight.teams %}
-                <div class="gridview-row">
-                    {% for version in team %}
+            {% for team in fight.teams_fv %}
+                <div class="gridview-container{%if team|length == 2%} vs-is-present{%endif%}{%if team.0.won%} winners-box{%endif%}">
+                    {% for fv in team %}
                         {% if forloop.counter == 2 and forloop.last %}
                             <div class="competitor-and">
                                 <p>&</p>
@@ -55,19 +51,14 @@
                         {% endif %}
                         <div class="gridview-square">
                             <div class="gridview-title">
-                                {%if
-                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
-                                <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
+                                <img class="flag-image" src="{{ fv.version.get_flag }}" alt="{{fv.version.country}} Flag">
+                                <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
                             </div>
                             <div class="gridview-image-container">
-                                <img class="fit-image" src="{% if version.image %}{{ version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
-                                     alt="{%if version.image%}Robot {{version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
+                                <img class="fit-image" src="{% if fv.version.image %}{{ fv.version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
+                                     alt="{%if fv.version.image%}Robot {{fv.version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
                             </div>
                         </div>
-                        {% if forloop.counter|divisibleby:3 and not forloop.last %}
-                            </div>
-                            <div class="gridview-row">
-                        {% endif %}
                     {% endfor %}
                     </div>
                 {% if not forloop.last %}

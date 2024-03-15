@@ -3,6 +3,7 @@
 {% load bonus_filters %}
 {% block meta %}
     <title>{{ team }} - Robot Combat Archive</title>
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
 {% endblock %}
 {% block content %}
@@ -17,7 +18,7 @@
             </div>
             {% if team.logo %}
                 <div class="team-logo-image">
-                    <img class="fit-image" src="{{ team.logo.url }}" alt="Logo">
+                    <img class="fit-image" loading="lazy" src="{{ team.logo.url }}" alt="Logo">
                 </div>
             {% endif %}
 
@@ -35,7 +36,7 @@
 
             {% endif %}{%endcomment%}
             <br>
-            <div class="gridview-row">
+            <div class="gridview-container">
                 {% for robot in robots %}
                     <div class="gridview-square">
                         <div class="gridview-title">
@@ -47,16 +48,12 @@
                                  alt="{{robot}}">
                         </div>
                     </div>
-                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
 
             {%if loaners|length > 0%}
             <h4>{{team}} was {%if robots|length > 0%} also{%endif%} loaned the following robot{%if loaners|length > 1%}s{%endif%}:</h4>
-            <div class="gridview-row">
+            <div class="gridview-container">
                 {% for robot in loaners %}
                     <div class="gridview-square">
                         <div class="gridview-title">
@@ -68,10 +65,6 @@
                                  alt="{{robot}}">
                         </div>
                     </div>
-                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
             {%endif%}

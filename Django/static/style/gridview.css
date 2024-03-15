@@ -1,0 +1,79 @@
+/* Default gridview width: 5 */
+.gridview-container {
+  display: grid;
+  justify-content: center;
+  align-items:center;
+  grid-template-columns: repeat(auto-fit,20%);
+}
+.grid-width-4 {
+  grid-template-columns: repeat(auto-fit,25%);
+}
+.grid-width-3 {
+  grid-template-columns: repeat(auto-fit,33%);
+}
+.grid-width-2 {
+  grid-template-columns: repeat(auto-fit,50%);
+}
+
+.gridview-square {
+  padding: 0.375em;
+  margin: 0.375em;
+  text-overflow: ellipsis;
+  display:flex;
+  flex-direction: column;
+  justify-content: space-around;
+  aspect-ratio:1;
+}
+
+.gridview-title {
+  font-size: 1.3em;
+  width: 100%;
+  display: flex;
+  align-items:center;
+  height: 1.2em;
+}
+.gridview-title .flag-image {
+    margin: 0px;
+    margin-right: 5px;
+}
+
+.gridview-title a {
+  display: inline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gridview-image-container {
+  width: 100%;
+  height: calc(90% - 0.75em);
+  display: flex;
+  align-items:center;
+  justify-content: center;
+}
+
+.gridview-image-container .fit-image{
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 2000px){
+    .gridview-container {
+        grid-template-columns: repeat(auto-fit,16%);
+    }
+}
+
+@media (max-width: 1079px){
+    .gridview-container {
+        grid-template-columns: repeat(auto-fit,33%);
+    }
+}
+
+@media (max-width: 700px){
+  .gridview-container {
+    grid-template-columns: repeat(auto-fit,50%);
+  }
+  .gridview-title {
+    font-size: 1.25em;
+  }
+}

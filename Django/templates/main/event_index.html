@@ -50,7 +50,7 @@
         {% for event in event_list %}
         <div class="hrz-index-result">
             <span class="hrz-index-image">
-                <img class="fit-image" src="{{event.get_logo_url}}" alt="{{event|truncatechars:100}} Logo">
+                <img class="fit-image" loading="lazy" src="{{event.get_logo_url}}" alt="{{event|truncatechars:100}} Logo">
             </span>
             <div class="hrz-index-content">
                 <span class="hrz-index-title">

@@ -4,6 +4,7 @@
 
 {% block meta %}
     <title>Leaderboard - Robot Combat Archive</title>
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}"/>
     <link rel="stylesheet" href="{% static 'style/tooltip.css' %}"/>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
@@ -38,7 +39,7 @@
 	{% if robot_list|length == 0%}
 	No data to display
 	{%else%}
-	<div class="gridview-row">
+	<div class="gridview-container grid-width-3">
 		{% for entry in top_three %}
             <div class="gridview-square">
 				<div class="gridview-title">
@@ -65,9 +66,9 @@
                 <th></th>
                 <th>Robot</th>
 				{%if is_this_year%}
-                <th>Wins</th>
-                <th>Losses</th>
-                <th>Awards</th>
+                <th class="mobile-hide">Wins</th>
+                <th class="mobile-hide">Losses</th>
+                <th class="mobile-hide">Awards</th>
 				{%endif%}
             </tr>
             </thead>
@@ -90,9 +91,9 @@
                         </span>
                     </td>
 					{%if is_this_year%}
-                    <td style="text-align: center">{{ lb.robot.wins }}</td>
-                    <td style="text-align: center">{{ lb.robot.losses }}</td>
-                    <td style="text-align: center">{{ lb.robot.awards|length }}</td>
+                    <td class="mobile-hide" style="text-align: center">{{ lb.robot.wins }}</td>
+                    <td class="mobile-hide" style="text-align: center">{{ lb.robot.losses }}</td>
+                    <td class="mobile-hide" style="text-align: center">{{ lb.robot.awards|length }}</td>
 					{%endif%}
 					{%endif%}
                 </tr>

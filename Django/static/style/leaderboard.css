@@ -2,9 +2,12 @@
 	height: 0.9em;
 	margin-inline-end: 0.1em;
 }
-.gridview-row {
+.gridview-container {
 	grid-template-rows: 20em;
     grid-auto-columns: 30%;
+}
+.gridview-square{
+    aspect-ratio:auto;
 }
 .gridview-title {
 	height: FIT-CONTENT;
@@ -51,3 +54,7 @@
 .lb-negative{
     color:red;
 }
+@media (max-width: 700px){
+  .gridview-container {
+    grid-template-columns: repeat(auto-fit,100%);
+  }

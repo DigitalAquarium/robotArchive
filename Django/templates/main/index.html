@@ -3,23 +3,8 @@
 {% block meta %}
     <title>Robot Combat Archive Home</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
-    <style>
-        .gridview-row{
-            margin-bottom:1.5em;
-        }
-        .gridview-title{
-            font-size:1.5vw;
-        }
-        .text-in-gridview{
-            font-size:5em;
-            color: black
-        }
-        .gridview-square{
-            box-shadow: black 0 0 0.5em;
-            aspect-ratio: 1;
-            border-radius: 0.5em;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+    <link rel="stylesheet" href="{% static 'style/index.css' %}" />
 {% endblock %}
 {% block content %}
     <div class="main-content">
@@ -40,7 +25,7 @@
         </div>
 
         <div>
-            <div class="gridview-row">
+            <div class="gridview-container">
 
                 <a href="{% url 'main:robotIndex'%}">
                 <div class="gridview-square">
@@ -80,7 +65,8 @@
 
             </div>
 
-            <div class="gridview-row">
+
+            <div class="gridview-container">
                 <a href="{% url 'main:credits'%}">
                 <div class="gridview-square">
                     <div class="gridview-title">Credits</div>

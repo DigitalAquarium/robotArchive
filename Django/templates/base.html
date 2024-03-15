@@ -28,13 +28,13 @@
                 <span class="home-icon"><a href="{%url 'main:index' %}"><img class="fit-image" src="{% static 'home_icon_google.svg'%}" alt="Home Icon"></a></span>
             {% endblock home_button %}
         </div>
-    <span style="padding-left:5%;font-size:0.8em;">Data accurate up to 2003</span>
+    <span class="mobile-hide" style="padding-left:5%;font-size:0.8em;">Data accurate up to 2003</span>
         <div class="navlinks">
             <ul>
-                <li>
+                <li class="mobile-hide">
                     <a href="{% url 'main:eventIndex' %}"> Events </a>
                 </li>
-                <li>
+                <li class="mobile-hide">
                     <a href="{% url 'main:robotIndex' %}"> Robots </a>
                 </li>
                 <li>

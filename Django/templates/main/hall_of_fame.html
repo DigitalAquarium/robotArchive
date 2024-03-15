@@ -2,6 +2,7 @@
 {% load static %}
 {% block meta %}
     <title>Hall of Fame</title>
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 {% endblock %}
 {% block content %}
         <div class="main-content">
@@ -13,7 +14,7 @@
                 For a full list, info on each entry's ascension, and more please go to <a href="http://runamok.tech/hall_of_fame.html">The Combat Robot Hall of Fame website linked here!</a>
             </p>
             <h2>Members:</h2>
-            <div class="gridview-row">
+            <div class="gridview-container">
                 {% for robot in members %}
                     <div class="gridview-square">
                         <div class="gridview-title">
@@ -26,14 +27,10 @@
                                  alt="{{robot}}">
                         </div>
                     </div>
-                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
             <h2>Honorable Mentions:</h2>
-            <div class="gridview-row">
+            <div class="gridview-container">
                 {% for robot in honoraries %}
                     <div class="gridview-square">
                         <div class="gridview-title">
@@ -46,10 +43,6 @@
                                  alt="Robot Image">
                         </div>
                     </div>
-                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
         </div>

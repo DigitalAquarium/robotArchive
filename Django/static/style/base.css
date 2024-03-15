@@ -82,40 +82,39 @@ body {
   padding: 1em;
   height: 10em;
   border: 1px solid dimgrey;
-  float: inside;
   box-shadow: 3px 4px 4px grey;
   display: flex;
   text-align: justify;
   text-overflow: ellipsis;
 }
-.hrz-index-result .hrz-index-image {
+.hrz-index-image {
   height: 100%;
   width: 20%;
   justify-content: center;
   display: inline-flex;
 }
-.hrz-index-result .hrz-index-content {
+.hrz-index-content {
   display: inline-flex;
   flex-direction: column;
   width: 80%;
   overflow: hidden;
 }
-.hrz-index-result .hrz-index-content .hrz-index-title {
-  font-size: 24px;
+.hrz-index-title {
+  font-size: 1.5em;
   display: inline-flex;
 }
-.hrz-index-result .hrz-index-content .hrz-index-title a {
+.hrz-index-title a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.hrz-index-result .hrz-index-content .hrz-index-details {
+.hrz-index-details {
   margin: 5px 5px;
 }
-.hrz-index-result .hrz-index-content .hrz-index-details span {
+.hrz-index-details span {
   margin: 0 1em 0 0;
 }
-.hrz-index-result .hrz-index-content .hrz-index-description {
+.hrz-index-description {
   font-size: 13px;
   margin: 0 5px;
 }
@@ -135,10 +134,6 @@ body {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-}
-.gridview-image-container .fit-image{
-  width: 100%;
-  height: 100%;
 }
 
 .main-content {
@@ -160,51 +155,6 @@ th {
   background-color: #babcc0;
   text-decoration: none;
   font-weight: normal;
-}
-
-.gridview-row {
-  display: grid;
-  justify-content: center;
-  grid-auto-flow: column;
-  grid-auto-columns: 20%;
-  grid-template-rows: 15em;
-  margin-bottom:1em;
-}
-
-.gridview-square {
-  padding: 0.375em;
-  margin: 0.375em;
-  text-overflow: ellipsis;
-  display:flex;
-  flex-direction: column;
-  justify-content: space-around;
-}
-
-.gridview-title {
-  font-size: 24px;
-  width: 100%;
-  display: flex;
-  align-items:center;
-  height: 1.2em;
-}
-.gridview-title .flag-image {
-    margin: 0px;
-    margin-right: 5px;
-}
-
-.gridview-title a {
-  display: inline;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gridview-image-container {
-  width: 100%;
-  height: calc(90% - 0.75em);
-  display: flex;
-  align-items:center;
-  justify-content: center;
 }
 
 .page-nav {
@@ -290,4 +240,46 @@ form fieldset legend {
 }
 .robot-title-text{
     margin-left: 0.3em;
+}
+
+.mobile-show{
+    visibility:hidden;
+    display:none;
+}
+
+@media (max-width: 700px){
+    body{
+        font-size:0.8em;
+    }
+    .mobile-hide{
+        display:none;
+    }
+    .mobile-show{
+        visibility:visible;
+        display:block;
+    }
+    .hrz-index-result{
+        flex-direction:column-reverse;
+        padding:0.5em;
+        height:12em;
+    }
+    .hrz-index-image{
+        width:100%;
+        height:80%;
+    }
+    .hrz-index-content{
+        width:100%;
+    }
+    .hrz-index-title{
+        font-size:1.2em;
+    }
+    .hrz-index-details {
+        display:none;
+    }
+    .hrz-index-description {
+        display:none;
+    }
+    .page-nav li{
+        width:1em;
+    }
 }

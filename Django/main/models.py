@@ -873,6 +873,16 @@ class Fight(models.Model):
                     teams.append([fv.version])
         return teams
 
+    def teams_fv(self):
+        teams = []
+        for fv in self.fight_version_set.all().order_by("tag_team"):
+            if fv.tag_team != 0:
+                try:
+                    teams[fv.tag_team - 1].append(fv)
+                except IndexError:
+                    teams.append([fv])
+        return teams
+
     def winners(self):
         winners = []
         for fv in self.fight_version_set.all():

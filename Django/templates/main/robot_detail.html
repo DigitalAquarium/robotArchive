@@ -12,13 +12,16 @@
 {% block navbar %}
     {{block.super}}
     {% if is_random %}
-        <div class="navlinks"><span class="random-robot"><a href="{% url 'main:randomRobot' %}"><span class="rand-question-mark">?</span></a></span></div>
+        <div class="navlinks"><span class="random-robot  mobile-hide"><a href="{% url 'main:randomRobot' %}"><span class="rand-question-mark">?</span></a></span></div>
     {%endif%}
 {% endblock %}
 
 {% block content %}
     <div class="main-content">
         {% if robot %}
+        {% if is_random %}
+        <div class="random-robot mobile-show"><a href="{% url 'main:randomRobot' %}"><span class="rand-question-mark">?</span></a></div>
+        {%endif%}
         <div class="heading">
             <h1 id="title">{{robot|generate_title}}</h1>
             {% if can_change %}
@@ -165,9 +168,9 @@
                     <thead>
                     <tr>
                         <th>Event</th>
-                        <th>Type</th>
+                        <th class="mobile-hide">Type</th>
                         <th>Opponents</th>
-                        <th>Result</th>
+                        <th class="mobile-hide">Result</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -180,12 +183,12 @@
                                     </td>
                                 {% endif %}
                             {% endwith %}
-                            <td>{{ fight.get_fight_type_display }}</td>
+                            <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
                             <td><a class="fight-link" style="display:inline-flex" href="{% url 'main:fightDetail' fight.id %}">
                                 {{ fight|fight_opponents:robot }}
                                 {% include "snippets/fight_icon.html" with fight=fight %}
                             </a></td>
-                            <td>{{ fight|fight_result:robot }}</td>
+                            <td class="mobile-hide">{{ fight|fight_result:robot }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
