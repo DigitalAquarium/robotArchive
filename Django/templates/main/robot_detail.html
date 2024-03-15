@@ -21,7 +21,6 @@
         {% if robot %}
         {% if is_random %}
         <div class="random-robot mobile-show"><a href="{% url 'main:randomRobot' %}"><span class="rand-question-mark">?</span></a></div>
-        <br>
         {%endif%}
         <div class="heading">
             <h1 id="title">{{robot|generate_title}}</h1>
