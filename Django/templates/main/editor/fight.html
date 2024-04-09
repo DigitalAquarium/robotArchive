@@ -6,6 +6,7 @@
     <title> {{ fight }} - Roboteer's Tavern </title>
     <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
     <link rel="stylesheet" href="{% static 'style/edit_fight.css' %}">
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}">
 	<link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
 {% endblock %}
 {% block content %}
@@ -26,9 +27,9 @@
         <div style="text-align: center">
         <a class="editor-link" href="{% url 'main:newFightVersion' fight.id %}">Add New Robot</a>
         </div>
-            <div class="gridview-row competitor-row">
+            <div class="gridview-container">
                 {% for fv in fight.fight_version_set.all %}
-                    <div class="gridview-square competitor-square" {% if has_winner %}style="background:{% if fv.won %}lightgreen{% else %}indianred{% endif %}{% endif %};" >
+                    <div class="gridview-square" {% if has_winner %}style="background:{% if fv.won %}lightgreen{% else %}indianred{% endif %}{% endif %};" >
                         <div class="gridview-title">
 
                             <img class="flag-image" src="{{ fv.version.get_flag }}" alt="Flag">
@@ -47,11 +48,6 @@
                                  alt="Robot Image">
                         </div>
                     </div>
-
-                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
 

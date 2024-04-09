@@ -161,9 +161,9 @@
                 </table>
             {% endif %}
 
-            {% if fights|length > 0 %}
+            {% if fights_tuple|length > 0 %}
                 <h2>{% if robot.display_latin_name %} {{ robot.latin_name }} {% else %}{{ robot }} {% endif %}
-                    has fought {{ fights|length }} {% if fights|length == 1 %}fight. {% else %}fights.{% endif %}</h2>
+                    has fought {{ fights_tuple|length }} {% if fights_tuple|length == 1 %}fight. {% else %}fights.{% endif %}</h2>
                 <table>
                     <thead>
                     <tr>
@@ -174,15 +174,13 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for fight in fights %}
+                    {% for rowspan, fight in fights_tuple %}
                         <tr>
-                            {% with fights|fights_event_number:fight as num_fights %}
-                                {% if num_fights != -1 %}
-                                    <td rowspan="{{ num_fights }}" style="background-color: white">
-                                        <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
-                                    </td>
-                                {% endif %}
-                            {% endwith %}
+                            {% if rowspan != 0 %}
+                            <td rowspan="{{ rowspan }}" style="background-color: white">
+                                <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
+                            </td>
+                            {% endif %}
                             <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
                             <td><a class="fight-link" style="display:inline-flex" href="{% url 'main:fightDetail' fight.id %}">
                                 {{ fight|fight_opponents:robot }}

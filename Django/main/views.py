@@ -877,8 +877,8 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        # Leaderboard.update_class(weight)
-        pass
+        Leaderboard.update_class(weight)
+        #pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
 
@@ -943,8 +943,26 @@ def robot_detail_view(request, slug):
     else:
         leaderboard_entries = None
 
+    #Calculate rowspans for fight table
+    contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date","id").distinct()
+    rowspans_unformatted = []
+    previous_contest = None
+    for c in contests_attended:
+        if previous_contest is not None and previous_contest.event == c.event:
+            rowspans_unformatted[-1] += fights.filter(contest=c).count() # TODO: is this the fastest way to do this?
+        else:
+            rowspans_unformatted.append(fights.filter(contest=c).count())
+        previous_contest = c
+
+    rowspans = []
+    for length in rowspans_unformatted:
+        rowspans.append(length)
+        rowspans += [0] * (length - 1)
+
+    fights_tuple = [(rowspans[i], fights[i]) for i in range(len(fights))]
+
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "fights": fights, "awards": awards, "ver": v, "can_change": can_change,
+                  {"robot": r, "fights_tuple": fights_tuple, "awards": awards, "ver": v, "can_change": can_change,
                    "version_set": r.version_set.all().order_by("number"),
                    "best_lb_entry": best_lb_entry, "leaderboard_entries": leaderboard_entries,
                    "current_lb_entry": current_lb_entry, "is_random": is_random})

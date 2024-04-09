@@ -2,6 +2,7 @@
 {% load static %}
 {% block meta %}
     <title>{{ contest }} - Roboteer's Tavern</title>
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 {% endblock %}
 {% block content %}
     {% if contest %}
@@ -12,7 +13,7 @@
 		<a href="{% url 'main:delete_noreturn' 'contest' contest.id%}?redirect={% url 'main:edtEvent' contest.event.id %}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Remove Contest"></a>
         </div>
         <br>
-        <a href="{% url "main:edtEvent" contest.event.id %}">Back</a>
+        <a href="{% url 'main:edtEvent' contest.event.id %}">Back</a>
         <br>
         <a class="editor-link" href="{% url 'main:newFight' contest.id %}?editor=true">Add Fight</a>
         <br>
@@ -67,25 +68,22 @@
 			</form>
         {% endif %}
 		{%if applications|length > 0 %}
-			<div class="gridview-row">
-                        {% for app in applications %}
-                            <div class="gridview-square">
-                                <div class="gridview-title">
-                                    <img class="flag-image" src="{{ app.version.get_flag }}" alt="Flag">
-                                    <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
-									<a href="{% url 'main:delete' 'registration' app.id contest.id %}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Remove Competitor"></a>
-                                </div>
-                                <div class="gridview-image-container">
-                                    <img class="fit-image"
-                                         src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
-                                         alt="Robot Image">
-                                </div>
-                            </div>
-                            {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                                </div>
-                                <div class="gridview-row">
-                            {% endif %}
-                        {% endfor %}
+			<div class="gridview-container">
+                {% for app in applications %}
+                    <div class="gridview-square">
+                        <div class="gridview-title">
+                            <img class="flag-image" loading="lazy" src="{{ app.version.get_flag }}" alt="{{app.version.country}} Flag">
+                            <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
+                            <a href="{% url 'main:delete' 'registration' app.id contest.id %}"><img class="inline-image" style="display:flex" src="{% static 'bin.png' %}" alt="Remove Competitor"></a>
+                        </div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" loading="lazy"
+                                 src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
+                                 alt="Competitor &quot;{{app.version}}&quot; at {{contest.event}}">
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
             </div>
 			<form method="post">{%csrf_token%}<button class="editor-link" name="save" value="prune">Prune Entries & Clean Contest</button></form>
 		{% endif %}
