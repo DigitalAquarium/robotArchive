@@ -40,12 +40,9 @@ def edt_new_event_view(request):
     if fran_id:
         fran_id = int(fran_id)
         fran = Franchise.objects.get(pk=fran_id)
+        # Set up form
         if request.method == "POST":
             form = NewEventFormEDT(request.POST, request.FILES)
-            if form.is_valid():
-                event = form.save(fran)
-                event.make_slug(save=True)
-                return redirect("main:edtEvent", event.id)
         else:
             form = NewEventFormEDT()
             if fran.event_set.count() > 0:
@@ -57,6 +54,16 @@ def edt_new_event_view(request):
                     else:
                         cdict[c['country']] = 1
                 form.fields["country"].initial = max(cdict, key=cdict.get)
+        if fran.event_set.count() > 0:
+            form.fields["prev_logo"].choices = [("", "")] + [(x["logo"], x["logo"]) for x in
+                                                             fran.event_set.values("logo").distinct()]
+
+        # Save form if required
+        if request.method == "POST" and form.is_valid():
+            event = form.save(fran)
+            event.make_slug(save=True)
+            return redirect("main:edtEvent", event.id)
+
     else:
         fran = None
         form = NewEventFormEDT()
@@ -878,7 +885,7 @@ def leaderboard(request):
         year = current_year
     if weight != "F":
         Leaderboard.update_class(weight)
-        #pass
+        # pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
 
@@ -943,13 +950,14 @@ def robot_detail_view(request, slug):
     else:
         leaderboard_entries = None
 
-    #Calculate rowspans for fight table
-    contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date","id").distinct()
+    # Calculate rowspans for fight table
+    contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date",
+                                                                                                "id").distinct()
     rowspans_unformatted = []
     previous_contest = None
     for c in contests_attended:
         if previous_contest is not None and previous_contest.event == c.event:
-            rowspans_unformatted[-1] += fights.filter(contest=c).count() # TODO: is this the fastest way to do this?
+            rowspans_unformatted[-1] += fights.filter(contest=c).count()  # TODO: is this the fastest way to do this?
         else:
             rowspans_unformatted.append(fights.filter(contest=c).count())
         previous_contest = c

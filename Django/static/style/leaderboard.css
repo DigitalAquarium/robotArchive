@@ -45,7 +45,20 @@
 .lb-negative{
     color:red;
 }
+.mobile-show {
+    visibility: hidden;
+    display: none;
+}
+
 @media (max-width: 700px){
   .gridview-container {
-    grid-template-columns: repeat(auto-fit,100%);
+    grid-template-columns: repeat(auto-fit,50%);
   }
+  .mobile-hide {
+    display: none;
+    }
+  .mobile-show {
+    visibility: visible;
+    display: grid;
+    }
+}

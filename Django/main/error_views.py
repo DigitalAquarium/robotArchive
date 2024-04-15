@@ -5,3 +5,6 @@ def _404(request):
 
 def _500(request):
     return django.views.defaults.server_error(request)
+
+def _403(request):
+    return django.views.defaults.permission_denied(request, None)

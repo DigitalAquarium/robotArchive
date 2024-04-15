@@ -612,6 +612,7 @@ class Fight(models.Model):
     METHOD_CHOICES = [
         ("KO", "Knockout"),
         ("JD", "Judge's Decision"),
+        ("CV", "Crowd Vote"),
         ("TO", "Tap Out"),
         ("OA", "Out of the Arena"),
         ("PT", "Pit"),

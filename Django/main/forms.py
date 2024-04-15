@@ -234,6 +234,7 @@ class NewEventFormEDT(forms.Form):
     name = forms.CharField(max_length=255, required=False)
     missing_brackets = forms.BooleanField(required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
+    prev_logo = forms.ChoiceField(choices=[("", "")], required=False)
     logo_img = forms.ImageField(required=False)
     logo_txt = forms.URLField(required=False)
     start_date = forms.DateField(required=True)
@@ -253,9 +254,9 @@ class NewEventFormEDT(forms.Form):
         e.country = self.cleaned_data['country']
         e.franchise = franchise
 
-        if not self.cleaned_data['logo_img'] and not self.cleaned_data['logo_txt']:
-            pass
-        elif not self.cleaned_data['logo_img']:
+        if self.cleaned_data['prev_logo']:
+            e.logo = self.cleaned_data['prev_logo']
+        elif self.cleaned_data['logo_img']:
             save_img(self.cleaned_data['logo_txt'], e.logo, e.name)
         else:
             e.logo = self.cleaned_data['logo_img']

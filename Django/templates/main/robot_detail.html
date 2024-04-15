@@ -7,6 +7,7 @@
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="{%static 'scripts/history_chart.js' %}"></script>
     <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
+    <link rel="canonical" href="https://www.robotcombatarchive.com/robot/{{robot.slug}}">
 {% endblock %}
 
 {% block navbar %}
@@ -18,7 +19,6 @@
 
 {% block content %}
     <div class="main-content">
-        {% if robot %}
         {% if is_random %}
         <div class="random-robot mobile-show"><a href="{% url 'main:randomRobot' %}"><span class="rand-question-mark">?</span></a></div>
         {%endif%}
@@ -192,9 +192,5 @@
                     </tbody>
                 </table>
             {% endif %}
-
-        {% else %}
-            Something appears to have gone wrong
-        {% endif %}
     </div>
 {% endblock %}

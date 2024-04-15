@@ -4,68 +4,65 @@
     <title>{{ fran }} - Robot Combat Archive</title>
     <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/franchise_detail.css' %}">
+    <link rel="canonical" href="https://www.robotcombatarchive.com/franchise/{{fran.slug}}">
 {% endblock %}
 {% block content %}
-    {% if fran %}
-        <div class="main-content">
-        <div class="heading">
-            <h1>{{ fran }}</h1>
-            {%if can_edit %}
-            <a href="{% url 'main:editFranchise' fran.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Franchise"></a>
-            {%endif%}
-        </div>
-
-        {% if fran.logo %}
-            <div class="franchise-logo-image">
-                <img class="fit-image" src="{{ fran.logo.url }}" alt="{{fran}} Logo">
-            </div>
-        {% endif %}
-
-        <P>{{ fran.description }}</P>
-
-        {%include "snippets/web_links.html" with link_set=fran.web_link_set.all%}
-
-        {% if fran.members.all|length > 0 %}
-            <h2>Members</h2>
-            <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'franchise' fran.id %}">Add
-                Member</a>
-            <p>
-                {% for member in fran.members.all %}
-                    <span>{{ member }}</span>
-                {% endfor %}
-            </p>
-        {% endif %}
-
-
-        {%if events|length > 0%}
-        <h2>Events</h2>
-        <table>
-            <thead>
-            <th>Event Name</th>
-            <th>Event Date</th>
-            </thead>
-            <tbody>
-            {% for event in events %}
-                <tr>
-                    <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
-                    <td>
-                        {% if event.start_date|date:"d M Y" == event.end_date|date:"d M Y" %}
-                            {{ event.start_date|date:"d M Y" }}
-                        {% elif event.start_date|date:"M" == event.end_date|date:"M" %}
-                            {{ event.start_date|date:"d" }} - {{ event.end_date|date:"d M Y" }}
-                        {% elif event.start_date|date:"Y" == event.end_date|date:"Y" %}
-                            {{ event.start_date|date:"d M" }} - {{ event.end_date|date:"d M Y" }}
-                        {%else%}
-                            {{ event.start_date|date:"d M Y" }} - {{ event.end_date|date:"d M Y" }}
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+<div class="main-content">
+    <div class="heading">
+        <h1>{{ fran }}</h1>
+        {%if can_edit %}
+        <a href="{% url 'main:editFranchise' fran.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Franchise"></a>
         {%endif%}
-    {% else %}
-        Something has gone wrong.
-    {% endif %}
+    </div>
+
+    {% if fran.logo %}
+        <div class="franchise-logo-image">
+            <img class="fit-image" src="{{ fran.logo.url }}" alt="{{fran}} Logo">
         </div>
+    {% endif %}
+
+    <P>{{ fran.description }}</P>
+
+    {%include "snippets/web_links.html" with link_set=fran.web_link_set.all%}
+
+    {% if fran.members.all|length > 0 %}
+        <h2>Members</h2>
+        <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'franchise' fran.id %}">Add
+            Member</a>
+        <p>
+            {% for member in fran.members.all %}
+                <span>{{ member }}</span>
+            {% endfor %}
+        </p>
+    {% endif %}
+
+
+    {%if events|length > 0%}
+    <h2>Events</h2>
+    <table>
+        <thead>
+        <th>Event Name</th>
+        <th>Event Date</th>
+        </thead>
+        <tbody>
+        {% for event in events %}
+            <tr>
+                <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
+                <td>
+                    {% if event.start_date|date:"d M Y" == event.end_date|date:"d M Y" %}
+                        {{ event.start_date|date:"d M Y" }}
+                    {% elif event.start_date|date:"M" == event.end_date|date:"M" %}
+                        {{ event.start_date|date:"d" }} - {{ event.end_date|date:"d M Y" }}
+                    {% elif event.start_date|date:"Y" == event.end_date|date:"Y" %}
+                        {{ event.start_date|date:"d M" }} - {{ event.end_date|date:"d M Y" }}
+                    {%else%}
+                        {{ event.start_date|date:"d M Y" }} - {{ event.end_date|date:"d M Y" }}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {%endif%}
+</div>
 {% endblock %}
