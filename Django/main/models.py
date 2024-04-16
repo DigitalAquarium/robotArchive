@@ -612,6 +612,7 @@ class Fight(models.Model):
     METHOD_CHOICES = [
         ("KO", "Knockout"),
         ("JD", "Judge's Decision"),
+        ("CV", "Crowd Vote"),
         ("TO", "Tap Out"),
         ("OA", "Out of the Arena"),
         ("PT", "Pit"),
@@ -1514,71 +1515,35 @@ class HalloFame(models.Model):
         str(self.robot) + " " + ("hall of fame entry" if self.full_member else "hall of fame honorable mention")
 
 
-# TODO: This should maybe be another module, requires database but idk how to like, do it otherwise.
-class Ascii_Lookup(models.Model):
-    old_char = models.CharField(max_length=1)
-    new_char = models.CharField(max_length=10, blank=True)
-    requires_translation = models.BooleanField(default=False)
-
-
-class Ascii_Attention(models.Model):
-    word = models.TextField()
-    bad_char = models.CharField(max_length=1)
-    model = models.CharField(max_length=50)
-    model_id = models.IntegerField()
-
-
-def asciify(text, model="none", model_id=0):
-    valid = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
-    lookups = Ascii_Lookup.objects.all()
-    lookup = {}
-    for look in lookups:
-        lookup[look.old_char] = look.new_char
-    new = ""
-    for i in range(len(text)):
-        if text[i] not in valid:
-            try:
-                # Checks for Special Cases
-                if text[i] == "-":
-                    # Convert " - " to one space
-                    try:
-                        if text[i - 1] == " " and text[i + 1] == " ":
-                            new = new[0:-1]
-                            continue
-                    except IndexError:
-                        pass
-
-                new += lookup[text[i]]
-
-            except KeyError:
-                # Checks for Special Cases
-                if text[i] == ".":
-                    try:
-                        if text[i - 1] in "0123456789" and text[i + 1] in "0123456789":
-                            new += "."
-                    except IndexError:
-                        pass  # Do Nothing
-                    continue
-                if text[i] == "%":
-                    try:
-                        if text[i - 1] in "0123456789":
-                            new += "%"
-                    except IndexError:
-                        pass  # Do Nothing
-                    continue
-
-                # General Case
-                if model_id is None:
-                    model_id = 0
-                asc = Ascii_Attention(word=text, bad_char=text[i], model=model, model_id=model_id)
-                asc.save()
-                new += text[i]
-        else:
-            new += text[i]
-    if new != text:
-        return new
+def asciify(obj, commit=False):
+    isVersion = isinstance(obj, Version)
+    if isVersion:
+        output = slugify(obj.robot_name).replace("-", " ")
     else:
-        return ""
+        output = slugify(obj.name).replace("-", " ")
+
+    if output != "": # TODO: Add length threshold.
+        if isVersion:
+            low_name = obj.robot_name.lower()
+        else:
+            low_name = obj.name.lower()
+
+        if low_name != output:
+            low_name = low_name.replace(" & ", " and ")
+            low_name = low_name.replace("&", " and ")
+            low_name = re.sub(r"([0-9]+)% ", r"\1 percent ", low_name)
+            output = slugify(low_name).replace("-", " ") # TODO: proper unicode collation
+
+            if commit and (isVersion and (obj.latin_robot_name is None or obj.latin_robot_name == "")) or \
+                    ((not isVersion) and (obj.latin_name is None or obj.latin_name == "")):
+                if isVersion:
+                    obj.latin_robot_name = output
+                else:
+                    obj.latin_name = output
+                obj.save()
+        return output
+    else:
+        return None
 
 
 try:

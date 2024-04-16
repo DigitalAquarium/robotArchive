@@ -5,75 +5,72 @@
     <title>{{ team }} - Robot Combat Archive</title>
     <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
+    <link rel="canonical" href="https://www.robotcombatarchive.com/team/{{team.slug}}">
 {% endblock %}
 {% block content %}
-    {% if team %}
-        <div class="main-content">
-            <div class="team-heading">
-                <img class="flag-image" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
-                <h1>{{ team }}</h1>
-                {% if can_change %}
-                    <a href="{% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Team"></a>
-                {% endif %}
-            </div>
-            {% if team.logo %}
-                <div class="team-logo-image">
-                    <img class="fit-image" loading="lazy" src="{{ team.logo.url }}" alt="Logo">
-                </div>
-            {% endif %}
-
-            {%include "snippets/web_links.html" with link_set=team.web_link_set.all%}
-
-            {%comment%}{% if team.members.all|length > 0 %}
-                <h2>Members</h2>
-                <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'team' team.id %}">Add
-                    Member</a>
-                <p>
-                    {% for member in team.members.all %}
-                        <span>{{ member }}</span>
-                    {% endfor %}
-                </p>
-
-            {% endif %}{%endcomment%}
-            <br>
-            <div class="gridview-container">
-                {% for robot in robots %}
-                    <div class="gridview-square">
-                        <div class="gridview-title">
-                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>
-                        </div>
-                        <div class="gridview-image-container">
-                            <img class="fit-image"
-                                 src="{{robot|image_from_team:team}}"
-                                 alt="{{robot}}">
-                        </div>
-                    </div>
-                {% endfor %}
-                </div>
-
-            {%if loaners|length > 0%}
-            <h4>{{team}} was {%if robots|length > 0%} also{%endif%} loaned the following robot{%if loaners|length > 1%}s{%endif%}:</h4>
-            <div class="gridview-container">
-                {% for robot in loaners %}
-                    <div class="gridview-square">
-                        <div class="gridview-title">
-                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>
-                        </div>
-                        <div class="gridview-image-container">
-                            <img class="fit-image"
-                                 src="{{robot|image_from_team:team}}"
-                                 alt="{{robot}}">
-                        </div>
-                    </div>
-                {% endfor %}
-                </div>
-            {%endif%}
-
-            {% if member %}
-                <a href="{% url 'main:newRobot' team.id %} ">New Robot</a>
-            {% endif %}
+<div class="main-content">
+    <div class="team-heading">
+        <img class="flag-image" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
+        <h1>{{ team }}</h1>
+        {% if can_change %}
+            <a href="{% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Team"></a>
+        {% endif %}
+    </div>
+    {% if team.logo %}
+        <div class="team-logo-image">
+            <img class="fit-image" loading="lazy" src="{{ team.logo.url }}" alt="Logo">
         </div>
-    {% else %}
-        Something has gone wrong.
     {% endif %}
+
+    {%include "snippets/web_links.html" with link_set=team.web_link_set.all%}
+
+    {%comment%}{% if team.members.all|length > 0 %}
+        <h2>Members</h2>
+        <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'team' team.id %}">Add
+            Member</a>
+        <p>
+            {% for member in team.members.all %}
+                <span>{{ member }}</span>
+            {% endfor %}
+        </p>
+
+    {% endif %}{%endcomment%}
+    <br>
+    <div class="gridview-container">
+        {% for robot in robots %}
+            <div class="gridview-square">
+                <div class="gridview-title">
+                    <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>
+                </div>
+                <div class="gridview-image-container">
+                    <img class="fit-image"
+                         src="{{robot|image_from_team:team}}"
+                         alt="{{robot}}">
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+
+    {%if loaners|length > 0%}
+    <h4>{{team}} was {%if robots|length > 0%} also{%endif%} loaned the following robot{%if loaners|length > 1%}s{%endif%}:</h4>
+    <div class="gridview-container">
+        {% for robot in loaners %}
+            <div class="gridview-square">
+                <div class="gridview-title">
+                    <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>
+                </div>
+                <div class="gridview-image-container">
+                    <img class="fit-image"
+                         src="{{robot|image_from_team:team}}"
+                         alt="{{robot}}">
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {%endif%}
+
+    {% if member %}
+        <a href="{% url 'main:newRobot' team.id %} ">New Robot</a>
+    {% endif %}
+</div>
 {% endblock %}

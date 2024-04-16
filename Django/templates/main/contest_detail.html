@@ -3,10 +3,10 @@
 {% block meta %}
     <title>{{ contest }}: {{contest.event}} - Robot Combat Archive</title>
     <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+    <link rel="canonical" href="https://www.robotcombatarchive.com/contest/{{contest.id}}">
 {% endblock %}
 {% block content %}
-    {% if contest %}
-        <div class="main-content">
+<div class="main-content">
         <div class="heading">
             <h1>{{ contest }}</h1>
             {% if can_change %}
@@ -74,6 +74,5 @@
                         {% endfor %}
                         </div>
             {% endif %}
-        {% endif %}
 </div>
 {% endblock %}

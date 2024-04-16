@@ -2,13 +2,7 @@
 	height: 0.9em;
 	margin-inline-end: 0.1em;
 }
-.gridview-container {
-	grid-template-rows: 20em;
-    grid-auto-columns: 30%;
-}
-.gridview-square{
-    aspect-ratio:auto;
-}
+
 .gridview-title {
 	height: FIT-CONTENT;
 	align-items: center;
@@ -20,9 +14,6 @@
 }
 .gridview-subtitle p{
    margin: 0em;
-}
-.gridview-image-container{
-	height:80%;
 }
 .lb-table-container{
 	display:flex;
@@ -54,7 +45,20 @@
 .lb-negative{
     color:red;
 }
+.mobile-show {
+    visibility: hidden;
+    display: none;
+}
+
 @media (max-width: 700px){
   .gridview-container {
-    grid-template-columns: repeat(auto-fit,100%);
+    grid-template-columns: repeat(auto-fit,50%);
   }
+  .mobile-hide {
+    display: none;
+    }
+  .mobile-show {
+    visibility: visible;
+    display: grid;
+    }
+}
