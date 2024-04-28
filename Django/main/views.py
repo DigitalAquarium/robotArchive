@@ -558,15 +558,15 @@ def delete_view(request, model, instance_id=None, next_id=None):
 
 
 def index_view(request):
-    editor_stay = request.GET.get("edt") or ""
-    if request.user.is_authenticated and request.user.is_superuser and editor_stay != "stay":
-        return redirect("main:edtHome")
+   editor_stay = request.GET.get("edt") or ""
+   if request.user.is_authenticated and request.user.is_superuser and editor_stay != "stay":
+      return redirect("main:edtHome")
 
-    events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
+   events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
               "mechwars-iii", "robotica-season-1"]
-    robot = Robot.objects.filter(hallofame__full_member=True).order_by("?")[0]
-    event = Event.objects.get(slug=random.choice(events))
-    return render(request, "main/index.html", {"example_robot": robot, "example_event": event})
+   robot = Robot.objects.filter(hallofame__full_member=True).order_by("?")[0]
+   event = Event.objects.get(slug=random.choice(events))
+   return render(request, "main/index.html", {"example_robot": robot, "example_event": event})
 
 
 def event_index_view(request):
