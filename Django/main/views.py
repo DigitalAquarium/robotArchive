@@ -31,6 +31,7 @@ def edt_home_view(request):
     return render(request, "main/editor/home.html",
                   {"event_list": event_list,
                    "name": name,
+                   "title": "Editor Home",
                    })
 
 
@@ -67,7 +68,7 @@ def edt_new_event_view(request):
     else:
         fran = None
         form = NewEventFormEDT()
-    return render(request, "main/editor/new_event.html", {"form": form, "fran": fran})
+    return render(request, "main/editor/new_event.html", {"form": form, "fran": fran, "title": "New Event"})
 
 
 @permission_required("main.add_contest", raise_exception=True)
@@ -133,7 +134,7 @@ def edt_event_view(request, event_id):
 
     locations = Location.objects.all().order_by("name")
     return render(request, "main/editor/event.html",
-                  {"event": event, "locations": locations})
+                  {"event": event, "locations": locations, "title": "edt " + str(event)})
 
 
 @permission_required("main.change_franchise", raise_exception=True)
@@ -150,6 +151,7 @@ def edt_fran_view(request):
     return render(request, "main/editor/franchise.html",
                   {"fran_list": fran_list,
                    "name": name,
+                   "title": "Choose a franchise"
                    })
 
 
@@ -217,7 +219,7 @@ def edt_contest_view(request, contest_id):
             Fight.objects.bulk_update(fights, ["number"])
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "other_contests": other_contests, "fights": fights,
-                   "applications": registrations})
+                   "applications": registrations, "title": "edt" + str(contest)})
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -253,7 +255,7 @@ def edt_fight_view(request, fight_id):
                 response.delete_cookie("editing_fight")
         else:
             response = render(request, "main/editor/fight.html",
-                              {"form": form, "has_winner": has_winner, "fight": fight})
+                              {"form": form, "has_winner": has_winner, "fight": fight, "title": "edt" + str(fight),})
             response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
     else:
         if fight.fight_version_set.count() == 0:
@@ -262,7 +264,7 @@ def edt_fight_view(request, fight_id):
         else:
             form = FightForm(instance=fight)
             response = render(request, "main/editor/fight.html",
-                              {"form": form, "has_winner": has_winner, "fight": fight})
+                              {"form": form, "has_winner": has_winner, "fight": fight, "title": "edt" + str(fight),})
             response.set_cookie("editing_fight", fight_id, ONE_HOUR_TIMER)
     return response
 
@@ -309,7 +311,7 @@ def edt_select_robot_view(request):
     return render(request, "main/editor/select_robot.html",
                   {"robot_list": robot_list,
                    "name": name, "obj_id": obj_id, "obj_type": obj_type, "page": page,
-                   "pages": results // num if results % num == 0 else results // num + 1
+                   "pages": results // num if results % num == 0 else results // num + 1, "title": "Choose Robot",
                    })
 
 
@@ -380,7 +382,7 @@ def edt_team_view(request, team_id):
     response = render(request, "main/editor/team.html",
                       {"team": team, "editing_version_id": editing_version_id,
                        "robot_or_version": robot_or_version, "editing_fight":
-                           fight_id != 0})
+                           fight_id != 0, "title": "edt" + str(team),})
     response.set_cookie("editing_team", team_id, ONE_HOUR_TIMER)
     return response
 
@@ -423,7 +425,8 @@ def edt_select_team_view(request, fight_id):
     return render(request, "main/editor/select_team.html",
                   {"team_list": team_list,
                    "name": name, "fight_id": fight_id, "page": page, "v": robot_id,
-                   "pages": results // num if results % num == 0 else results // num + 1
+                   "pages": results // num if results % num == 0 else results // num + 1,
+                   "title": "Select Team",
                    })
 
 
@@ -440,7 +443,7 @@ def edt_select_version_view(request, robot_id):
         obj_type = "fight"
         obj_id = request.COOKIES.get("editing_fight")
     return render(request, "main/editor/select_version.html",
-                  {"robot": robot, "obj_type": obj_type, "obj_id": obj_id})
+                  {"robot": robot, "obj_type": obj_type, "obj_id": obj_id, "title": "Select Version",})
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -551,7 +554,7 @@ def delete_view(request, model, instance_id=None, next_id=None):
         return redirect(next_url)
     else:
         return render(request, "main/delete.html",
-                      {"instance": instance, "model": model, "next_id": next_id, "redirect": redir})
+                      {"instance": instance, "model": model, "next_id": next_id, "redirect": redir,"title": "Delete " + str(instance)})
 
 
 def index_view(request):
@@ -637,6 +640,10 @@ def event_index_view(request):
                    "date_from": date_from,
                    "date_to": date_to,
                    "past": past,
+
+                   "title": "Events",
+                   "description": "List of robot combat events from " + str(event_list[0].start_date) + " to " + str(event_list[-1].end_date),
+                   "url": reverse("main:eventIndex"),
                    })
 
 
@@ -648,6 +655,7 @@ def event_detail_view(request, slug):
 
     fran = event.franchise
     contests = Contest.objects.filter(event=event).order_by("-weight_class__weight_grams")
+    num_competitors = Version.objects.filter(registration__contest__in=contests).distinct().count()
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
     else:
@@ -655,7 +663,13 @@ def event_detail_view(request, slug):
     return render(request, "main/event_detail.html",
                   {"event": event,
                    "contests": contests,
-                   "can_change": can_change, })
+                   "can_change": can_change,
+
+                   "title": event.name,
+                   "description": "Information about " + str(event) + ", an event organised by " + str(event.franchise) + (" on " + str(event.start_date) if event.is_one_day else " from " + str(event.start_date) + " to " + str(event.end_date)) + " with " + str(num_competitors) + " robots competing.",
+                   "thumbnail": event.logo.url if event.logo else (event.franchise.logo.url if event.franchise.logo else None),
+                   "url": reverse("main:eventDetail", args=[event.slug]),
+                   })
 
 
 @permission_required("main.add_event", raise_exception=True)  # TODO: FORMS
@@ -675,7 +689,7 @@ def new_event_view(request, franchise_id):
             return redirect("main:edtEvent", event.id)
     else:
         form = EventForm()
-    return render(request, "main/new_event.html", {"form": form, "fran": fran})
+    return render(request, "main/new_event.html", {"form": form, "fran": fran, "title": "New Event"})
 
 
 @permission_required("main.change_event", raise_exception=True)
@@ -691,7 +705,7 @@ def modify_event_view(request, event_id):
             return redirect("main:edtEvent", new.id)
     else:
         form = EventForm(instance=event)
-    return render(request, "main/forms/generic.html", {"form": form, "title": "Edit Event", "has_image": True,
+    return render(request, "main/forms/generic.html", {"form": form, "title": "Edit " + str(event), "has_image": True,
                                                        "next_url": reverse("main:editEvent", args=[event_id])})
 
 
@@ -712,7 +726,12 @@ def contest_detail_view(request, contest_id):
         can_change = False
     return render(request, "main/contest_detail.html",
                   {"contest": contest, "fights": fights, "applications": registrations, "can_change": can_change,
-                   "applied": applied, "approved": approved, "reserve": reserve, "app_ver": app_ver})
+                   "applied": applied, "approved": approved, "reserve": reserve, "app_ver": app_ver,
+
+                   "title": str(contest) + ": " + contest.event.name,
+                   "description": "Overview of the fights and competitors at the " + contest.name + " at " + contest.event.name,
+                   "url": reverse("main:contestDetail", args=[contest_id]),
+                   })
 
 
 @permission_required("main.add_contest", raise_exception=True)
@@ -911,6 +930,11 @@ def leaderboard(request):
                    "is_this_year": year == current_year,
                    "low_classes": ["A", "U", "B", "Y", "F"],
                    "eliminations": eliminations,
+
+                   "title": "Leaderboard",
+                   "description": "Leaderboard of "+ (lambda x: {"F":"featherweight", "L":"lightweight", "M":"middleweight", "H":"heavyweight", "S":"super heayweight"}[x])(weight) + " fighting robots in the year " + str(year) + ".",
+                   "thumbnail": top_three[0].version.image.url,
+                   "url": reverse("main:leaderboard") + "?weight=" + weight + "&year=" + str(year),
                    })
 
 
@@ -973,7 +997,14 @@ def robot_detail_view(request, slug):
                   {"robot": r, "fights_tuple": fights_tuple, "awards": awards, "ver": v, "can_change": can_change,
                    "version_set": r.version_set.all().order_by("number"),
                    "best_lb_entry": best_lb_entry, "leaderboard_entries": leaderboard_entries,
-                   "current_lb_entry": current_lb_entry, "is_random": is_random})
+                   "current_lb_entry": current_lb_entry, "is_random": is_random,
+                   "missing_brackets_flag": True if fights.filter(contest__event__missing_brackets=True).exists() else False,
+
+                   "title": r.name,
+                   "description": "Information about " + str(r) + ", a combat robot that has fought " + str(fights.count()) + " fight" + ("" if fights.count == 0 else "s") + " from " + str(r.first_fought) + " to " + str(r.last_fought) + ". Winning " + str(r.wins) + " and losing " + str(r.losses) + " in head to head battle.",
+                   "thumbnail": v.image.url if v and v.image else r.get_image(),
+                   "url": reverse("main:robotDetail", args=[r.slug]),
+                   })
 
 
 def random_robot_view(unused):
@@ -1038,12 +1069,12 @@ def version_edit_view(request, version_id):  # TODO: MASSIVE NEEDS TO BE DONE RI
             response.delete_cookie("editing_version")
         else:
             response = render(request, "main/modify_version.html", {"form": form, "version": version, "new": False,
-                                                                    "fight_id": fight_id, "team_id": team_id})
+                                                                    "fight_id": fight_id, "team_id": team_id,"title": "Edit" + str(version)})
             response.set_cookie("editing_version", version.id, ONE_HOUR_TIMER)
     else:
         form = VersionForm(instance=version)
         response = render(request, "main/modify_version.html",
-                          {"form": form, "version": version, "new": False, "fight_id": fight_id, "team_id": team_id})
+                          {"form": form, "version": version, "new": False, "fight_id": fight_id, "team_id": team_id,"title": "Edit" + str(version)})
         response.set_cookie("editing_version", version.id, ONE_HOUR_TIMER)
     return response
 
@@ -1086,7 +1117,7 @@ def new_version_view(request, robot_id):  # TODO: FORM
                 response.delete_cookie("robot_or_version")
         else:
             response = render(request, "main/modify_version.html",
-                              {"form": form, "robot": robot, "new": True, "fight_id": fight_id, "team_id": team_id})
+                              {"form": form, "robot": robot, "new": True, "fight_id": fight_id, "team_id": team_id,"title":"Add new version to "+str(robot)})
             response.set_cookie("robot_or_version", "version", ONE_HOUR_TIMER)
             response.set_cookie("rv_id", robot_id, ONE_HOUR_TIMER)
     else:
@@ -1105,7 +1136,7 @@ def new_version_view(request, robot_id):  # TODO: FORM
             else:
                 form.fields['country'].initial = robot.country
         response = render(request, "main/modify_version.html",
-                          {"form": form, "robot": robot, "new": True, "fight_id": fight_id, "team_id": team_id})
+                          {"form": form, "robot": robot, "new": True, "fight_id": fight_id, "team_id": team_id,"title":"Add new version to "+str(robot)})
         response.set_cookie("robot_or_version", "version", ONE_HOUR_TIMER)
         response.set_cookie("rv_id", robot_id, ONE_HOUR_TIMER)
     return response
@@ -1122,8 +1153,17 @@ def team_detail_view(request, slug):
         can_change = False
     robots = team.owned_robots().order_by("-last_fought")
     loaners = team.loaners().order_by("-last_fought")
+
+    first_first_fought = team.owned_robots().order_by("first_fought").first().first_fought
+    last_last_fought = team.owned_robots().order_by("-last_fought").first().last_fought
     return render(request, "main/team_detail.html",
-                  {"team": team, "robots": robots, "loaners": loaners, "can_change": can_change})
+                  {"team": team, "robots": robots, "loaners": loaners, "can_change": can_change,
+
+                   "title": team,
+                   "description": "Overview of " + str(team) + ", a robot combat team that built " + str(robots.count()) + " robots " + ("from " + str(first_first_fought.year) + " to " + str(last_last_fought.year) if first_first_fought.year != last_last_fought.year else "in " + str(first_first_fought.year)) + ".",
+                   "thumbnail": team.logo.url if team.logo else None,
+                   "url": reverse("main:teamDetail", args=[slug]),
+                   })
 
 
 def team_index_view(request):
@@ -1163,6 +1203,10 @@ def team_index_view(request):
                    "countries": [("", "")] + COUNTRY_CHOICES,
                    "chosen_country": country_code,
                    "name": name,
+
+                   "title": "Teams",
+                   "description": "A list of robot combat teams in alphabetical order from " + team_list[0].name + " to " + team_list[-1].name + ".",
+                   "url": reverse("main:teamIndex"),
                    })
 
 
@@ -1329,7 +1373,12 @@ def franchise_detail_view(request, slug):
         raise Http404
     events = fran.event_set.all().order_by("start_date")
     return render(request, "main/franchise_detail.html",
-                  {"fran": fran, "events": events, "leave_id": 1})  # pf.id or 1}) #TODO: lol
+                  {"fran": fran, "events": events, "leave_id": 1, #TODO: lol
+                   "title": fran,
+                   "description": "Information about " + fran.name + ", a robot combat event organiser who organised " + str(events.count()) + " event" +("" if events.count == 1 else "s")+ " from " + events.first().start_date.strftime("%d %M %Y") + " to " + events.last().end_date.strftime("%d %M %Y") + ".",
+                   "thumbnail": fran.logo.url if fran.logo else None,
+                   "url": reverse("main:franchiseDetail", args=[fran.slug]),
+                   })
 
 
 def franchise_index_view(request):
@@ -1353,6 +1402,11 @@ def franchise_index_view(request):
                    "page": page,
                    "pages": results // num if results % num == 0 else results // num + 1,
                    "name": name,
+
+                   "title": "Franchises",
+                   "description": "A list of robot combat franchises in alphabetical order from " + fran_list[
+                       0].name + " to " + fran_list[-1].name + ".",
+                   "url": reverse("main:franchiseIndex"),
                    })
 
 
@@ -1422,7 +1476,14 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
     if Fight.objects.filter(contest=fight.contest, number__lt=fight.number).exists():
         previous_fight = Fight.objects.filter(contest=fight.contest, number__lt=fight.number).order_by("-number")[0]
     return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change,
-                                                      "next_fight": next_fight, "previous_fight": previous_fight})
+                                                      "next_fight": next_fight, "previous_fight": previous_fight,
+
+                                                      "title": fight.non_latin_name,
+                                                      "description": ("Image of " if fight.media_type=="LI" or fight.media_type=="EI" else ("Video of " if fight.media_type!="XX" and fight.media_type!="UN" else "Overview of " )) + str(fight) + ". A " + ("round of " if fight.fight_type == "NC" else "fight at ") + "the " + str(fight.contest) + " contest at " + str(fight.contest.event) + ".",
+                                                      "thumbnail": fight.internal_media.url if fight.media_type=="LI" else (fight.external_media if fight.media_type=="EI" else None),
+                                                      "url": reverse("main:fightDetail", args=[fight_id]),
+                                                      "type": "video.other" if fight.media_type in ["LV","IF","TW","IG","TT","FB"] else None,
+                                                      })
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -1452,7 +1513,7 @@ def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
     else:
         form.fields['version'].queryset = registered
         response = render(request, "main/modify_fight_version.html",
-                          {"form": form, "fight_id": fight_id, "fight_version_id": vf_id, "editor": editor})
+                          {"form": form, "fight_id": fight_id, "fight_version_id": vf_id, "editor": editor, "title": "Modify Fight Version"})
 
     response.delete_cookie("editing_version")
     response.delete_cookie("editing_team")
@@ -1467,7 +1528,12 @@ def award_index_view(request, event_slug):
         can_change = event.can_edit(request.user)
     else:
         can_change = False
-    return render(request, "main/award_index.html", {"award_list": awards, "event": event, "can_change": can_change})
+    return render(request, "main/award_index.html", {"award_list": awards, "event": event, "can_change": can_change,
+                                                     "title": str(event)+": Awards - Robot Combat Archive",
+                                                     "description": "List of awards given out to robots at " + str(event),
+                                                     "thumbnail": settings.STATIC_URL + "awards/trophy_gold.png",
+                                                     "url": reverse("main:awardIndex", args=[event_slug]),
+                                                     })
 
 
 @permission_required("main.change_contest", raise_exception=True)
@@ -1585,7 +1651,12 @@ def search_view(request):
         return render(request, "main/search.html",
                       {"events": events, "robots": robots, "teams": teams, "franchises": franchises,
                        "search_term": search_term, "fran_len": fran_len, "event_len": event_len, "robot_len": robot_len,
-                       "team_len": team_len})
+                       "team_len": team_len,
+
+                       "title": '"' + search_term + '"',
+                       "description": "Search results for: " + search_term,
+                       "url": reverse("main:search"),
+                       })
 
 
 @permission_required("main.add_weight_class", raise_exception=True)
@@ -1699,7 +1770,12 @@ def robot_transfer_view(request, robot_id, team_id=None):
 def hall_of_fame_view(request):
     members = Robot.objects.filter(hallofame__full_member=True).order_by("-first_fought")
     honoraries = Robot.objects.filter(hallofame__full_member=False).order_by("-first_fought")
-    return render(request, "main/hall_of_fame.html", {"members": members, "honoraries": honoraries})
+    return render(request, "main/hall_of_fame.html", {"members": members, "honoraries": honoraries,
+                                                      "title": "Hall of Fame",
+                                                      "description": "All robots on the robot combat archive that also appear on RunAmok's Hall of Fame.",
+                                                      "thumbnail":"/media/team_logos/2022/newhotcoin1.png",
+                                                      "url": reverse("main:hallOfFame"),
+                                                      })
 
 
 def credits_view(request):
@@ -1714,6 +1790,10 @@ def credits_view(request):
         "flag": get_flag(random_country),
         "trophy": settings.STATIC_URL + "awards/trophy_" + random.choice(["bronze", "silver", "gold"]) + ".png",
         "google_icon": random.choice(google_icon_choices),
+
+        "title": "Credits",
+        "description": "Credits for assets used by the Robot Combat Archive.",
+        "url": reverse("main:credits"),
     })
 
 
@@ -1754,7 +1834,11 @@ def weapon_types_view(request):
         else:
             version_dict[w.replace(" ", "_").replace("-", "_").lower()] = valid_versions[0]
 
-    return render(request, "main/weapon_types.html", {"version_dict": version_dict})
+    return render(request, "main/weapon_types.html", {"version_dict": version_dict,
+                                                      "title": "Weapon Types",
+                                                      "description": "Definitions of all weapon types recognised by the robot combat archive.",
+                                                      "url": reverse("main:weaponTypes"),
+                                                      })
 
 
 def weight_class_view(unused):

@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load bonus_filters %}
-{% block meta %}
-    <title>{{ team }} - Robot Combat Archive</title>
+{% block head %}
     <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
     <link rel="canonical" href="https://www.robotcombatarchive.com/team/{{team.slug}}">

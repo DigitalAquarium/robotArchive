@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% load bonus_filters %}
 {% load static %}
-{% block meta %}
-    <title>{{ robot.name }} - Robot Combat Archive</title>
+{% block head %}
+    <link rel="canonical" href="https://www.robotcombatarchive.com/robot/{{robot.slug}}">
     <script src="{% static 'scripts/robot_detail.js' %}"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="{%static 'scripts/history_chart.js' %}"></script>
     <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
-    <link rel="canonical" href="https://www.robotcombatarchive.com/robot/{{robot.slug}}">
 {% endblock %}
 
 {% block navbar %}
@@ -38,9 +37,19 @@
                 </h2>
                 <h2>Win/Loss: {{ robot.wins }}/{{ robot.losses }}</h2>
             {% endif %}
-            <p>{{ robot.description }}</p>
 
-            {%if best_lb_entry%}
+        <h3>Competed:
+            {% if robot.first_fought|date:"F Y" == robot.last_fought|date:"F Y" %}
+                {{ robot.first_fought|date:"F Y" }}
+            {% elif robot.first_fought|date:"Y" == robot.last_fought|date:"Y" %}
+                {{ robot.first_fought|date:"F" }} - {{ robot.last_fought|date:"F Y" }}
+            {%else%}
+                {{ robot.first_fought|date:"F Y" }} - {{ robot.last_fought|date:"F Y" }}
+            {% endif %}</h3>
+        <p>{{ robot.description }}</p>
+        {%if missing_brackets_flag%}<p style="color:red">{{robot}} has fought at events where the brackets are missing, so this data may be incomplete. These events are highlighted in its fight history in red.</p> {%endif%}
+
+        {%if best_lb_entry%}
             <button id="best-lb-entry" onclick="toggleDropdown()" style="font-size:1.3em;font-weight: bold;margin:0px 0px 20px 0px;
                                     color:  {% if best_lb_entry.position == 1 %}gold
                                             {% elif best_lb_entry.position == 2 %}silver
@@ -48,18 +57,17 @@
                                             {%else%}black{% endif %};
                                             border:none; padding:0px; background:none; {%if leaderboard_entries%}cursor:pointer{%endif%};
 ">Ranked #{{best_lb_entry.position}} {{best_lb_entry.wc_to_string}} in {{best_lb_entry.year}} {%if leaderboard_entries%}🠟{%endif%}</button>
-        <div id="all-lb-entries" style="display:none">
-            {%for entry in leaderboard_entries%}
-        <p style="color:  {% if entry.position == 1 %}gold
+            <div id="all-lb-entries" style="display:none">
+                {%for entry in leaderboard_entries%}
+                <p style="color:  {% if entry.position == 1 %}gold
                                             {% elif entry.position == 2 %}silver
                                             {% elif entry.position == 3 %}darkgoldenrod
                                             {%else%}black{% endif %};
                                             {%if not forloop.last%}margin:2px 0px{%else%}margin:2px 0px 20px 0px{%endif%}">
-            <span {%if entry.position < 10 %}style="margin-right:0.6em"{%endif%}> #{{entry.position}}</span> <span>{{entry.wc_to_string}} in {{entry.year}}</span></p>
-            {%endfor%}
-                        </div>
+                <span {%if entry.position < 10 %}style="margin-right:0.6em"{%endif%}> #{{entry.position}}</span> <span>{{entry.wc_to_string}} in {{entry.year}}</span></p>
+                {%endfor%}
+            </div>
         {%endif%}
-
             <div>
                 <div class="version tabs">
                     {% for v in version_set %}
@@ -177,7 +185,7 @@
                     {% for rowspan, fight in fights_tuple %}
                         <tr>
                             {% if rowspan != 0 %}
-                            <td rowspan="{{ rowspan }}" style="background-color: white">
+                            <td {%if fight.contest.event.missing_brackets %} class="incomplete_event"{%endif%} rowspan="{{ rowspan }}" style="background-color: white">
                                 <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
                             </td>
                             {% endif %}

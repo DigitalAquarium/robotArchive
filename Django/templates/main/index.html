@@ -1,7 +1,18 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
+{%block seo %}
     <title>Robot Combat Archive Home</title>
+    <meta name="description" content="The Robot Combat Archive is a website for viewing the history of combat robots from events such as Robot Wars and BattleBots to lesser known live and international events. The archive currently complete up to 2003."/>
+    <meta property="og:description" content="The Robot Combat Archive is a website for viewing the history of combat robots from events such as Robot Wars and BattleBots to lesser known live and international events. The archive currently complete up to 2003." />
+    <meta name="twitter:description" content="The Robot Combat Archive is a website for viewing the history of combat robots from events such as Robot Wars and BattleBots to lesser known live and international events. The archive currently complete up to 2003." />
+    <meta property="twitter:domain" content="www.robotcombatarchive.com">
+    <meta property="og:url" content="https://www.robotcombatarchive.com" />
+    <meta property="twitter:url" content="https://www.robotcombatarchive.com"/>
+    <meta property="og:type" content="website"/>
+    <meta name="twitter:card" content="summary"/>
+    <meta property="og:locale" content="en_GB" />
+{%endblock%}
+{% block head %}
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
     <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/index.css' %}" />
@@ -11,7 +22,20 @@
     <div class="main-content">
         <h1>The Robot Combat Archive</h1>
         <div>
-           <p> {% lorem %}</p>
+           <p>
+               Welcome to the robot combat archive! A site with the goal of centralising information about big-box robot combat globally with a ranking system thrown in for fun!<br>
+               The site covers information from big TV events such as <a href="franchise/classic-robot-wars">Robot Wars</a> and <a href="franchise/battlebots">BattleBots,</a> to lesser known live events such as <a href="franchise/roaming-robots">Extreme Robots</a> and <a href="franchise/robogames">Robogames</a> down to the obscure like <a href="event/robocide-showdown-in-o-town">Robocide</a> or <a href="event/guerra-de-robos">Guerra de Robôs.</a><br>
+               Did you know that <a href="/fight/823">Chaos 2 has beaten Razer</a>, or that <a href="/contest/22">Vlad the Impaler fought in Japan?</a> Well with all the information in one place It's much easier to view a robot's whole history and find trivia like this. The archive is currently complete up to 2003.<br>
+               <br>
+               What this site is:<br>
+               An overview of a robot's fight history and design changes over time.
+               <br>
+               What this site is not:<br>
+               An in-depth break-down of every detail of every robot and fight. For more detail you can often check the excellent <a href="https://robotwars.fandom.com/">Robot Wars</a> or <a href="https://battlebots.fandom.com/">BattleBots</a> wikis.<br>
+               A definitive answer to the greatest robot of all time or who would beat who. The ranking system has flaws and may edge cases. As an example modern robots are always likely to beat older ones no matter the ranking.<br>
+               Where you can find the latest episode of BattleBots etc. That would be harmful to the show and likely lead to the site getting taken down.<br>
+               100% Accurate. While great care has been taken to ensure accuracy, there are often large holes in the data and this site is maintained by 1 person. If you spot any glaring errors, for now I'm reachable on the OOTA or BB Wiki discord servers.
+           </p>
         </div>
 
         <div>
