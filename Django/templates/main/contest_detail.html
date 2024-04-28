@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
-    <title>{{ contest }}: {{contest.event}} - Robot Combat Archive</title>
-    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+{% block head %}
     <link rel="canonical" href="https://www.robotcombatarchive.com/contest/{{contest.id}}">
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 {% endblock %}
+
 {% block content %}
 <div class="main-content">
         <div class="heading">
@@ -13,7 +13,9 @@
                 <a href="{% url 'main:edtContest' contest.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Contest"></a>
             {% endif %}
         </div>
-            <h4 style="font-weight:normal">A contest at <a href="{% url 'main:eventDetail' contest.event.slug %}">{{contest.event}}</a></h4>
+            <h4 style="font-weight:normal">A contest at <a href="{% url 'main:eventDetail' contest.event.slug %}">{{contest.event}}.</a>
+                {%if contest.event.missing_brackets%} <span style="color:red">This event is missing brackets, fights are likely to be missing from or listed incorrectly on this contest.</span> {%endif%}
+            </h4>
             {%if fights|length > 0%}
                 <table>
                     <thead>

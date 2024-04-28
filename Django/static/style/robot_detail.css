@@ -87,6 +87,9 @@
     -o-animation: random-animation 30s ease infinite;
     animation: random-animation 30s ease infinite;
 }
+.incomplete_event, .incomplete_event a{
+    color:red;
+}
 
 @-webkit-keyframes random-animation {
     0%{background-position:0% 36%}
