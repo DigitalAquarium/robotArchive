@@ -3,8 +3,17 @@ from django.urls import path
 from . import views
 from . import ajax_views
 from . import error_views
+from .sitemap_views import *
+from django.contrib.sitemaps.views import sitemap
+from django.contrib.sitemaps import GenericSitemap
+from main.models import *
 
 app_name = 'main'
+
+info_dict = {
+    "queryset": Robot.objects.all(),
+}
+
 urlpatterns = [
     path('', views.index_view, name='index'),
     path('delete/<str:model>/<int:instance_id>/<int:next_id>', views.delete_view, name='delete'),
@@ -45,8 +54,8 @@ urlpatterns = [
     path('weight_class/new/<int:return_id>', views.new_weight_class_view, name='newWeightClass'),
     path('awards/<int:award_id>/edit', views.award_edit_view, name='editAward'),
     path('account_public_details/<int:person_id>/edit', views.person_edit_view, name='editPerson'),
-    #path('accounts/register', views.register, name='register'),
-    #path('accounts/profile/', views.profile_view, name='profile'),
+    # path('accounts/register', views.register, name='register'),
+    # path('accounts/profile/', views.profile_view, name='profile'),
     path('<str:obj_type>/add_member/<int:obj_id>', views.add_member_view, name="addMember"),
     path('hall-of-fame', views.hall_of_fame_view, name="hallOfFame"),
     path('weapon-types', views.weapon_types_view, name="weaponTypes"),
@@ -63,23 +72,50 @@ urlpatterns = [
     path('editor/contest/<int:contest_id>', views.edt_contest_view, name='edtContest'),
     path('editor/selectFranchise', views.edt_fran_view, name='edtSelectFran'),
     path('editor/fight/<int:fight_id>', views.edt_fight_view, name='edtFightOverview'),
-    path('editor/selectRobot', views.edt_select_robot_view, name='edtSelectRobot'), # Modifyfightversion
+    path('editor/selectRobot', views.edt_select_robot_view, name='edtSelectRobot'),  # Modifyfightversion
     path('editor/fight/selectVersion/<int:robot_id>', views.edt_select_version_view, name='edtSelectVersion'),
     path('editor/fight/<int:fight_id>/signupVersion/<int:version_id>', views.edt_signup_version_view, name='edtSignupVersion'),
     path('editor/fight/<int:fight_id>/selectTeam', views.edt_select_team_view, name='edtSelectTeam'),
     path('editor/team/<int:team_id>', views.edt_team_view, name='edtTeam'),
     path('editor/link/<str:obj_type>/<int:obj_id>', views.edt_team_view, name='edtLink'),
-    #path('editor/pruneMedia', views.prune_media, name='edtPrune'),
-    #path('editor/recalculate', views.recalc_all, name='recalculateAll'),
-    #path('test/tourny', views.tournament_tree, name='tournament_test'),
-    #path('import', views.importView, name='import'),
-    #path('test/graph', views.graph_test, name='graph_test'),
-    #path('test/graph_data', views.graph_data, name='graph_test'),
+    # path('editor/pruneMedia', views.prune_media, name='edtPrune'),
+    # path('editor/recalculate', views.recalc_all, name='recalculateAll'),
+    # path('test/tourny', views.tournament_tree, name='tournament_test'),
+    # path('import', views.importView, name='import'),
+    # path('test/graph', views.graph_test, name='graph_test'),
+    # path('test/graph_data', views.graph_data, name='graph_test'),
 
     path('ajax/get_location', ajax_views.get_location, name='ajax_getLocation'),
     path('ajax/get_history', ajax_views.get_history, name='ajax_getHistory'),
 
-
     path("404/", error_views._404),
     path("500/", error_views._500),
+
+    path("sitemap.xml",
+         sitemap,
+         {"sitemaps": {
+             "static": StaticSitemap,
+             "index": IndexSitemap,
+             "leaderboard": LeaderboardSitemap,
+             "events": EventSitemap,
+             "contests": ContestSitemap,
+             "robots": RobotSitemap,
+             "teams": TeamSitemap,
+             "franchises": FranchiseSitemap,
+         }},
+         name="django.contrib.sitemaps.views.index", ),
+
+    path("sitemap-<section>.xml",
+         sitemap,
+         {"sitemaps": {
+             "static": StaticSitemap,
+             "index": IndexSitemap,
+             "leaderboard": LeaderboardSitemap,
+             "events": EventSitemap,
+             "contests": ContestSitemap,
+             "robots": RobotSitemap,
+             "teams": TeamSitemap,
+             "franchises": FranchiseSitemap,
+         }},
+         name="django.contrib.sitemaps.views.sitemap", ),
 ]
