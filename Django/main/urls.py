@@ -5,7 +5,6 @@ from . import ajax_views
 from . import error_views
 from .sitemap_views import *
 from django.contrib.sitemaps.views import sitemap
-from django.contrib.sitemaps import GenericSitemap
 from main.models import *
 
 app_name = 'main'
