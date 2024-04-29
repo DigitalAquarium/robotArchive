@@ -3,8 +3,16 @@ from django.urls import path
 from . import views
 from . import ajax_views
 from . import error_views
+from .sitemap_views import *
+from django.contrib.sitemaps.views import sitemap
+from main.models import *
 
 app_name = 'main'
+
+info_dict = {
+    "queryset": Robot.objects.all(),
+}
+
 urlpatterns = [
     path('', views.index_view, name='index'),
     #path('delete/<str:model>/<int:instance_id>/<int:next_id>', views.delete_view, name='delete'),
@@ -70,11 +78,37 @@ urlpatterns = [
     #path('editor/pruneMedia', views.prune_media, name='edtPrune'),
     #path('editor/recalculate', views.recalc_all, name='recalculateAll'),
 
-
     path('ajax/get_location', ajax_views.get_location, name='ajax_getLocation'),
     path('ajax/get_history', ajax_views.get_history, name='ajax_getHistory'),
 
-
     path("404/", error_views._404),
     path("500/", error_views._500),
+
+    path("sitemap.xml",
+         sitemap,
+         {"sitemaps": {
+             "static": StaticSitemap,
+             "index": IndexSitemap,
+             "leaderboard": LeaderboardSitemap,
+             "events": EventSitemap,
+             "contests": ContestSitemap,
+             "robots": RobotSitemap,
+             "teams": TeamSitemap,
+             "franchises": FranchiseSitemap,
+         }},
+         name="django.contrib.sitemaps.views.index", ),
+
+    path("sitemap-<section>.xml",
+         sitemap,
+         {"sitemaps": {
+             "static": StaticSitemap,
+             "index": IndexSitemap,
+             "leaderboard": LeaderboardSitemap,
+             "events": EventSitemap,
+             "contests": ContestSitemap,
+             "robots": RobotSitemap,
+             "teams": TeamSitemap,
+             "franchises": FranchiseSitemap,
+         }},
+         name="django.contrib.sitemaps.views.sitemap", ),
 ]
