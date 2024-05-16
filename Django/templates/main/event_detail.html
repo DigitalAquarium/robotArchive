@@ -26,7 +26,7 @@
         {% endif %}
 
         {%if event.missing_brackets%}
-            <p style="color:red">⚠️ A complete bracket for this event has not yet been found. It is likely many of the fights from this event are not listed on the site. Fights may have unknown winners, or be listed slightly wrong.</p>
+            <p class="warning">⚠️ A complete bracket for this event has not yet been found. It is likely many of the fights from this event are not listed on the site. Fights may have unknown winners, or be listed slightly wrong.</p>
         {%endif%}
 
 
@@ -93,13 +93,13 @@
             <h2>This event has been archived using the following websites:</h2>
         {% for source in event.source_set.all %}
                 <ul>
-                    <ui style="border:None;display:flex">
+                    <li style="border:None;display:flex">
                         <a href="{{ source.link }}" style="display:inherit">
                             <img src="{%if source.archived %}{%static 'web_logos/WA.png'%}{%else%}https://icon.horse/icon/{{source.get_domain}}{%endif%}" alt="{{ source.name }} favicon" width="25px" height="25px" style="padding-inline:1em">
                             <span>{{source.name}}</span>
                         </a>
                         <span style="padding-inline:1em">{%if source.archived %} archived. {%else%} last accessed {{source.last_accessed}}. {%endif%}</span>
-                    </ui>
+                    </li>
                 </ul>
         {% endfor %}
 </div>

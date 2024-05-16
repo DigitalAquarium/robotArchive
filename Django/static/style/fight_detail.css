@@ -5,7 +5,8 @@
     justify-content: center;
 }
 .winners-box{
-    box-shadow: inset limegreen 0 0 0.1em 0.3em;
+    box-shadow: inset var(--positive-colour) 0 0 0.1em 0.3em;
+    border-radius:0.5em;
 }
 
 h1 {

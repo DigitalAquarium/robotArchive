@@ -256,7 +256,7 @@ class NewEventFormEDT(forms.Form):
 
         if self.cleaned_data['prev_logo']:
             e.logo = self.cleaned_data['prev_logo']
-        elif self.cleaned_data['logo_img']:
+        elif self.cleaned_data['logo_txt']:
             save_img(self.cleaned_data['logo_txt'], e.logo, e.name)
         else:
             e.logo = self.cleaned_data['logo_img']

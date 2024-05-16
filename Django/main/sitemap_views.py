@@ -34,7 +34,7 @@ class LeaderboardSitemap(Sitemap):
     def items(self):
         items = []
         for lb in Leaderboard.objects.values("year", "weight").order_by("-year").distinct():
-            items.append("?weight=" + lb["weight"] + "&year" + str(lb["year"]))
+            items.append("?weight=" + lb["weight"] + "&year=" + str(lb["year"]))
         return items
 
     def location(self, item):

@@ -29,11 +29,9 @@
             {% endif %}
         </div>
             {% if not robot.opt_out %}
-                <h2>Rank: {{ robot.ranking|floatformat:2 }}
-                    <span style="color:  {% if current_lb_entry.position == 1 %}gold
-                                            {% elif current_lb_entry.position == 2 %}silver
-                                            {% elif current_lb_entry.position == 3 %}darkgoldenrod
-                                            {%else%}purple{% endif %}">{%if current_lb_entry %}#{{current_lb_entry.position}} {{current_lb_entry.wc_to_string}}{%endif%}</span>
+                <h2>Rank{%if current_lb_entry%}ed
+                    <span class="{% if current_lb_entry.position == 1 %}gold{% elif current_lb_entry.position == 2 %}silver {% elif current_lb_entry.position == 3 %} bronze {%else%}top-hundred{% endif %}">
+                        #{{current_lb_entry.position}} {{current_lb_entry.wc_to_string}}:</span>{%else%}:{%endif%} {{ robot.ranking|floatformat:2 }}
                 </h2>
                 <h2>Win/Loss: {{ robot.wins }}/{{ robot.losses }}</h2>
             {% endif %}
@@ -47,23 +45,13 @@
                 {{ robot.first_fought|date:"F Y" }} - {{ robot.last_fought|date:"F Y" }}
             {% endif %}</h3>
         <p>{{ robot.description }}</p>
-        {%if missing_brackets_flag%}<p style="color:red">{{robot}} has fought at events where the brackets are missing, so this data may be incomplete. These events are highlighted in its fight history in red.</p> {%endif%}
+        {%if missing_brackets_flag%}<p class="warning">{{robot}} has fought at events where the brackets are missing, so this data may be incomplete. These events are highlighted in its fight history in red.</p> {%endif%}
 
         {%if best_lb_entry%}
-            <button id="best-lb-entry" onclick="toggleDropdown()" style="font-size:1.3em;font-weight: bold;margin:0px 0px 20px 0px;
-                                    color:  {% if best_lb_entry.position == 1 %}gold
-                                            {% elif best_lb_entry.position == 2 %}silver
-                                            {% elif best_lb_entry.position == 3 %}darkgoldenrod
-                                            {%else%}black{% endif %};
-                                            border:none; padding:0px; background:none; {%if leaderboard_entries%}cursor:pointer{%endif%};
-">Ranked #{{best_lb_entry.position}} {{best_lb_entry.wc_to_string}} in {{best_lb_entry.year}} {%if leaderboard_entries%}🠟{%endif%}</button>
+            <button id="best-lb-entry" onclick="toggleDropdown()" class="{% if best_lb_entry.position == 1 %}gold{% elif best_lb_entry.position == 2 %}silver {% elif best_lb_entry.position == 3 %}bronze {%else%}top-hundred{% endif %}" style="{%if leaderboard_entries%}cursor:pointer{%endif%}">Ranked #{{best_lb_entry.position}} {{best_lb_entry.wc_to_string}} in {{best_lb_entry.year}} {%if leaderboard_entries%}🠟{%endif%}</button>
             <div id="all-lb-entries" style="display:none">
                 {%for entry in leaderboard_entries%}
-                <p style="color:  {% if entry.position == 1 %}gold
-                                            {% elif entry.position == 2 %}silver
-                                            {% elif entry.position == 3 %}darkgoldenrod
-                                            {%else%}black{% endif %};
-                                            {%if not forloop.last%}margin:2px 0px{%else%}margin:2px 0px 20px 0px{%endif%}">
+                <p class="{% if entry.position == 1 %}gold{% elif entry.position == 2 %}silver {% elif entry.position == 3 %}bronze{% endif %}" style="{%if not forloop.last%}margin:2px 0px{%else%}margin:2px 0px 20px 0px{%endif%}">
                 <span {%if entry.position < 10 %}style="margin-right:0.6em"{%endif%}> #{{entry.position}}</span> <span>{{entry.wc_to_string}} in {{entry.year}}</span></p>
                 {%endfor%}
             </div>
@@ -130,6 +118,7 @@
                 {% if can_change %}<a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>{% endif %}
             </div>
         <span id="robot-slug" robot-slug="{{robot.slug}}" hidden="hidden"></span>
+        <br>
         <div id="history-chart" style="width:100%; height:400px;"></div>
 
             {% if awards|length > 0 or robot.hallofame_set.all|length > 0 %}
@@ -147,11 +136,13 @@
                     </tr>
                     </thead>
                     {%if robot.hallofame_set.all|length > 0%}
+                    <tr class="table-row-two">
                     <td><img class="award-icon" src="{%static 'awards/frame2.png'%}" alt="Golden Picture Frame Icon"></td>
                     <td colspan="2" style="text-align:center"><a href="{%url 'main:hallOfFame' %}">{%if robot.hallofame_set.first.full_member%}Hall of Fame Member{%else%}Hall of Fame Honorable Mention{%endif%}</a></td>
+                    </tr>
                     {% endif %}
                     {% for award in awards %}
-                        <tr>
+                        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
                             <td><img class="award-icon" src="{{ award.get_icon }}"
                                      {%if award_type == 0%}
                                         alt="Medal with Red Ribbon"
@@ -183,9 +174,9 @@
                     </thead>
                     <tbody>
                     {% for rowspan, fight in fights_tuple %}
-                        <tr>
+                        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
                             {% if rowspan != 0 %}
-                            <td {%if fight.contest.event.missing_brackets %} class="incomplete_event"{%endif%} rowspan="{{ rowspan }}" style="background-color: white">
+                            <td class ="table-no-bg{%if fight.contest.event.missing_brackets %} incomplete_event{%endif%}" rowspan="{{ rowspan }}">
                                 <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
                             </td>
                             {% endif %}

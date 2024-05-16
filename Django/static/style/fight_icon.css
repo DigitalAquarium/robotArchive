@@ -1,0 +1,16 @@
+td, th{
+        height:1.5em;
+}
+.fight-link{
+    display: inline-flex;
+    align-items: center;
+}
+.fight-link-icon{
+    padding-left:0.5em;
+    color: var(--font-colour)
+}
+
+.fight-link-icon-gif{
+    font-size: 2em;
+    margin: -0.5em 0 -0.5em 0;
+}

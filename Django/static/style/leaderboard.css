@@ -22,7 +22,7 @@
 .header-warning{
     margin:0.5em 0 0 0;
     font-style:italics;
-    color:red;
+    color:var(--warning-colour);
 }
 
 .robot-name-cell{
@@ -37,13 +37,13 @@
        }
 
 .lb-positive{
-    color:limegreen;
+    color: var(--positive-colour);
 }
 .lb-neutral{
-    color:black;
+    color:var(--font-colour);
 }
 .lb-negative{
-    color:red;
+    color:var(--negative-colour);
 }
 .mobile-show {
     visibility: hidden;

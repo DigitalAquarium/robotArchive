@@ -1,8 +1,8 @@
 .tooltip{
     position:absolute;
     display:none;
-    background:white;
+    background:var(--background-colour);
     padding:0.5em;
-    border:1px light-grey solid;
-    box-shadow: 3px 4px 4px grey;
+    border:1px var(--shadow-colour) solid;
+    box-shadow: 3px 4px 4px var(--shadow-colour);
 }

@@ -1,25 +1,10 @@
 {%load static%}
-<style>
-    td, th{
-        height:1.5em;
-    }
-    .fight-link{
-        display: inline-flex;
-        align-items: center;
-    }
-    .fight-link-icon{
-        padding-left:0.5em;
-    }
-    .fight-link-icon-gif{
-        height: 2em;
-        margin: -0.5em 0 -0.5em 0;
-    }
-</style>
+ <link rel="stylesheet" href="{% static 'style/fight_icon.css' %}">
 
 {%if fight.img_gif_vid == 'image'%}
-    <img class="fight-link-icon" src="{%static 'media_icons/image.svg'%}" alt="This fight has an image">
+    <span class="fight-link-icon material-symbols-outlined">imagesmode</span>
 {%elif fight.img_gif_vid == 'gif'%}
-    <img class="fight-link-icon fight-link-icon-gif" src="{%static 'media_icons/gif.svg'%}" alt="This fight has a gif">
+    <span class="fight-link-icon fight-link-icon-gif material-symbols-outlined">gif</span>
 {%elif fight.img_gif_vid == 'video'%}
-    <img class="fight-link-icon" src="{%static 'media_icons/video.svg'%}" alt="This fight has a video">
+    <span class="fight-link-icon material-symbols-outlined">videocam</span>
 {%endif%}

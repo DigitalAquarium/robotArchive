@@ -126,6 +126,14 @@ class Team(models.Model):
         if save: self.save()
         return self.slug
 
+    def timespan(self,text=False):
+        # Only select robots that fought after 1980 (all robots) as a proxy for checking that first_fought is not none
+        first_first_fought = self.owned_robots().filter(first_fought__gt="1980-01-01").order_by(
+            "first_fought").first().first_fought
+        last_last_fought = self.owned_robots().order_by("-last_fought").first().last_fought
+        return timespan(first_first_fought, last_last_fought, text)
+
+
 
 class Weight_Class(models.Model):
     BOUNDARY_AMOUNT = 0.21
@@ -386,6 +394,9 @@ class Robot(models.Model):
         else:
             return settings.STATIC_URL + "unknown.png"
 
+    def timespan(self, text=False):
+        return timespan(self.first_fought, self.last_fought, text)
+
 
 class Version(models.Model):
     robot_name = models.CharField(max_length=255, blank=True)
@@ -474,6 +485,9 @@ class Version(models.Model):
     def can_edit(self, user):
         return self.owner.can_edit(user) or self.robot.last_version().owner.can_edit(user)
 
+    def timespan(self, text=False):
+        return timespan(self.first_fought, self.last_fought, text)
+
 
 class Franchise(models.Model):
     name = models.CharField(max_length=50)
@@ -504,6 +518,10 @@ class Franchise(models.Model):
         if Event.objects.filter(franchise=self).count() > 0 and Event.objects.filter(franchise=self)[0].country != "XX":
             return Event.objects.filter(franchise=self)[0].get_flag()
         return settings.STATIC_URL + "unknown.png"
+
+    def timespan(self, text=False):
+        return timespan(self.event_set.all().order_by("start_date").first().start_date,
+                        self.event_set.all().order_by("start_date").last().end_date, text)
 
 
 class Location(models.Model):
@@ -570,6 +588,10 @@ class Event(models.Model):
         else:
             return Location(name="Undefined", latitude=0, longitude=0)
 
+    def timespan(self, text=False):
+        print(self.start_date, self.end_date, timespan(self.start_date, self.end_date, text))
+        return timespan(self.start_date, self.end_date, text)
+
 
 class Contest(models.Model):
     name = models.CharField(max_length=255, blank=True)
@@ -587,6 +609,9 @@ class Contest(models.Model):
 
     def can_edit(self, user):
         return self.event.franchise.can_edit(user)
+
+    def timespan(self, text=False):
+        return timespan(self.start_date, self.end_date, text)
 
 
 class Registration(models.Model):  # Idea for future: Add a team limit to reservations.
@@ -611,6 +636,7 @@ class Registration(models.Model):  # Idea for future: Add a team limit to reserv
 class Fight(models.Model):
     METHOD_CHOICES = [
         ("KO", "Knockout"),
+        ("DK", "Double KO"),
         ("JD", "Judge's Decision"),
         ("CV", "Crowd Vote"),
         ("TO", "Tap Out"),
@@ -1522,7 +1548,7 @@ def asciify(obj, commit=False):
     else:
         output = slugify(obj.name).replace("-", " ")
 
-    if output != "": # TODO: Add length threshold.
+    if output != "":  # TODO: Add length threshold.
         if isVersion:
             low_name = obj.robot_name.lower()
         else:
@@ -1532,7 +1558,7 @@ def asciify(obj, commit=False):
             low_name = low_name.replace(" & ", " and ")
             low_name = low_name.replace("&", " and ")
             low_name = re.sub(r"([0-9]+)% ", r"\1 percent ", low_name)
-            output = slugify(low_name).replace("-", " ") # TODO: proper unicode collation
+            output = slugify(low_name).replace("-", " ")  # TODO: proper unicode collation
 
             if commit and (isVersion and (obj.latin_robot_name is None or obj.latin_robot_name == "")) or \
                     ((not isVersion) and (obj.latin_name is None or obj.latin_name == "")):
@@ -1544,6 +1570,54 @@ def asciify(obj, commit=False):
         return output
     else:
         return None
+
+
+def timespan(dateA, dateB, text=False):
+    def format_day(date):
+        day_string = date.strftime("%d")
+        if day_string[0] == "0":
+            day_string = day_string[1]
+
+        if day_string[-1] == "1":
+            day_string += "st"
+        elif day_string[-1] == "2":
+            day_string += "nd"
+        elif day_string[-1] == "3":
+            day_string += "rd"
+        else:
+            day_string += "th"
+        return day_string
+
+    year = "%Y"
+
+    if text:
+        between = " to the "
+        start = "from the "
+        day_seperator = " of "
+        month = "%B"
+    else:
+        between = " - "
+        start = ""
+        day_seperator = " "
+        month = "%b"
+
+    if dateA == None:
+        if dateB == None:
+            return "never"
+        else:
+            return ("on the " if text else "") + format_day(dateA) + day_seperator + dateA.strftime(month + " " + year)
+
+    if dateA == dateB:
+        return ("on the " if text else "") + format_day(dateA) + day_seperator + dateA.strftime(month + " " + year)
+    elif dateA.month == dateB.month:
+        return start + format_day(dateA) + between + format_day(dateB) + day_seperator + dateB.strftime(
+            month + " " + year)
+    elif dateA.year == dateB.year:
+        return start + format_day(dateA) + day_seperator + dateA.strftime(month) + between + format_day(
+            dateB) + day_seperator + dateB.strftime(month + " " + year)
+    else:
+        return start + format_day(dateA) + day_seperator + dateA.strftime(month + " " + year) + between + format_day(
+            dateB) + day_seperator + dateB.strftime(month + " " + year)
 
 
 try:

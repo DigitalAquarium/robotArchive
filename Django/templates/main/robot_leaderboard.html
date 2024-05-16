@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block head %}
-    <link rel="canonical" href="{{url}}">
+    <link rel="canonical" href="https://www.robotcombatarchive.com{{url}}">
     <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}"/>
     <link rel="stylesheet" href="{% static 'style/tooltip.css' %}"/>
@@ -89,7 +89,7 @@
             <tbody>
             {% for lb in robot_list %}
                 <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %}
-                    style="background-color: #eeeeee"{% endif %}>
+                    class="table-row-two"{% endif %}>
 					{% if forloop.counter > 3 %}
                     <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>

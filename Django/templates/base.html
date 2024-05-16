@@ -12,6 +12,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{%static 'favicon/favicon-16x16.png'%}">
     <link rel="manifest" href="{%static 'favicon/site.webmanifest' %}">
     <link rel="stylesheet" href="{% static 'style/base.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     {% block head %}{% endblock %}
 </head>
@@ -21,7 +22,7 @@
     {% block navbar %}
         <div class="navtitle">
             {% block home_button %}
-                <span class="home-icon"><a href="{%url 'main:index' %}"><img class="fit-image" src="{% static 'home_icon_google.svg'%}" alt="Home Icon"></a></span>
+                <span class="home-icon"><a class="material-symbols-outlined" href="{%url 'main:index' %}">home</a></span>
             {% endblock home_button %}
         </div>
     <span class="mobile-hide" style="padding-left:5%;font-size:0.8em;">Data accurate up to 2003</span>

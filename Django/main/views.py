@@ -3,6 +3,7 @@ import random
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.validators import URLValidator
+from django.db.models import F, When, Case
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -643,8 +644,7 @@ def event_index_view(request):
                    "past": past,
 
                    "title": "Events",
-                   "description": "List of robot combat events from " + str(event_list[0].start_date) + " to " + str(
-                       event_list[-1].end_date),
+                   "description": "List of robot combat events " + timespan(event_list[0].start_date,event_list[-1].end_date,True) + ".",
                    "url": reverse("main:eventIndex"),
                    })
 
@@ -669,8 +669,7 @@ def event_detail_view(request, slug):
 
                    "title": event.name,
                    "description": "Information about " + str(event) + ", an event organised by " + str(
-                       event.franchise) + (" on " + str(event.start_date) if event.is_one_day else " from " + str(
-                       event.start_date) + " to " + str(event.end_date)) + " with " + str(
+                       event.franchise) + " " + event.timespan(True) + " with " + str(
                        num_competitors) + " robots competing.",
                    "thumbnail": event.logo.url if event.logo else (
                        event.franchise.logo.url if event.franchise.logo else None),
@@ -1017,8 +1016,7 @@ def robot_detail_view(request, slug):
 
                    "title": r.name,
                    "description": "Information about " + str(r) + ", a combat robot that has fought " + str(
-                       fights.count()) + " fight" + ("" if fights.count == 0 else "s") + " from " + str(
-                       r.first_fought) + " to " + str(r.last_fought) + ". Winning " + str(
+                       fights.count()) + " fight" + ("" if fights.count == 0 else "s") + " " + r.timespan(True) + ". Winning " + str(
                        r.wins) + " and losing " + str(r.losses) + " in head to head battle.",
                    "thumbnail": v.image.url if v and v.image else r.get_image(),
                    "url": reverse("main:robotDetail", args=[r.slug]),
@@ -1176,16 +1174,12 @@ def team_detail_view(request, slug):
     robots = team.owned_robots().order_by("-last_fought")
     loaners = team.loaners().order_by("-last_fought")
 
-    first_first_fought = team.owned_robots().order_by("first_fought").first().first_fought
-    last_last_fought = team.owned_robots().order_by("-last_fought").first().last_fought
     return render(request, "main/team_detail.html",
                   {"team": team, "robots": robots, "loaners": loaners, "can_change": can_change,
 
                    "title": team,
                    "description": "Overview of " + str(team) + ", a robot combat team that built " + str(
-                       robots.count()) + " robots " + ("from " + str(first_first_fought.year) + " to " + str(
-                       last_last_fought.year) if first_first_fought.year != last_last_fought.year else "in " + str(
-                       first_first_fought.year)) + ".",
+                       robots.count()) + " robots " + team.timespan(True) + ".",
                    "thumbnail": team.logo.url if team.logo else None,
                    "url": reverse("main:teamDetail", args=[slug]),
                    })
@@ -1401,10 +1395,7 @@ def franchise_detail_view(request, slug):
     return render(request, "main/franchise_detail.html",
                   {"fran": fran, "events": events, "leave_id": 1,  # TODO: lol
                    "title": fran,
-                   "description": "Information about " + fran.name + ", a robot combat event organiser who organised " + str(
-                       events.count()) + " event" + (
-                                      "" if events.count == 1 else "s") + " from " + events.first().start_date.strftime(
-                       "%d %M %Y") + " to " + events.last().end_date.strftime("%d %M %Y") + ".",
+                   "description": "Information about " + fran.name + ", a robot combat event organiser who organised " + str(events.count()) + " event" + ("" if events.count == 1 else "s") + " " + fran.timespan(True) + ".",
                    "thumbnail": fran.logo.url if fran.logo else None,
                    "url": reverse("main:franchiseDetail", args=[fran.slug]),
                    })
@@ -1534,7 +1525,12 @@ def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
     can_change = fight.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
-    registered = Version.objects.filter(registration__contest=fight.contest.id).order_by("name", "robot__name")
+    registered = Version.objects.filter(registration__contest=fight.contest.id).annotate(alphabetical=Case(
+        When(robot_name="", then=F("robot__name")),
+        default=F("robot_name")
+    )
+    )
+    registered = registered.order_by("alphabetical")
 
     if vf_id is not None:
         vf = Fight_Version.objects.get(pk=vf_id)
