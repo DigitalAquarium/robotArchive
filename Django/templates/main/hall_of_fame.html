@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
-    <title>Hall of Fame</title>
+{% block head %}
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 {% endblock %}
 {% block content %}
         <div class="main-content">
@@ -13,43 +13,35 @@
                 For a full list, info on each entry's ascension, and more please go to <a href="http://runamok.tech/hall_of_fame.html">The Combat Robot Hall of Fame website linked here!</a>
             </p>
             <h2>Members:</h2>
-            <div class="gridview-row">
+            <div class="gridview-container">
                 {% for robot in members %}
                     <div class="gridview-square">
                         <div class="gridview-title">
-                             <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
+                             <img class="flag-image" src="{{ robot.get_flag }}" alt="{{robot.country}} Flag">
                             <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"
                                  src="{{robot.get_image}}"
-                                 alt="Robot Image">
+                                 alt="{{robot}}">
                         </div>
                     </div>
-                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
             <h2>Honorable Mentions:</h2>
-            <div class="gridview-row">
+            <div class="gridview-container">
                 {% for robot in honoraries %}
                     <div class="gridview-square">
                         <div class="gridview-title">
-                             <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
+                             <img class="flag-image" src="{{ robot.get_flag }}" alt="{{robot.country}} Flag">
                             <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"
-                                 src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
+                                 src="{% if robot.last_version.image %} {{ robot.last_version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
                                  alt="Robot Image">
                         </div>
                     </div>
-                    {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
         </div>

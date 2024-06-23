@@ -1,48 +1,62 @@
 {% extends "base.html" %}
 {% load bonus_filters %}
 {% load static %}
-{% block meta %}
-    <title>{{ robot.name }} - Roboteer's Tavern</title>
-    <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
+{% block head %}
+    <link rel="canonical" href="https://www.robotcombatarchive.com/robot/{{robot.slug}}">
     <script src="{% static 'scripts/robot_detail.js' %}"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="{%static 'scripts/history_chart.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
+     <link rel="stylesheet" href="{% static 'style/fight_icon.css' %}">
 {% endblock %}
+
+{% block navbar %}
+    {{block.super}}
+    {% if is_random %}
+        <div class="navlinks"><span class="random-robot  mobile-hide"><a href="{% url 'main:randomRobot' %}"><span class="rand-question-mark">?</span></a></span></div>
+    {%endif%}
+{% endblock %}
+
 {% block content %}
     <div class="main-content">
-        {% if robot %}
-            <div class="heading">
-                <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                <h1>{{ robot.name }} {% if robot.requires_translation %} <span class="alphanum">({{ robot.name_alphanum }})</span> {% endif %} </h1>
-                {% if can_change %}
-                    <a class="editor-link" href="{% url 'main:editRobot' robot.id %}">Edit Robot</a>
-                    <a class="delete-link"
-                       href="{% url 'main:delete' 'robot' robot.id 0%}">Delete Robot</a>
-                {% endif %}
-            </div>
+        {% if is_random %}
+        <div class="random-robot mobile-show"><a href="{% url 'main:randomRobot' %}"><span class="rand-question-mark">?</span></a></div>
+        {%endif%}
+        <div class="heading">
+            <h1 id="title">{{robot|generate_title}}</h1>
             {% if can_change %}
-                <a class="editor-link" href="{% url 'main:transferRobot_form' robot.id %}">Transfer robot to another
-                    team</a>
+                <a href="{% url 'main:editRobot' robot.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Robot"></a>
+                <a href="{% url 'main:delete' 'robot' robot.id 0%}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Delete Robot"></a>
             {% endif %}
+        </div>
             {% if not robot.opt_out %}
-                <h2>Rank: {{ robot.ranking|floatformat:2 }}</h2>
+                <h2>Rank{%if current_lb_entry%}ed
+                    <span class="{% if current_lb_entry.position == 1 %}gold{% elif current_lb_entry.position == 2 %}silver {% elif current_lb_entry.position == 3 %} bronze {%else%}top-hundred{% endif %}">
+                        #{{current_lb_entry.position}} {{current_lb_entry.wc_to_string}}:</span>{%else%}:{%endif%} {{ robot.ranking|floatformat:2 }}
+                </h2>
                 <h2>Win/Loss: {{ robot.wins }}/{{ robot.losses }}</h2>
             {% endif %}
-            <p>{{ robot.description }}</p>
 
-            <p style="font-size:1.3em;font-weight: bold;font-style: italic;
-                                    color:  {% if best_lb_entry.position == 1 %}gold
-                                            {% elif best_lb_entry.position == 2 %}silver
-                                            {% elif best_lb_entry.position == 3 %}darkgoldenrod
-                                            {%else%}purple{% endif %}">{{best_lb_entry}}</p>
-            {%for entry in leaderboard_entries%}
-        <p style="color:  {% if entry.position == 1 %}gold
-                                            {% elif entry.position == 2 %}silver
-                                            {% elif entry.position == 3 %}darkgoldenrod
-                                            {%else%}purple{% endif %}">
-            {{entry}}</p>
-            {%endfor%}
+        <h3>Competed:
+            {% if robot.first_fought|date:"F Y" == robot.last_fought|date:"F Y" %}
+                {{ robot.first_fought|date:"F Y" }}
+            {% elif robot.first_fought|date:"Y" == robot.last_fought|date:"Y" %}
+                {{ robot.first_fought|date:"F" }} - {{ robot.last_fought|date:"F Y" }}
+            {%else%}
+                {{ robot.first_fought|date:"F Y" }} - {{ robot.last_fought|date:"F Y" }}
+            {% endif %}</h3>
+        <p>{{ robot.description }}</p>
+        {%if missing_brackets_flag%}<p class="warning">{{robot}} has fought at events where the brackets are missing, so this data may be incomplete. These events are highlighted in its fight history in red.</p> {%endif%}
 
+        {%if best_lb_entry%}
+            <button id="best-lb-entry" onclick="toggleDropdown()" class="{% if best_lb_entry.position == 1 %}gold{% elif best_lb_entry.position == 2 %}silver {% elif best_lb_entry.position == 3 %}bronze {%else%}top-hundred{% endif %}" style="{%if leaderboard_entries%}cursor:pointer{%endif%}">Ranked #{{best_lb_entry.position}} {{best_lb_entry.wc_to_string}} in {{best_lb_entry.year}} {%if leaderboard_entries%}🠟{%endif%}</button>
+            <div id="all-lb-entries" style="display:none">
+                {%for entry in leaderboard_entries%}
+                <p class="{% if entry.position == 1 %}gold{% elif entry.position == 2 %}silver {% elif entry.position == 3 %}bronze{% endif %}" style="{%if not forloop.last%}margin:2px 0px{%else%}margin:2px 0px 20px 0px{%endif%}">
+                <span {%if entry.position < 10 %}style="margin-right:0.6em"{%endif%}> #{{entry.position}}</span> <span>{{entry.wc_to_string}} in {{entry.year}}</span></p>
+                {%endfor%}
+            </div>
+        {%endif%}
             <div>
                 <div class="version tabs">
                     {% for v in version_set %}
@@ -58,25 +72,41 @@
                     <div class="version-block" id="ver-{{ v.id }}" {% if ver == v %}style="display:block"
                          {% elif not ver and forloop.last %}style="display:block"{% endif %}>
                         <div class="version-header">
-                            <img class="flag-image" src="{{ v.get_flag }}" alt="Flag">
-                            <p>{{ v }} {% if v.requires_translation %}<span class="alphanum">({{ v.get_alphanum }})</span> {% endif %}</p>
+                            {{v|generate_title}}
+                            {% if can_change %}
+                                <a href="{% url 'main:editVersion' v.id %}"><img class="inline-image" style="height:0.75em" src="{% static 'edit.png' %}" alt="Edit Version"></a>
+                                <a href="{% url 'main:delete' 'version' v.id robot.id %}"><img class="inline-image" style="height:0.75em" src="{% static 'bin.png' %}" alt="Delete Version"></a>
+                            {%endif%}
                         </div>
 
                         <div class="version-content">
                             <div class="version-image">
                                 <img class="fit-image"
                                      src="{% if v.image %} {{ v.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}"
-                                     alt="Version Image">
+                                     alt="{% if v.image %} {{ v }} {% else %} Black Circle with White Question Mark Inside {% endif %}">
                             </div>
                             <div class="version-text">
                                 <div class="version-mini-head">
                                     <span>Weapon: {{ v.weapon_type }}</span>
                                     <span>Weight Class: {{ v.weight_class }}</span>
-                                    <span>Time Competing: {{ v.first_fought|date:"F Y" }}
-                                            {% if v.first_fought != v.last_fought %} -
-                                                {{ v.last_fought|date:"F Y" }}{% endif %}</span>
+                                    <span>Competed:
+                                        {% if v.first_fought|date:"F Y" == v.last_fought|date:"F Y" %}
+                                            {{ v.first_fought|date:"F Y" }}
+                                        {% elif v.first_fought|date:"Y" == v.last_fought|date:"Y" %}
+                                            {{ v.first_fought|date:"F" }} - {{ v.last_fought|date:"F Y" }}
+                                        {%else%}
+                                            {{ v.first_fought|date:"F Y" }} - {{ v.last_fought|date:"F Y" }}
+                                        {% endif %}</span>
                                 {% if v.team %}
-                                    <span>Team : <a href="{% url 'main:teamDetail' v.team.slug %}">{{ v.team }}</a></span>
+                                    <span>
+                                        {%if v.loaned%}
+                                            <em> Loaned To:
+                                        {%else%}
+                                            Team:
+                                        {%endif%}
+                                        <a href="{% url 'main:teamDetail' v.team.slug %}">{{ v.team }}</a>
+                                        {%if v.loaned%}</em>{%endif%}
+                                    </span>
                                 {% endif %}
                                 </div>
                                 <div class="version-description">
@@ -86,27 +116,10 @@
                         </div>
                     </div>
                 {% endfor %}
-                {% with version_set.last as lastV %}
-                    {% if can_change %}
-                        <a class="editor-link" id="edit-version-button"
-                                {% if ver %}
-                           href="{% url 'main:editVersion' ver.id %}"
-                                {% else %}
-                           href="{% url 'main:editVersion' lastV.id %}"
-                                {% endif %}>Edit Selected Version</a>
-
-                        <a class="delete-link" id="delete-version-button"
-                                {% if ver %}
-                           href="{% url 'main:delete' 'version' ver.id robot.id %}"
-                                {% else %}
-                           href="{% url 'main:delete' 'version' lastV.id robot.id %}"
-                                {% endif %}>Delete Selected Version</a>
-                    {% endif %}
-                {% endwith %}
-                {% if can_change %}
-                    <a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>{% endif %}
+                {% if can_change %}<a class="editor-link" href="{% url 'main:newVersion' robot.id %}">Add New Version</a>{% endif %}
             </div>
-        <span id="history-data" history="{{history}}"></span>
+        <span id="robot-slug" robot-slug="{{robot.slug}}" hidden="hidden"></span>
+        <br>
         <div id="history-chart" style="width:100%; height:400px;"></div>
 
             {% if awards|length > 0 or robot.hallofame_set.all|length > 0 %}
@@ -124,12 +137,23 @@
                     </tr>
                     </thead>
                     {%if robot.hallofame_set.all|length > 0%}
-                    <td><img class="award-icon" src="{%static 'awards/frame2.png'%}" alt="award icon"></td>
+                    <tr class="table-row-two">
+                    <td><img class="award-icon" src="{%static 'awards/frame2.png'%}" alt="Golden Picture Frame Icon"></td>
                     <td colspan="2" style="text-align:center"><a href="{%url 'main:hallOfFame' %}">{%if robot.hallofame_set.first.full_member%}Hall of Fame Member{%else%}Hall of Fame Honorable Mention{%endif%}</a></td>
+                    </tr>
                     {% endif %}
                     {% for award in awards %}
-                        <tr>
-                            <td><img class="award-icon" src="{{ award.get_icon }}" alt="award icon"></td>
+                        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                            <td><img class="award-icon" src="{{ award.get_icon }}"
+                                     {%if award_type == 0%}
+                                        alt="Medal with Red Ribbon"
+                                     {%elif award_type == 1%}
+                                        alt="Golden Trophy"
+                                     {%elif award_type == 2%}
+                                        alt="Silver Trophy"
+                                     {%elif award_type == 3%}
+                                        alt="Bronze Trophy"
+                                     {%endif%}></td>
                             <td>{{ award }}</td>
                             <td>{{ award.contest.event }}</td>
                         </tr>
@@ -137,47 +161,36 @@
                 </table>
             {% endif %}
 
-            {% if fights|length > 0 %}
-                <h2>{% if robot.requires_translation %} {{ robot.name_alphanum }} {% else %}{{ robot }} {% endif %}
-                    has fought {{ fights|length }} {% if fights|length == 1 %}fight. {% else %}fights.{% endif %}</h2>
+            {% if fights_tuple|length > 0 %}
+                <h2>{% if robot.display_latin_name %} {{ robot.latin_name }} {% else %}{{ robot }} {% endif %}
+                    has fought {{ fights_tuple|length }} {% if fights_tuple|length == 1 %}fight. {% else %}fights.{% endif %}</h2>
                 <table>
                     <thead>
                     <tr>
                         <th>Event</th>
-                        <th>Type</th>
+                        <th class="mobile-hide">Type</th>
                         <th>Opponents</th>
-                        <th>Result</th>
-                        <th>View More</th>
+                        <th class="mobile-hide">Result</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for fight in fights %}
-                        <tr>
-                            {% with fights|fights_event_number:fight as num_fights %}
-                                {% if num_fights != -1 %}
-                                    <td rowspan="{{ num_fights }}" style="background-color: white">
-                                        <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
-                                    </td>
-                                {% endif %}
-                            {% endwith %}
-                            <td>{{ fight.get_fight_type_display }}</td>
-                            <td>{{ fight|fight_opponents:robot }}</td>
-                            <td>{{ fight|fight_result:robot }}</td>
-                            <td>
-                                {% if fight.has_video %}
-                                    <a href="{% url 'main:fightDetail' fight.id %}">Video</a>
-                                {% else %}
-                                    <a href="{% url 'main:fightDetail' fight.id %}">Details</a>
-                                {% endif %}
+                    {% for rowspan, fight in fights_tuple %}
+                        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                            {% if rowspan != 0 %}
+                            <td class ="table-no-bg{%if fight.contest.event.missing_brackets %} incomplete_event{%endif%}" rowspan="{{ rowspan }}">
+                                <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
                             </td>
+                            {% endif %}
+                            <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
+                            <td><a class="fight-link" href="{% url 'main:fightDetail' fight.id %}">
+                                {{ fight|fight_opponents:robot }}
+                                {% include "snippets/fight_icon.html" with fight=fight %}
+                            </a></td>
+                            <td class="mobile-hide">{{ fight|fight_result:robot }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             {% endif %}
-
-        {% else %}
-            Something appears to have gone wrong
-        {% endif %}
     </div>
 {% endblock %}

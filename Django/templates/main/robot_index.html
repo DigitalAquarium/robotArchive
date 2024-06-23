@@ -1,13 +1,8 @@
 {% extends "base.html" %}
-{% load bonus_filters %}
 {% load static %}
-
-{% block meta %}
-    <title>Robots - Roboteer's Tavern</title>
-    <style>.searchform label {
-        display: inline-block;
-        margin: 0.3em;
-    }</style>
+{%load bonus_filters%}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'style/robot_index.css' %}" />
 {% endblock %}
 
 {% block content %}
@@ -29,7 +24,7 @@
             <label> Include Territories:
                 <input name="regions" type="checkbox" checked>
             </label>
-            <label> Standard Weight Class:
+            <label> Weight Class:
                 <select name="weight">
                     {% for wc in weights %}
                         <option value="{{ wc|first }}"
@@ -50,37 +45,34 @@
         {% for robot in robot_list %}
             <div class="hrz-index-result">
                 <span class="hrz-index-image">
-                    <img class="fit-image"
+                    <img class="fit-image" loading="lazy"
                          src="{{robot.get_image}}"
-                         alt="Robot Image">
+                         alt="{{robot}}">
                 </span>
                 <div class="hrz-index-content">
                     <span class="hrz-index-title">
-                    <a style="display:flex; color:inherit" href="{% url 'main:robotDetail' robot.slug %}">
-                        <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                        <span>
-                            {%comment%}{%if robot.lb_rank != 0%}<span style="font-weight: bold;font-style: italic;
-                                    color:  {% if robot.lb_rank == 1 %}gold
-                                            {% elif robot.lb_rank == 2 %}silver
-                                            {% elif robot.lb_rank == 3 %}darkgoldenrod
-                                            {%else%}purple{% endif %};">#{{ robot.lb_rank }}</span>{% endif %}{%endcomment%}
-                            <span>{{ robot.name }}</span>
-                            {% if robot.requires_translation %} <span class="alphanum">({{ robot.name_alphanum }})</span>{% endif %}
-                        </span>
-                    </a>
+                    <a href="{% url 'main:robotDetail' robot.slug %}">{{robot|generate_title}}</a>
                     </span>
                     <span class="hrz-index-details">
                         {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
-                        <span>Weight Class: {{ robot.version_set.last.weight_class.weight_string }}</span>
+                        <span>Weight Class: {{ robot.last_version.weight_class.weight_string }}</span>
                         {% if robot.awards|length > 0 %}<span> Awards: {{ robot.awards|length }}</span>{% endif %}
                         {% if robot.last_fought %}
-                            <span>Last Competed: {{ robot.last_fought|date:"M Y" }}</span>{% endif %}
+                            <span>Competed:
+                                {% if robot.first_fought|date:"F Y" == robot.last_fought|date:"F Y" %}
+                                    {{ robot.first_fought|date:"F Y" }}
+                                {% elif robot.first_fought|date:"Y" == robot.last_fought|date:"Y" %}
+                                    {{ robot.first_fought|date:"F" }} - {{ robot.last_fought|date:"F Y" }}
+                                {%else%}
+                                    {{ robot.first_fought|date:"F Y" }} - {{ robot.last_fought|date:"F Y" }}
+                            {% endif %}</span>
+                        {% endif %}
                     </span>
                     <span class="hrz-index-description">
                         {% if robot.description %}
                             {{ robot.description|truncatechars:650 }}
                         {% else %}
-                            {{ robot.version_set.last.description }}
+                            {{ robot.last_version.description }}
                         {% endif %}
                     </span>
 
@@ -88,40 +80,8 @@
             </div>
         {% endfor %}
         {% if pages > 1 %}
-            <div class="page-nav">
-                {% url "main:robotIndex" as this %}
-                <ul class="page-select">
-                    <li>{% if page > 1 %}
-                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
-                    {% endif %}</li>
-
-                    <li>{% if page > 5 %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page > 1 %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
-                    {% endif %}</li>
-
-                    <li>{{ page }}</li>
-
-                    <li>{% if page < pages %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page < pages|add:"-5" %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page < pages %}
-                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
-                    {% endif %}</li>
-                </ul>
-            </div>
+            {% url "main:robotIndex" as this %}
+            {%include "snippets/page-flipper.html" with link=this %}
         {% endif %}
     </div>
 {% endblock %}

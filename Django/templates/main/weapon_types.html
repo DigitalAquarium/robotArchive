@@ -1,0 +1,800 @@
+{% extends "base.html" %}
+{% load bonus_filters %}
+{% load static %}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+    <link rel="stylesheet" href="{% static 'style/weapon_types.css' %}">
+{% endblock %}
+{% block content %}
+    <div class="main-content">
+        <h1>Weapon Types</h1>
+        <div class="weapon-category">
+            <h2>Non-Active Weapons</h2>
+            <p>Not all robots have an active weapon. Building a robot without a weapon allows for more weight to go to the drive system and armour which can make it stronger. Robots with no active weapons are a good options for newcomers to the sport as they are less complex. Some events do not allow robots without an active weapon to make fights more exciting for the audience.</p>
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.rammer as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A rammer is the most basic plan of robot, use your own drive as the weapon. Through static spikes, pushing into hazards or brute force, rammers aim to break their opponents fist with their face.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.wedge as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A wedge is similar to a rammer, but with the added goal of getting under the opponent. Using an angled plate or forks, it is possible to lift the opposition's wheels off the floor making them easier to push. This design trades a small amount of impact for a large amount of control.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.thwackbot as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>Thwackbots have a large blade or club pointing out from the main chassis to hit opponents with. This can be done by spinning in place or for certain designs rapidly accelerating/braking to cause the weapon to swing overhead.</p>
+                        <p>Some thwackbots, such as Gabriel, are fitted with a torque limiter allowing the blade to swing overhead whilst the robot remains stationary. Some events permit this as an active weapon.</p>
+                    </div>
+                </div>
+                {%endwith%}
+
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.meltybrain as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>A meltybrain (or  just melty for short) is a type of thwackbot that is able to spin while moving. It does this by using a combination of sensors and code to detect where it is in the arena, convert control inputs into a direction, and then perform tiny adjustments to the speed of the motors while spinning to produce an overall force in that direction. Meltybrains are generally permitted under active weapon rules.</p>
+                            <p>The system gets its name as trying to understand and write code for it will melt your brain. An earlier version of the system was dubbed "Tornado Drive".</p>
+                            <p>While many early meltybrains were built like a traditional thwackbot, modern ones tend to more closely resemble <a href="#Shell Spinner">shell spinners.</a></p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+            </div>
+        </div>
+
+
+
+        <div class="weapon-category">
+            <h2 id="Spinner">Spinners</h2>
+            <p>A spinner can be thought of as a <a href="#Axe">hammer</a> that is being swung in a full circle. With each rotation the spinner can gain speed until it is moving incredibly fast. The common tip-speed limit for weapons is 250mph (400km/h). Spinners mainly consist of either a bar or a disc. Unlike <a href="#Saw">saws,</a> spinners are trying to deliver kinetic energy so a spinning disc will generally have one or two teeth to get a good bite into an opponent.</p>
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.horizontal_spinner as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>Horizontal spinners have their weapon aligned horizontally or parallel to floor. Upsides of this include being able to mount a larger weapon more easily and using the space the weapon takes up as a danger zone that cannot be attacked for fear of damage. Horizontals however tend to have a lot of recoil and can be easier to smother than other types of spinner.</p>
+                        <p>Robots on this site referred to simply as "Horizontal Spinner" are typically offset horizontals where the weapon is in front of the robot. Configuring a robot this way means it can be made invertible easily and can allow for swing attacks, where you spin the front end into an opponent as they approach and catch them in the side. Any other types of horizontal spinner that do not fall into the below categories will also get this label.</p>
+                    </div>
+                </div>
+                {%endwith%}
+
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.undercutter as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>Undercutters are horizontal spinners mounted to the bottom of a robot's chassis. An undercutter is ideally aiming to get underneath an opponent and shred their wheels so they can no longer drive. The low stance also makes them a good tool for removing forks.</p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.overhead_spinner as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>Overhead horizontal spinners are mounted to the top of a robot's chassis near the centre. Doing this allows a robot to have a 360-degree angle of attack meaning as long as the weapon is spinning, the opponent must face taking damage to get close. The weapon covering the whole robot does mean it can be more easily smothered than an offset horizontal.</p>
+                            <p>Some overhead spinners, like <a href="/robot/son-of-whyachi">Son of Whyachi,</a> have a bent or angled bar allowing them to hit lower down. When more than 2 of these arms are used, they can be reinforced with cross-braces between them. This style of overhead spinner can be referred to as a "Cage Spinner". It is also possible to place the weapon electronics in a box above the weapon bar such as on <a href="/version/3187">Green Wave².</a></p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.shell_spinner as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>The best offence is defence and the best defence is offence. A shell spinner allows your armour to be your weapon by spinning the entire outer shell of the robot. The shell is mounted in the same way as an overhead spinner, but unlike an overhead you cannot hit the chassis of most shells if the weapon is down. Shells have extremely heavy weapons and take longer to get up to speed than other types of spinner and can be particularly unstable driving while doing so, but when they hit, they hit extremely hard. Shell spinners require a direction indicator which is usually done in the form of a bent pole (which also allows self-righting) or by lights under the robot.</p>
+                            <p>Primarily shell spinners, but other types that cover part of the chassis and have a 360-degree attack can be referred to as "Full-Body Spinners". This term has been used to describe shell spinners, <a href="#Ring Spinner">ring spinners,</a> <a href="Overhead Spinner">cage spinners,</a> and <a href="Meltybrain">meltybrains.</a> Because different people have different definitions of this term, the site does not use it.</p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.ring_spinner as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>Ring spinners are a way of allowing a robot with a 360-degree attack to run upside down. They consist of a ring around part of the outside of the robot that spins. Since the internals of the robot must be inside the spinning ring, it cannot be connected to a central shaft and must be supported by a series of bearings around the outer body. This makes ring spinners the most complex and fragile type of horizontal spinner.</p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+            </div>
+
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.vertical_spinner as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>Vertical spinners are placed vertically or at a right angle to the ground. Vertical spinners have an advantage over <a href="#Horizontal Spinner">horizontals</a> in that they are braced against the ground. This means that when they hit, they do not get spun away and instead can deliver more energy. The hits they make also knock the opponent up and forward, making it easier to get follow-up hits and in some cases even juggle the opponent.</p>
+                        <p>On the other hand, vertical spinners have issues with gyroscopic forces. When a heavy object rotates at high speed, it wants to remain aligned with the 2D plane on which they spin. For <a href="#Horizontal Spinner">horizontal spinners</a> this is not a problem, but for verts, as they try to turn they twist the weapon out of its plane of rotation causing it to fight back and pull one of the wheels off the ground.</p>
+                        <p>A robot referred to on this site as simply "vertical spinner" is typically just a single bar or disc, but to get a wider area of attack, two can be mounted on a wide hub at a distance apart.</p>
+                    </div>
+                </div>
+                {%endwith%}
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.drum_spinner as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>A drum spinner is a small radius but wide vertical spinner. This site classifies a vertical weapon with a larger width than diameter to be a drum spinner, providing it does not fall into the category of <a href="Eggbeater">eggbeater.</a> Drum spinners have the advantage of the large and normally ground-scraping weapon at the front which can be difficult to attack, and especially with small forks, can negate the ground scraping elements of an opponent. The form factor of drums means robots tend to be difficult to armour against overhead attacks.</p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.eggbeater as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>If a drum spinner is a wide disc, an eggbeater is a wide bar. Eggbeaters get their name due to the weapon shape. They have a hollow centre with most of their weight towards the edge of the weapon giving it a whisk-like appearance. This allows them to have a much higher <a href="https://en.wikipedia.org/wiki/Moment_of_inertia">moment of inertia,</a> storing more energy for the same weight as a drum. Eggbeaters are typically wider than their diameter, but that is not always the case, they can also be made with diameter similar to width, for the best of both reach and width.</p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+            </div>
+
+            <div class="weapon-category weapon-subcategory">
+                <h3 id="{{version.weapon_type}}">Lesser Used Spinners</h3>
+                <p>This category contains some miscellaneous spinners that are rarely used.</p>
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.propeller_spinner as version%}
+                    <h4>{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>A propeller spinner is a spinner mounted at a right angle to both the floor and the drive wheels. They hit in a very unconventional manner, but have trouble engaging with an opponent due to very small weapon reach.</p>
+                            <p><span style="font-style: italic;">Editor's Note:</span> This robot type is so rare that I don't know if the community actually has a name for it. I've given it a name on this site based on its similar look to a propeller on an aeroplane, but it's possible a different name is more widely used. As such this may be changed later.</p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+                 <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.angled_spinner as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>An angled spinner is a horizontal mounted at an extreme angle to the point it is no longer horizontal. Somewhere between a horizontal and propeller spinner, this weapon type is normally built for aesthetics over function. Gyroscopic forces mean that this configuration is unstable by default, leading to the front-end of the robot pitching up or down depending on the angle the weapon is mounted at. It will also get less reach compared to if it was mounted horizontally.</p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+                 <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.articulated_spinner as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>Articulated spinners are on a mechanism which allows them to convert between being a horizontal or vertical spinner. With the added complexity for not much reward, this has only been tried a handful of times.</p>
+                        </div>
+                    </div>
+                </div>
+                {%endwith%}
+            </div>
+        </div>
+
+
+
+        <div class="weapon-category">
+            {%with version_dict.axe as version%}
+            <h2 id="{{version.weapon_type}}">Axe (Hammer)</h2>
+            <div class="gridview-row">
+                <div class="gridview-square">
+                    <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                        <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                        <span>{{version}}</span>
+                    </a></div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                    </div>
+                </div>
+                <div class="grid-weapon-description">
+                    <p>Axe weapons are a weight on a stick being swung overhead to attack an opponent. They may have a large and flat-ended head to try and shake loose internal components, or a sharp-ended head to attempt to peirce armour and hit those components directly. Axes have an advantage in that most other weapon types target the front and side armour of a robot, so top armour tends to be thinner. Some invertible robots also find it difficult to add extra top armour as they need clearance for the wheels. Modern axes tend to make heavy use of magnets to avoid jumping when the weapon is swung.</p>
+                    <p>This site classifies all weapons that fit the above description as axes, even if either by looks or thematically they could be called hammers. Both axes and hammers use the same mechanism, and can be swapped between each other by switching just the head. Using a unified name makes searching for robots with this weapon type easier, and axe was the name chosen.</p>
+                </div>
+            </div>
+            {%endwith%}
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.horizontal_axe as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>Horizontal axes are mounted to the side of a robot rather than above. They are a rare type of weapon for a number of reasons. First of all they negate the thin armour advantage that a regular axe has by attacking the thicker side of the opponent. Secondly, when they do hit, the opponent is not braced against the floor, which could cause them to get knocked away. This means most horizontal axe robots tend to mount one on each side with all the negative aspects that having two weapons brings. The limited range of motion also means they have a limited time to build speed compared to a <a href="#Spinner">spinner</a> and will cause less damage, so for the type of attacks they are trying to make, a <a href="#Horizontal Spinner">horizontal spinner</a> will deliver them more effectively.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.hammersaw as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>Regular axes suffer from the problem that they have at most half a rotation to build energy before hitting an opponent. As with horizontal axes, a <a href="#Spinner">spinner</a> would deal more damage, but it is not as obvious how to build a spinner that would attack in a similar way to a regular axe compared to a horizontal one. This is where the hammersaw comes in.</p>
+                        <p>A hammersaw is a downward spinning <a href="Vertical Spinner">vertical spinner</a> mounted on a moving arm. The term "hammersaw" was coined by the Sawblaze team to show that their spinning weapon and <a href="Saw">saw</a> were interchangeable, however it is important to note that a hammersaw is not a saw and uses kinetic energy to damage opponents. Hammersaws may have less power in the swing than a regular axe, but the spinning blade more than makes up for that. The combination of spin and swing allows these weapons to get good engagement when they land, cutting holes in top armour and hitting internals much more regularly than axes. On the other hand, they have issues with gyroscopic forces, and the slower swing means they often need to pin opponents to land a meaningful hit.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+        </div>
+
+
+
+        <div class="weapon-category">
+            <h2>Control Weapons</h2>
+            <p>Control weapons aim to deny the opponent their ability to move where they want to go. This can be achieved through holding, out-pushing and removing them from the floor. The general goal of a control robot is to move opponents into arena hazards, throw them over the arena wall, and if none of that is possible smother an opponents ability to drive to win a judge's decision.</p>
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.lifter as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A lifter is a weapon that allows a robot to lift its opponent off the ground. This may be just one side of the opponent to tip it over, or picking it up entirely and holding it midair. With a good lift on an opponent it is then easier for a lifter to push the opponent where they want them to go.</p>
+                        <p>There can be a grey line between a <a href="#Flipper">flipper</a> and a lifter. The methodology used by this site is that if a weapon was to "fire" from the down position to the up position, (assuming the up position is below vertical and there is a good grip on the opponent and it doesn't fall off the weapon arm) would the opponent end up sitting on the weapon arm, or pushed away from the robot. If it is still in contact, the weapon is a lifter if not, a flipper.</p>
+                        <p>That being said, there are many robots on this site that do not have video to show that behaviour, so they will be listed as described by their sources.</p>
+                    </div>
+                </div>
+                {%endwith%}
+            </div>
+
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.grabber as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A Grabber is a robot with an overhead arm used to hold an opponent. This does not require lifting the opponent up, but does have the issue that their wheels will be on the floor, so they will be able to push back. Grabbing an opponent with a stronger drive train than you is counterproductive!</p>
+                    </div>
+                </div>
+                {%endwith%}
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.horizontal_grabber as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>Horizontal grabbers are grabbers that instead of grabbing vertically, grab horizontally. These have an even larger issue than regular grabbers when it comes to the opponent fighting back, as they are much harder to pair with a wedge.</p>
+                        </div>
+                    </div>
+                    {%endwith%}
+                </div>
+            </div>
+
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.grabber_lifter as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A Grabber-Lifter combines a <a href="#Lifter">lifting arm</a> with a <a href="Grabber">grabbing arm</a> for the most control possible. Grabbing an opponent while lifting makes it much easier to ensure they are fully picked up. This means generally more successful lifts, the ability to drive around holding a robot without dropping them, and an easier time performing a suplex! The downside of this approach is that holding the opponent while you lift them makes it more difficult to deliver them to some hazards as they will be over your robot rather than in front of it.</p>
+                    </div>
+                </div>
+                {%endwith%}
+            </div>
+
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.crusher as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A crusher is a high-power <a href="#Grabber">grabber</a> that not only intends to hold an opponent, but to apply enough pressure to peirce or crumple them. Crushers generally have to use high-power hydraulic systems to get the force required to puncture armour, so damaging crushers tend to be glass-cannons. Robots simply described as "Crusher" on this site are vertically oriented.</p>
+                    </div>
+                </div>
+                {%endwith%}
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.horizontal_crusher as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>Horizontal crushers are oriented horizontally rather than vertically. This means they often require 2 arms to grab and crush opponents, and as with horizontal grabbers, are harder to mount a wedge to. </p>
+                        </div>
+                    </div>
+                    {%endwith%}
+                </div>
+            </div>
+
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.flipper as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A flipper is a weapon designed to throw the opponent into the air. Usually achieved with a pneumatic ram, this weapon type allows a robot to try and throw an opponent so high that damage is done on the way down, throw them over a wall, or force them to keep self-righting and reorienting themselves, unable to get a clean attack in.</p>
+                        <p>Flippers are classified by where the hinge is located related to the flipping arm. The most common type of flipper has the part of the arm that lifts up at the front of the robot on the ground. If you follow the arm to the other end to where it attaches, you'll find the hinge at the rear of the arm/robot, so this is called a "Rear-Hinged Flipper".</p>
+                        <p>There are many types of flippers, but the ones referred to simply as "Flippers" are rear-hinges and any that do not fall into the categories below.</p>
+                    </div>
+                </div>
+                {%endwith%}
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.front_hinged_flipper as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>A front-hinged flipper has the hinge at the front of the robot, so the flipping arm opens up and forwards rather than up and backwards. This can make throwing an opponent forwards more efficient than with a rear-hinged flipper. The major downside of a front-hinge, is that the hinge is the part of the robot that an opponent will hit first. This means that if the opponent is only a small distance onto the flipping arm, they will not be flipped with much force.</p>
+                        </div>
+                    </div>
+                    {%endwith%}
+                </div>
+                <div class="weapon-category weapon-leaf-category">
+                    {%with version_dict.side_hinged_flipper as version%}
+                    <h4 id="{{version.weapon_type}}">{{version.weapon_type}}</h4>
+                    <div class="gridview-row">
+                        <div class="gridview-square">
+                            <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                                <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                                <span>{{version}}</span>
+                            </a></div>
+                            <div class="gridview-image-container">
+                                <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                            </div>
+                        </div>
+                        <div class="grid-weapon-description">
+                            <p>A side-hinged flipper places the hinge, and also flips opponents sideways. This weapon type is quite rare since in addition to the reach issues that front-hinges have, a side hinge also does not throw opponents in front of them making following up on attacks harder.</p>
+                        </div>
+                    </div>
+                    {%endwith%}
+                </div>
+            </div>
+        </div>
+
+
+        <div class="weapon-category">
+            <h2>Abrasive Weapons</h2>
+            <p>Abrasive weapons aim to cut into the opponent. Using sharp blades and tiny teeth, an abrasive weapon will cut a hole in an opponent when applied to them with pressure. The main drawback of abrasive weapons is that they require high pressure to be applied to a single spot on a robot for an extended period of time. This means to get a good amount of damage done these robots will need to pin their opponents in place. Abrasive weapons also have difficulty cutting through particularly hard materials, and can be gummed up by certain soft ones.</p>
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.saw as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A saw is a circular disc with small, often hardened teeth designed to cut a hole in something, or to cut small objects into pieces. Saws are the main type of abrasive weapon used as they are generally the easiest to use and least fragile.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.chainsaw as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A chainsaw is like a saw but the cutting teeth are mounted onto a rotating chain rather than cut into a metal disc. This allows a chainsaw to be a variety of 2D shapes and not just a circle. Typically, they have a long flat edge which gives them a higher contact area than a saw.</p>
+                        <p>Chainsaws are however more fragile than regular saws as they are prone to breaking links or derailing. They also suffer from the fact that while metal-cutting saws are widely available, most chainsaws are designed for cutting wood, which is significantly softer.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.drill as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A drill is a cylindrical piece of metal with a spiral shaped cutter. They are intended for making precise holes in things, so have to be held in place in 2 dimensions rather than just 1 for a saw or chainsaw. This makes a drill the hardest abrasive weapon type to use. In addition drills fare particularly poorly against hardened materials even when compared to saws or chainsaws.</p>
+                        <p>Other weapons which attack in a similar manner such as hole-saws, pneumatic drills, or more complex hole-cutters are classified under drill on this site.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+        </div>
+
+
+        <div class="weapon-category">
+            <h2>Multiple Weapons</h2>
+            <p>Many robots are equipped with more than one weapon. This site generally tries to assign the robots weapon type based on which one is the primary/most used/most effective weapon. On a single robot where this is not obvious, one may be chosen at random. Some exceptions to this are listed below.</p>
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.interchangeable as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>Some robots, sometimes known as "Swiss Army Bots" have the ability to completely switch out which weapon they use based on the opponent. They may choose to field a <a href="#Vertical Spinner">vertical spinner</a> against opponents they think they can get underneath and a <a href="#Horizontal Spinner">horizontal</a> for ones they cannot for example.</p>
+                        <p>For robots which the only option are a weapon and some form of wedge, robots with 2 different versions of the same weapon type, or ones which are damaged and modified on the fly they will be listed under their main weapon type, not as interchangeable.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.multibot as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <P>Robots can be configured in any way possible provided that they meet the weight limit for their class. This means it is possible to use two 50kg robots in a 100kg heavyweight limit for example. These robots are called "multibots" or "cluster bots".</P>
+                        <p>Many multibots consist of two identical robots, or one weaponed robot and some wedges. These robots will be classified by their active weapon type. Some multibots however have completely different weapons and these will be classified as "multibot" as it is not clear what the primary weapon is.</p>
+                        <p>Some robots have a companion "minibot" which is much lighter than the main robot. For example, it is common in the 250lb heavyweight class to pair a 220lb heavyweight with a 30lb featherweight. In these cases the minibot is ignored, the weapon type will be marked down as the type of the main robot, not as "multibot".</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+        </div>
+
+
+        <div class="weapon-category">
+            <h2>Linear Weapons</h2>
+            <p>Linear weapons are weapons that shoot out of the robot in a straight line.</p>
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.spear as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A spear is a linear weapon that is attached to the robot, usually a spike or punching weapon. Usually spears are powered by a pneumatic piston. Many early robots were armed with spears in an attempt to peirce opponents armour, but as armour got stronger spears had a major flaw. A robot armed with a spear is not braced against anything in combat, so when their opponent is hit, they get pushed backwards with an equal amount of force to that given to the opponent. This minimises the damage done.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+            <div class="weapon-category weapon-subcategory">
+                {%with version_dict.cannon as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>A cannon is a linear weapon that shoots a projectile out from the robot. This robot type is rare as it has a limited amount of shots, and most rulesets require projectiles to be tethered to the robot with a rope or similar, increasing weight and complexity while reducing damage. Some modern rulesets allow untethered projectiles under very strict saftey inspections provided that the projectile is under the tip-speed limit for <a href="Spinner">spinners.</a></p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+        </div>
+
+
+
+         <div class="weapon-category">
+            <h2 id="Banned Weapons">Banned Weapons</h2>
+             <p>Robot combat is designed to be both fun and safe to watch, if a weapon is violates one of these rules then it will be banned from being used.</p>
+             <p>Below are some weapons which are illegal to use, starting with ones that were previously allowed and progressing to some which are commonly suggested as additions to robots, but have never been allowed.</p>
+             <div class="weapon-category weapon-subcategory">
+               {%with version_dict.entanglement as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>Entanglement is a system designed to wrap around moving parts, bog them down and stop them from moving. This is usually in the form of a net.</p>
+                        <p>Entanglement was very quickly found to be an extremely effective way to tangle an opponents wheels and instantly immobilise them, which would have resulted in every fight just being a net quickdraw. As a result entanglement was banned from robot wars 1997</p>
+                        <p>It has remained banned since except for robot wars series 10, where it was allowed in a very restricted way, as only 2m stretches of rope and no nets. This was a measure to attempt to counter <a href="Spinner">spinners.</a> This rule is assumed so strongly that there was an issue when it was accidentally left out of the 2015 battlebots rules. Afight had to be restarted when <a href="/robot/complete-control">complete control</a> brought a net into the arena.</p>
+                    </div>
+                </div>
+            </div>
+            {%endwith%}
+             <div class="weapon-category weapon-subcategory">
+                {%with version_dict.halon_gas as version%}
+                <h3 id="{{version.weapon_type}}">{{version.weapon_type}}</h3>
+                <div class="gridview-row">
+                    <div class="gridview-square">
+                        <div class="gridview-title"><a href="{% url 'main:robotDetail' version.robot.slug %}">
+                            <img class="flag-image" src="{{ version.get_flag }}" alt="{{version.country}} Flag">
+                            <span>{{version}}</span>
+                        </a></div>
+                        <div class="gridview-image-container">
+                            <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}">
+                        </div>
+                    </div>
+                    <div class="grid-weapon-description">
+                        <p>Halon is an incredibly effective fire-extinguishing gas that has the ability to stop internal combustion engines. Rhino did this in 1997 and after that the gas was banned from use in competition.</p>
+                    </div>
+                </div>
+                {%endwith%}
+            </div>
+
+             <div class="weapon-category weapon-subcategory">
+                 <h3 id="Explosives">Explosives</h3>
+                 <p>Explosives are highly dangerous to be around and cause a serious threat of damage to the arena. They are banned for safety reasons.</p>
+             </div>
+             <div class="weapon-category weapon-subcategory">
+                 <h3 id="Gun">Gun</h3>
+                 <p>Guns are a common suggestion for weapons for robot combat, but they fire projectiles at speeds high enough to breach the walls of arenas and cause harm to audience members, especially at calibers high enough to cause damage to a combat robot. This and the use of explosives in their weapon system prevents them from being legal.</p>
+             </div>
+             <div class="weapon-category weapon-subcategory">
+                 <h3 id="Radio Jamming">Radio Jamming</h3>
+                 <p>Radio jammers are weapons that prevent radio-waves from being transmitted, causing signals to not reach the target robots. While a very effective way of winning, this breaks the fun rule established earlier. Audiences are here to see robots driving aggressively and getting destroyed, not unable to move out of the starting square due to a completely invisible attack.</p>
+            </div>
+             <div class="weapon-category weapon-subcategory">
+                 <h3 id="EMP">Electromagnetic Pulse (EMP)</h3>
+                 <p>EMPs are weapons that can fry anything electronic within a certain radius causing it to stop working. These have the same problem as radio jammers with the added issue that they would break any equipment recording the fight, any phones of audience members, any computers nearby etc...</p>
+            </div>
+
+
+         </div>
+
+    </div>
+{%endblock%}

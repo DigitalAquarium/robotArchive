@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% load bonus_filters %}
-{% block meta %}
-    <title>Teams - Roboteer's Tavern</title>
+{% block head %}
     <style>.searchform label {
         display: inline-block;
         margin: 0.3em;
@@ -37,11 +35,11 @@
         <span class="hrz-index-image">
         <img class="fit-image"
              src="{{team.get_logo_url}}"
-             alt="Team Logo">
+             alt="{{team}} Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
-                <img class="flag-image" src="{{ team.get_flag }}" alt="Flag">
+                <img class="flag-image" loading="lazy" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
                 <a href="{% url 'main:teamDetail' team.slug %}">{{ team.name }}</a>
             </span>
                     <span class="hrz-index-details">
@@ -51,40 +49,8 @@
             </div>
         {% endfor %}
         {% if pages > 1 %}
-            <div class="page-nav">
-                {% url "main:teamIndex" as this %}
-                <ul class="page-select">
-                    <li>{% if page > 1 %}
-                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
-                    {% endif %}</li>
-
-                    <li>{% if page > 5 %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page > 1 %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
-                    {% endif %}</li>
-
-                    <li>{{ page }}</li>
-
-                    <li>{% if page < pages %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page < pages|add:"-5" %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page < pages %}
-                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
-                    {% endif %}</li>
-                </ul>
-            </div>
+            {% url "main:teamIndex" as link %}
+            {%include "snippets/page-flipper.html" with link=link %}
         {% endif %}
     </div>
 {% endblock %}

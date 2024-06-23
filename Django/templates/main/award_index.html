@@ -2,9 +2,8 @@
 {% load bonus_filters %}
 {% load static %}
 
-{% block meta %}
-    <title>{{ event }}: Awards - Roboteer's Tavern</title>
-    <link rel="stylesheet" href="{% static "style/award_index.css" %}">
+{% block head %}
+    <link rel="stylesheet" href="{% static 'style/award_index.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -13,12 +12,15 @@
             <div class="hrz-index-result">
                 <span class="hrz-index-image">
                     <img class="fit-image"
-                         src="{% if award.version.image %} {{ award.version.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}"
-                         alt="Robot Image">
+                         {% if award.version.image %}
+                            src=" {{award.version.image.url}} " alt="Robot {{award.version}}|truncatechars:100"
+                         {% else %}
+                            src="{% static 'unknown.png' %}" alt="Unknown Robot Image Placeholder"
+                         {% endif %}>
                 </span>
                 <div class="hrz-index-content">
                     <span class="hrz-index-title">
-                        <img class="award-icon" src="{{ award.get_icon }}" alt="Flag">
+                        <img class="award-icon" src="{{ award.get_icon }}" alt="Award Icon">
                         {{ award }}
                         {% if can_change %}
                             <a class="editor-link" style="font-size: 16px" href="{% url 'main:editAward' award.id %}">Edit Award</a>
@@ -27,7 +29,7 @@
                         {% endif %}
                     </span>
                     <span class="hrz-index-details">
-                        <img class="flag-image" src="{{ award.version.get_flag }}" alt="Flag">
+                        <img class="flag-image" src="{{ award.version.get_flag }}" alt="{{ award.version.country }} Flag">
                         <a href="{% url 'main:versionDetail' award.version.id %}">{{ award.version }}</a>
                     </span>
                 </div>

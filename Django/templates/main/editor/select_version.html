@@ -2,10 +2,10 @@
 {% load static %}
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags %}
-{% block meta %}
-    <title> Roboteer's Tavern </title>
+{% block head %}
     <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
     <link rel="stylesheet" href="{% static 'style/edit_fight.css' %}">
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 {% endblock %}
 {% block content %}
     {% if robot %}
@@ -18,7 +18,7 @@
             <a class="editor-link" href="{% url 'main:edtTeam' obj_id %}?add_robot={{ robot.id }}">Add All Versions</a>
         {% endif %}
         </div>
-            <div class="gridview-row competitor-row">
+            <div class="gridview-container competitor-row">
                 {% for version in robot.version_set.all %}
                     <div class="gridview-square competitor-square">
                         <div class="gridview-title">
@@ -37,10 +37,6 @@
                         </div>
                     </div>
 
-                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
     {% else %}

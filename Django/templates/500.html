@@ -1,0 +1,7 @@
+{%extends "error_page.html"%}
+{%load static%}
+
+{%block errnum%}500{%endblock%}
+{%block title_text%}500: Internal Server Error.{%endblock%}
+{%block subtitle_text%}The server had an error responding to this request. Someone should really fix that.{%endblock%}
+{%block src%}{%static 'errors/500.png'%}{%endblock%}

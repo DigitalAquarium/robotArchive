@@ -1,52 +1,133 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
-    <title>Home - Roboteer's Tavern</title>
+{%block seo %}
+    <title>Robot Combat Archive Home</title>
+    <meta name="description" content="The Robot Combat Archive is a website for viewing the history of combat robots from events such as Robot Wars and BattleBots to lesser known live and international events. The archive currently complete up to 2003."/>
+    <meta property="og:description" content="The Robot Combat Archive is a website for viewing the history of combat robots from events such as Robot Wars and BattleBots to lesser known live and international events. The archive currently complete up to 2003." />
+    <meta name="twitter:description" content="The Robot Combat Archive is a website for viewing the history of combat robots from events such as Robot Wars and BattleBots to lesser known live and international events. The archive currently complete up to 2003." />
+    <meta property="twitter:domain" content="www.robotcombatarchive.com" />
+    <meta property="og:url" content="https://www.robotcombatarchive.com" />
+    <meta property="twitter:url" content="https://www.robotcombatarchive.com"/>
+    <meta property="og:type" content="website"/>
+    <meta name="twitter:card" content="summary"/>
+    <meta property="og:locale" content="en_GB" />
+    <meta name="thumbnail" content="https://robotcombatarchive.com/media/robot_images/2022/1386_Razer.png" />
+    <meta property="og:image" content="https://robotcombatarchive.com/media/robot_images/2022/1386_Razer.png" />
+    <meta name="twitter:image" content="https://robotcombatarchive.com/media/robot_images/2022/1386_Razer.png" />
+{%endblock%}
+{% block head %}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+    <link rel="stylesheet" href="{% static 'style/index.css' %}" />
+    <link rel="canonical" href="https://www.robotcombatarchive.com">
 {% endblock %}
 {% block content %}
     <div class="main-content">
-        <h1>Roboteer's Tavern</h1>
-        <div class="other_nonsense" style="width: 48%; height: 100%; display: inline-flex; flex-direction: column">
-            <p>Welcome to roboteer's tavern, a site for management of events for robot combat.</p>
-            <a href="{% url 'main:leaderboard' %}">Leaderboard</a>
-            <a href="{% url 'main:credits' %}">Asset Credits</a>
+        <h1>The Robot Combat Archive</h1>
+        <div>
+           <p>
+               Welcome to the robot combat archive! A site with the goal of centralising information about big-box robot combat globally with a ranking system thrown in for fun!<br>
+               The site covers information from big TV events such as <a href="franchise/classic-robot-wars">Robot Wars</a> and <a href="franchise/battlebots">BattleBots,</a> to lesser known live events such as <a href="franchise/roaming-robots">Extreme Robots</a> and <a href="franchise/robogames">Robogames</a> down to the obscure like <a href="event/robocide-showdown-in-o-town">Robocide</a> or <a href="event/guerra-de-robos">Guerra de Robôs.</a><br>
+               Did you know that <a href="/fight/823">Chaos 2 has beaten Razer</a>, or that <a href="/contest/22">Vlad the Impaler fought in Japan?</a> Well with all the information in one place It's much easier to view a robot's whole history and find trivia like this. The archive is currently complete up to 2003.<br>
+               <br>
+               What this site is:<br>
+               An overview of a robot's fight history and design changes over time.
+               <br>
+               What this site is not:<br>
+               An in-depth break-down of every detail of every robot and fight. For more detail you can often check the excellent <a href="https://robotwars.fandom.com/">Robot Wars</a> or <a href="https://battlebots.fandom.com/">BattleBots</a> wikis.<br>
+               A definitive answer to the greatest robot of all time or who would beat who. The ranking system has flaws and may edge cases. As an example modern robots are always likely to beat older ones no matter the ranking.<br>
+               Where you can find the latest episode of BattleBots etc. That would be harmful to the show and likely lead to the site getting taken down.<br>
+               100% Accurate. While great care has been taken to ensure accuracy, there are often large holes in the data and this site is maintained by 1 person. If you spot any glaring errors, for now I'm reachable on the OOTA or BB Wiki discord servers.
+           </p>
         </div>
 
+        <div>
+            <div class="gridview-container">
 
-        <div class="upcoming-events" style="width: 49%; display: inline-flex;flex-direction: column">
-            <h3>Next 5 upcoming events:</h3>
-            {% if upcoming_event_list %}
-                {% for event in upcoming_event_list %}
-                    <div class="hrz-index-result" style="height:7em">
-        <span class="hrz-index-image">
-        <img class="fit-image"
-             src="{% if event.logo %} {{ event.logo.url }} {% elif event.franchise.logo %} {{ event.franchise.logo.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
-             alt="Event Logo">
-        </span>
-                        <div class="hrz-index-content">
-                <span class="hrz-index-title">
-                <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
-                <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}</a>
-            </span>
-                            <div class="hrz-index-details">
-                                <span>{{ event.start_date|date:"jS F Y" }}</span>
-                                {% if event.available_weight_classes|length > 0 %}
-                                    <span>Weight Classes:
-                                    {% for class in event.available_weight_classes %}
-                                        {{ class.weight_string }}
-                                    {% endfor %}
-                                {% endif %}
-                                </span>
-                            </div>
-                            <span class="hrz-index-description">
-                    {{ event.description|truncatechars:650 }}
-                </span>
-                        </div>
+                <a href="{% url 'main:robotIndex'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Robots</div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="{{example_robot.get_image}}" alt="Example Robot: {{example_robot}}">
                     </div>
-                {% endfor %}
-            {% else %}
-            {% endif %}
-            <a href="{% url 'main:eventIndex' %}">View More</a>
+                </div>
+                </a>
+
+                <a href="{% url 'main:eventIndex'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Events</div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="{{example_event.get_logo_url}}" alt="Example Event Logo from &quot{{example_event}}&quot">
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:leaderboard'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Leaderboard</div>
+                    <div class="gridview-image-container">
+                        <img class="fit-image" src="{%static 'awards/trophy_gold.png' %}" alt="Gold Trophy">
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:randomRobot'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Random Robot</div>
+                    <div class="gridview-image-container">
+                        <p class="text-in-gridview">?</p>
+                    </div>
+                </div>
+                </a>
+
+            </div>
+
+            <div class="gridview-container">
+                <a href="{% url 'main:leaderboard'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Ranking System</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">query_stats</span>
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:weaponTypes'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Weapon Types</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">destruction</span>
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:weightClasses'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Weight Classes</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">scale</span>
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:randomRobot'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Future Ambitions</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">hourglass</span>
+                    </div>
+                </div>
+                </a>
+
+                <a href="{% url 'main:credits'%}">
+                <div class="gridview-square">
+                    <div class="gridview-title">Credits</div>
+                    <div class="gridview-image-container">
+                        <span class="material-symbols-outlined text-in-gridview">favorite</span>
+                    </div>
+                </div>
+                </a>
+            </div>
         </div>
     </div>
 {% endblock %}

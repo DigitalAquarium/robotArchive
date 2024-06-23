@@ -1,14 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
-{% load bonus_filters %}
-{% block meta %}
-    <title>Franchises - Roboteer's Tavern</title>
-{% endblock %}
 {% block content %}
     <form class="search-form" style="display:block; padding-left: 10%; padding-right: 10%; text-align: center"
-          method="get" action="{% url "main:teamIndex" %}">
+          method="get" action="{% url 'main:franchiseIndex' %}">
         <label style="display: inline-block;margin:0.3em;"> Search Term:
-            <input name="name" type="text" value={{ name }}>
+            <input name="name" type="text" value="{{ name }}">
         </label>
         <input style="display: inline-block;margin:0.3em;" type="submit" value="Search">
     </form>
@@ -20,7 +16,7 @@
         <span class="hrz-index-image">
         <img class="fit-image"
              src="{{franchise.get_logo_url}}"
-             alt="Franchise Logo">
+             alt="{{franchise}} Logo">
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
@@ -36,40 +32,8 @@
             </div>
         {% endfor %}
         {% if pages > 1 %}
-            <div class="page-nav">
-                {% url "main:franchiseIndex" as this %}
-                <ul class="page-select">
-                    <li>{% if page > 1 %}
-                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ 1 }}">1</a>
-                    {% endif %}</li>
-
-                    <li>{% if page > 5 %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-5" }}">{{ page|add:"-5" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page > 1 %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"-1" }}">{{ page|add:"-1" }}</a>
-                    {% endif %}</li>
-
-                    <li>{{ page }}</li>
-
-                    <li>{% if page < pages %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"1" }}">{{ page |add:"1" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page < pages|add:"-5" %}
-                        <a href="
-                                {{ this }}{{ request.GET.urlencode|page_url }}page={{ page |add:"5" }}">{{ page |add:"5" }}</a>
-                    {% endif %}</li>
-
-                    <li>{% if page < pages %}
-                        <a href="{{ this }}{{ request.GET.urlencode|page_url }}page={{ pages }}">{{ pages }}</a>
-                    {% endif %}</li>
-                </ul>
-            </div>
+            {% url "main:franchiseIndex" as this %}
+            {%include "snippets/page-flipper.html" with link=this %}
         {% endif %}
     </div>
 {% endblock %}

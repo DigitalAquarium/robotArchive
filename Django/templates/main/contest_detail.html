@@ -1,30 +1,37 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
-    <title>{{ contest }} - Roboteer's Tavern</title>
+{% block head %}
+    <link rel="canonical" href="https://www.robotcombatarchive.com/contest/{{contest.id}}">
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+    <link rel="stylesheet" href="{% static 'style/fight_icon.css' %}">
 {% endblock %}
+
 {% block content %}
-    {% if contest %}
-        <div class="main-content">
+<div class="main-content">
         <div class="heading">
             <h1>{{ contest }}</h1>
             {% if can_change %}
                 <a href="{% url 'main:edtContest' contest.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Contest"></a>
             {% endif %}
         </div>
+            <h4 style="font-weight:normal">A contest at <a href="{% url 'main:eventDetail' contest.event.slug %}">{{contest.event}}.</a>
+                {%if contest.event.missing_brackets%} <span class="warning">This event is missing brackets, fights are likely to be missing from or listed incorrectly on this contest.</span> {%endif%}
+            </h4>
+            {%if fights|length > 0%}
                 <table>
                     <thead>
                     <tr>
                         <th>Fight</th>
-                        <th>Type</th>
+                        <th class="mobile-hide">Type</th>
                         <th>Winners</th>
                     </tr>
                     </thead>
                     <tbody>
+
                     {% for fight in fights %}
-                        <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
-                            <td><a href="{% url 'main:fightDetail' fight.id %}">{{ fight|truncatechars:55 }} </a></td>
-                            <td>{{ fight.get_fight_type_display }}</td>
+                        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                            <td><a class="fight-link" href="{% url 'main:fightDetail' fight.id %}" >{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %}</a></td>
+                            <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
                             <td>
                                 {% if fight.winners|length > 0 %}
                                     {% if fight.winners|length == 1 %}
@@ -36,36 +43,39 @@
                                         {{ fight.winners|length|add:-2 }} more…
                                     {% endif %}
                                 {% else %}
-                                    None
+                                    {% if fight.method == "DR" %}
+                                        Draw
+                                    {% elif fight.method == "WU" %}
+                                        Unknown
+                                    {% else %}
+                                        None
+                                    {% endif %}
                                 {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
+
                     </tbody>
                 </table>
+            {%endif%}
 
             {% if applications %}
                 <h2>Competitors</h2>
-                    <div class="gridview-row">
+                    <div class="gridview-container">
                         {% for app in applications %}
                             <div class="gridview-square">
                                 <div class="gridview-title">
-                                    <img class="flag-image" src="{{ app.version.get_flag }}" alt="Flag">
+                                    <img class="flag-image" loading="lazy" src="{{ app.version.get_flag }}" alt="{{app.version.country}} Flag">
                                     <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
                                 </div>
                                 <div class="gridview-image-container">
-                                    <img class="fit-image"
+                                    <img class="fit-image" loading="lazy"
                                          src="{% if app.version.image %} {{ app.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
-                                         alt="Robot Image">
+                                         alt="Competitor &quot;{{app.version}}&quot; at {{contest.event}}">
                                 </div>
                             </div>
-                            {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                                </div>
-                                <div class="gridview-row">
-                            {% endif %}
                         {% endfor %}
                         </div>
             {% endif %}
-        {% endif %}
 </div>
 {% endblock %}

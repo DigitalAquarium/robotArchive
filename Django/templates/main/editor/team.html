@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load crispy_forms_filters %}
 {% load static %}
-{% block meta %}
-    <title>{{ team }} - Roboteer's Tavern</title>
+{% block head %}
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
     <link rel="stylesheet" href="{% static 'style/web_links.css' %}">
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}">
     <style>
     table, td, tr {border:None}
     </style>
@@ -68,22 +68,18 @@
             <a class="editor-link" href="{% url 'main:newRobot'%}?team=team_id">Add New Robot</a>
         {% endif %}
         <a class="editor-link" href="{% url 'main:edtSelectRobot'%}">Add Existing Robot</a>
-        <div class="gridview-row">
-            {% for robot in team.robots %}
+        <div class="gridview-container">
+            {% for robot in team.all_robots %}
                 <div class="gridview-square">
                     <div class="gridview-title">
                         <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot }}</a>
                     </div>
                     <div class="gridview-image-container">
                         <img class="fit-image"
-                             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
+                             src="{% if robot.last_version.image %} {{ robot.last_version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}"
                              alt="Robot Image">
                     </div>
                 </div>
-                {% if forloop.counter|divisibleby:5 and not forloop.last %}
-                   </div>
-                   <div class="gridview-row">
-                {% endif %}
            {% endfor %}
             </div>
         {% if editing_fight %}

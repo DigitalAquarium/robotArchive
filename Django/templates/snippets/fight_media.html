@@ -1,0 +1,56 @@
+{% load static %}
+
+{% if fight.internal_media or fight.external_media %}
+{% if fight.media_type == "LI" %}
+    <img class="fight-image" src="{{ fight.internal_media.url }}" alt="{{fight}}">
+
+{% elif fight.media_type == "EI" %}
+    <img class="fight-image" src="{{ fight.external_media }}" alt="{{fight}}">
+
+{% elif fight.media_type == "LV" %}
+    <div class="vidjs-container">
+    <video id="fight-video" class="video-js vjs-fill" data-setup='{"controls": true, "autoplay": false, "preload": "auto"}' onloadstart="this.volume=0.20" >
+        <source src="{{ fight.internal_media.url }}" type="video/mp4"/>
+        <p class="vjs-no-js"> To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+    </video></div>
+
+    <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet"/>
+    <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
+					
+{% elif fight.media_type == "FB" %}
+  <script src="{%static 'scripts/fb_embed.js' %}"></script>
+  <div id="fb-root"></div>
+  <script async defer src="https://connect.facebook.net/en_GB/sdk.js"></script>
+  <div
+    id="fight-video-fb"
+    class="fb-video"
+    data-height="800"
+    data-href="{{fight.external_media}}"
+    data-show-text="false"
+    data-allowfullscreen="true"></div>
+
+{% elif fight.media_type == "IF" %}
+    <iframe width="100%" height="800px" src="{{ fight.external_media }}" title="Fight Video" allowfullscreen></iframe>
+
+{% elif fight.media_type == "IG" %}
+    <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.external_media }}" data-instgrm-version="14">
+        Fight video on Instagram
+    </blockquote>
+    <script async src="http://www.instagram.com/embed.js"></script>
+
+{% elif fight.media_type == "TW" %}
+    <blockquote style="width: 800px;height:450px" class="twitter-tweet">
+        <a href="{{ fight.external_media }}">Fight video on Twitter.</a>
+    </blockquote>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+{% elif fight.media_type == "TT" %}
+    <blockquote class="tiktok-embed" cite="{{ fight.external_media }}" data-video-id="{{ fight.get_tt_id }}">
+        <section></section> <!--This section tag is required, embed will fail without it. -->
+    </blockquote>
+    <script async src="https://www.tiktok.com/embed.js"></script>
+
+{% else %}
+    <p>We're unsure how to embed this media, here's a <a href="{{ fight.external_media }}">link.</a></p>
+{% endif %}
+{% endif %}

@@ -10,12 +10,12 @@ class PersonAdmin(admin.ModelAdmin):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ['name']
 
 
 @admin.register(Robot)
 class RobotAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ['name']
 
 
 @admin.register(Version)
@@ -25,12 +25,12 @@ class VersionAdmin(admin.ModelAdmin):
 
 @admin.register(Franchise)
 class FranchiseAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ['name']
 
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ['name']
 
 
 @admin.register(Weight_Class)
@@ -78,5 +78,9 @@ class WebLinkAdmin(admin.ModelAdmin):
 
 @admin.register(Source)
 class SourceAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
     pass
 

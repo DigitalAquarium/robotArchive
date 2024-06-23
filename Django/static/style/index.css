@@ -1,0 +1,17 @@
+.gridview-row{
+    margin-bottom:1.5em;
+}
+
+.text-in-gridview{
+    font-size:5em;
+    color: var(--font-colour)
+}
+.gridview-square{
+    box-shadow: var(--shadow-colour) 0 0 0.5em;
+    border-radius: 0.5em;
+}
+@media (max-width: 700px){
+.gridview-title {
+        font-size: 1.1em;
+    }
+}

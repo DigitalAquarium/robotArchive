@@ -2,9 +2,13 @@
 {% load bonus_filters %}
 {% load static %}
 
-{% block meta %}
-    <title>Leaderboard - Roboteer's Tavern</title>
-	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}">
+{% block head %}
+    <link rel="canonical" href="https://www.robotcombatarchive.com{{url}}">
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}"/>
+    <link rel="stylesheet" href="{% static 'style/tooltip.css' %}"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <script src="{%static 'scripts/tooltip.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -31,28 +35,40 @@
         </form>
     </section>
     <div class="main-content">
+    {%if chosen_year < 1998 %}<h3 class="header-warning">Weight classes prior to 1997 do not line up with modern ones, expect weird results</h3>{%endif%}
 	{% if robot_list|length == 0%}
 	No data to display
 	{%else%}
-	<div class="gridview-row">
-		{% for entry in top_three %}
-			{%with entry|first as lb%}
-			{%with entry|last as version%}
+        <div class="gridview-container mobile-show">
             <div class="gridview-square">
 				<div class="gridview-title">
-                    <img class="big-trophy" src="{% if forloop.counter == 1 %}{% static 'awards/trophy_gold.png' %}{% elif forloop.counter == 2 %}{% static 'awards/trophy_silver.png' %}{%else%}{% static 'awards/trophy_bronze.png' %}{%endif%}" alt="Flag">
-                    <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
+                    <img class="big-trophy" src="{% static 'awards/trophy_gold.png' %}" alt="Gold Trophy">
+                    <a href="{% url 'main:versionDetail' top_three.0.version.id %}">{{ top_three.0.version }}</a>{% include "snippets/leaderboard_difference_icon.html" with lb=top_three.0 first_year=first_year %}
                 </div>
                 <div class="gridview-subtitle">
-                    <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
-                    <p>{{ lb.ranking|floatformat:2 }}</p>
+                    <img class="flag-image" src="{{ top_three.0.version.get_flag }}" alt="{{top_three.0.version.country}} Flag">
+                    <p>{{ top_three.0.ranking|floatformat:2 }}</p>
                 </div>
                 <div class="gridview-image-container">
-                    <img class="fit-image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="Robot Image">
+                    <img class="fit-image" src="{% if top_three.0.version.image %} {{ top_three.0.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="{{top_three.0.version}}">
                 </div>
             </div>
-		{% endwith %}
-		{% endwith %}
+        </div>
+	<div class="gridview-container grid-width-3">
+		{% for entry in top_three %}
+            <div class="gridview-square {% if forloop.counter == 1 %} mobile-hide{%endif%}">
+				<div class="gridview-title">
+                    <img class="big-trophy" {% if forloop.counter == 1 %} src="{% static 'awards/trophy_gold.png' %}" alt="Gold Trophy" {% elif forloop.counter == 2 %} src="{% static 'awards/trophy_silver.png' %}" alt="Silver Trophy"{%else%} src="{% static 'awards/trophy_bronze.png' %}" alt="Bronze Trophy"{%endif%} >
+                    <a href="{% url 'main:versionDetail' entry.version.id %}">{{ entry.version }}</a>{% include "snippets/leaderboard_difference_icon.html" with lb=entry first_year=first_year %}
+                </div>
+                <div class="gridview-subtitle">
+                    <img class="flag-image" src="{{ entry.version.get_flag }}" alt="{{entry.version.country}} Flag">
+                    <p>{{ entry.ranking|floatformat:2 }}</p>
+                </div>
+                <div class="gridview-image-container">
+                    <img class="fit-image" src="{% if entry.version.image %} {{ entry.version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="{{entry.version}}">
+                </div>
+            </div>
 		{% endfor %}
     </div>
 	{% if robot_list|length > 3%}
@@ -60,30 +76,37 @@
         <table>
             <thead>
             <tr>
-                <th>Rank</th>
-                <th>Score</th>
-                <th></th>
-                <th>Robot</th>
+                <th scope="col">Rank</th>
+                <th scope="col">Score</th>
+                <th scope="col" colspan="2">Robot</th>
 				{%if is_this_year%}
-                <th>Wins</th>
-                <th>Losses</th>
-                <th>Awards</th>
+                <th scope="col" class="mobile-hide">Wins</th>
+                <th scope="col" class="mobile-hide">Losses</th>
+                <th scope="col" class="mobile-hide">Awards</th>
 				{%endif%}
             </tr>
             </thead>
             <tbody>
             {% for lb in robot_list %}
-                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %}
-                    style="background-color: #eeeeee"{% endif %}>
+                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
 					{% if forloop.counter > 3 %}
                     <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
-                    <td style="text-align: center"><img class="flag-image" src="{{ lb.robot.get_flag }}" alt="Flag"></td>
-                    <td><a href="{% url 'main:robotDetail' lb.robot.slug %}">{{ lb.robot }}</a></td>
+                    <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="{{lb.robot.country}} Flag"></td>
+                    <td>
+                        <span class="robot-name-cell">
+                        <a href="{% url 'main:versionDetail' lb.version.id %}">
+                            {%if lb.version.loaned or lb.version.team == lb.robot.first_version.team %} {{lb.robot}} {%if lb.robot.display_latin_name %} <span class="alphanum">({{lb.robot.latin_name}})</span>{%endif%}
+                            {%else%} {{ lb.version }}{%if lb.version.display_latin_name %} <span class="alphanum">({{lb.version.latin_robot_name}})</span>{%endif%}
+                            {%endif%}
+                        </a>
+                        {% include "snippets/leaderboard_difference_icon.html" with lb=lb first_year=first_year %}
+                        </span>
+                    </td>
 					{%if is_this_year%}
-                    <td style="text-align: center">{{ lb.robot.wins }}</td>
-                    <td style="text-align: center">{{ lb.robot.losses }}</td>
-                    <td style="text-align: center">{{ lb.robot.awards|length }}</td>
+                    <td class="mobile-hide" style="text-align: center">{{ lb.robot.wins }}</td>
+                    <td class="mobile-hide" style="text-align: center">{{ lb.robot.losses }}</td>
+                    <td class="mobile-hide" style="text-align: center">{{ lb.robot.awards|length }}</td>
 					{%endif%}
 					{%endif%}
                 </tr>
@@ -91,6 +114,34 @@
             </tbody>
         </table>
 	</div>
+        {%if eliminations.count > 0 %}
+        <h2>The following robots with leaderboard entries in {{robot_list.first.year|add:"-1"}} no longer have one in {{robot_list.first.year}}:</h2>
+        <div class="lb-table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Robot</th>
+                </tr>
+            </thead>
+            {% for lb in eliminations %}
+                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                    <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="{{lb.robot.country}} Flag"></td>
+                    <td>
+                        <span class="robot-name-cell">
+                        <a href="{% url 'main:versionDetail' lb.version.id %}">
+                            {%if lb.version.loaned or lb.version.team == lb.robot.first_version.team %} {{lb.robot}}
+                            {%else%} {{ lb.version }}
+                            {%endif%}
+                        </a>
+                        {% include "snippets/leaderboard_difference_icon.html" with lb=lb first_year=first_year %}
+                        </span>
+                    </td>
+                </tr>
+            {%endfor%}
+        </table>
+            </div>
+        {%endif%}
 	{%endif%}
 	{%endif%}
     </div>

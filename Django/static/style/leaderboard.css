@@ -2,12 +2,7 @@
 	height: 0.9em;
 	margin-inline-end: 0.1em;
 }
-.gridview-row {
-	height: 20em;
-}
-.gridview-square {
-	width:30%;
-}
+
 .gridview-title {
 	height: FIT-CONTENT;
 	align-items: center;
@@ -20,10 +15,53 @@
 .gridview-subtitle p{
    margin: 0em;
 }
-.gridview-image-container{
-	height:80%;
-}
 .lb-table-container{
 	display:flex;
 	justify-content:center;
+}
+.header-warning{
+    margin:0.5em 0 0 0;
+    font-style:italics;
+    color:var(--warning-colour);
+}
+
+.robot-name-cell{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.material-symbols-outlined{
+            position:relative;
+            bottom: -0.115em
+       }
+
+.lb-positive{
+    color: var(--positive-colour);
+}
+.lb-neutral{
+    color:var(--font-colour);
+}
+.lb-negative{
+    color:var(--negative-colour);
+}
+.alphanum{
+    font-size:1em;
+}
+.mobile-show {
+    visibility: hidden;
+    display: none;
+}
+
+@media (max-width: 700px){
+  .gridview-container {
+    grid-template-columns: repeat(auto-fit,50%);
+  }
+  .mobile-hide {
+    display: none;
+    }
+  .mobile-show {
+    visibility: visible;
+    display: grid;
+    }
 }

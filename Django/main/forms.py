@@ -1,4 +1,3 @@
-import datetime
 import urllib
 import time
 from io import BytesIO
@@ -8,8 +7,7 @@ from django.core.files import File
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db.models import Max
+from django.core.exceptions import ObjectDoesNotExist
 
 from .models import *
 
@@ -31,6 +29,8 @@ class RegistrationForm(UserCreationForm):
 
 class NewRobotForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
+    latin_name = forms.CharField(max_length=255, required=False,show_hidden_initial="hidden")
+    slug = forms.CharField(max_length=100, required=False)
     vname = forms.CharField(max_length=255, required=False, label="Name of first version if different from main name")
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
@@ -40,10 +40,23 @@ class NewRobotForm(forms.Form):
                                           required=True)
     opt_out = forms.BooleanField(required=False)
 
+    def clean_slug(self):
+        slug = self.cleaned_data['slug']
+        if Robot.objects.filter(slug=slug).count() > 0:
+            raise ValidationError("This slug is already taken.")
+        return slug
+
     def save(self, team, owner):
         r = Robot()
         v = Version()
         r.name = self.cleaned_data['name']
+        r.slug = self.cleaned_data['slug']
+        r.latin_name = self.cleaned_data['latin_name']
+        if r.latin_name != "":
+            r.display_latin_name = True
+        else:
+            r.display_latin_name = False
+            r.latin_name = asciify(r)
         v.robot_name = self.cleaned_data['vname']
         r.country = self.cleaned_data['country']
         v.country = self.cleaned_data['country']
@@ -57,9 +70,15 @@ class NewRobotForm(forms.Form):
         v.owner = owner
         if team != 0:
             v.team = team
-        r.save()
-        v.save()
-        r.slugify()
+        if not r.slug:
+            r.slug = uuid.uuid4()
+            r.save()
+            v.save()
+            r.slug = r.slugify()
+            r.save()
+        else:
+            r.save()
+            v.save()
         return r, v
 
 
@@ -95,20 +114,39 @@ class NewVersionForm(forms.Form):
 
 
 class RobotForm(forms.ModelForm):
+    slug = forms.CharField(max_length=100, required=False)
+
     class Meta:
         model = Robot
-        fields = ['name', 'description',"country", "opt_out"]
+        fields = ['name', 'latin_name','display_latin_name', 'slug', "country", 'description', "opt_out"]
+
+    def clean_slug(self):
+        slug = self.cleaned_data['slug']
+        if Robot.objects.filter(slug=slug).count() > 0:
+            rob = super().save(commit=False)
+            if slug != rob.slug:
+                raise ValidationError("This slug is already taken.")
+        return slug
 
     def save(self, commit=True):
+<<<<<<< HEAD
         rob = super().save()
         rob.slugify()
+=======
+        rob = super().save(commit=False)
+        if not rob.slug:
+            rob.slug = rob.slugify()
+        if commit:
+            rob.save()
+>>>>>>> main
 
 
 class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
-        fields = ["robot_name", "name", "country", "description", "image", "weapon_type", "weight_class"]
-    def save(self,commit=True):
+        fields = ["robot_name", "name", "loaned", "country", "description", "image", "weapon_type", "team", "weight_class"]
+
+    def save(self, commit=True):
         ver = super().save(commit=False)
         if ver.number == 0:
             ver.number = ver.robot.version_set.all().order_by("number").last().number + 1
@@ -116,6 +154,7 @@ class VersionForm(forms.ModelForm):
         if commit:
             ver.save()
         return ver
+
 
 class TeamForm(forms.ModelForm):
     class Meta:
@@ -132,13 +171,13 @@ class FranchiseForm(forms.ModelForm):  # TODO: Add Web Links
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise']
+        fields = ['name', 'missing_brackets', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise']
 
 
 class ContestForm(forms.ModelForm):
     class Meta:
         model = Contest
-        fields = ["name", "fight_type", "weight_class"]
+        fields = ["name", "fight_type", "start_date", "end_date", "weight_class"]
 
 
 class FightForm(forms.ModelForm):
@@ -205,7 +244,9 @@ class TransferRobotForm(forms.Form):
 
 class NewEventFormEDT(forms.Form):
     name = forms.CharField(max_length=255, required=False)
+    missing_brackets = forms.BooleanField(required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
+    prev_logo = forms.ChoiceField(choices=[("", "")], required=False)
     logo_img = forms.ImageField(required=False)
     logo_txt = forms.URLField(required=False)
     start_date = forms.DateField(required=True)
@@ -215,6 +256,7 @@ class NewEventFormEDT(forms.Form):
     def save(self, franchise):
         e = Event()
         e.name = self.cleaned_data['name']
+        e.missing_brackets = self.cleaned_data['missing_brackets']
         e.description = self.cleaned_data['description']
         e.start_date = self.cleaned_data['start_date']
         if not self.cleaned_data['end_date']:
@@ -224,9 +266,9 @@ class NewEventFormEDT(forms.Form):
         e.country = self.cleaned_data['country']
         e.franchise = franchise
 
-        if not self.cleaned_data['logo_img'] and not self.cleaned_data['logo_txt']:
-            pass
-        elif not self.cleaned_data['logo_img']:
+        if self.cleaned_data['prev_logo']:
+            e.logo = self.cleaned_data['prev_logo']
+        elif self.cleaned_data['logo_txt']:
             save_img(self.cleaned_data['logo_txt'], e.logo, e.name)
         else:
             e.logo = self.cleaned_data['logo_img']

@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
-    <title>{{ event }} - Roboteer's Tavern</title>
+{% block head %}
     <link rel="stylesheet" href="{% static 'style/event_detail.css' %}">
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"/>
+    <link rel="canonical" href="https://www.robotcombatarchive.com/event/{{event.slug}}">
 	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
 {% endblock %}
+
 {% block content %}
-    {% if event %}
-        <div class="main-content">
+<div class="main-content">
         <div class="heading">
-            <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
-            <h1>{{ event.name }}</h1>
+            <img class="flag-image" src="{{ event.get_flag }}" alt="{{event.country}} Flag">
+            <h1>{{ event.name }}{%if event.missing_brackets%} ⚠️{%endif%}</h1>
             {% if can_change %}
                 <a href="{% url 'main:edtEvent' event.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Event"></a>
             {% endif %}
@@ -21,9 +21,13 @@
 
         {% if event.logo or event.franchise.logo %}
             <div class="event-logo-image">
-                <img class="fit-image" src="{{event.get_logo_url}}" alt="logo">
+                <img class="fit-image" src="{{event.get_logo_url}}" alt="Logo of {{event}}|truncatechars:100">
             </div>
         {% endif %}
+
+        {%if event.missing_brackets%}
+            <p class="warning">⚠️ A complete bracket for this event has not yet been found. It is likely many of the fights from this event are not listed on the site. Fights may have unknown winners, or be listed slightly wrong.</p>
+        {%endif%}
 
 
 
@@ -45,7 +49,7 @@
 
 
 
-        {% if event.contest_set.all|length !=  0 %}
+        {% if contests|length !=  0 %}
             <div class="contest-table">
                 <table>
                     <thead>
@@ -53,19 +57,21 @@
                     <th>Weight Class</th>
                     <th>Fight Type</th>
                     </thead>
-                    {% for contest in event.contest_set.all %}
+                    {% for contest in contests %}
                         <tr>
-                            <td><a href="{% url 'main:contestDetail' contest.id %}">{{ contest }}</a></td>
+                            <td>
+                                {%if contest.fight_set.all|length > 0 or contest.registration_set.all|length > 0%}
+                                    <a href="{% url 'main:contestDetail' contest.id %}">{{ contest }}</a>
+                                {%else%}
+                                    {{ contest }}
+                                {%endif%}
+                            </td>
                             <td>{{ contest.weight_class.weight_string }}</td>
                             <td>{{ contest.get_fight_type_display }}</td>
                         </tr>
                     {% endfor %}
                 </table>
             </div>
-        {% else %}
-            {% if can_change %}
-                <h2 id="no-contest-warn">Warning: This event has no contests, please add one.</h2>
-            {% endif %}
         {% endif %}
 
 
@@ -78,27 +84,23 @@
                 {% endif %}
                 given out at this event</p>
         {% endif %}
+            <br>
 
 
-		<div id="osm-map" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
+		<div id="osm-map" style="z-index:0" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
 		<script src="{% static 'scripts/open_street_map.js' %}"></script>
 
             <h2>This event has been archived using the following websites:</h2>
         {% for source in event.source_set.all %}
                 <ul>
-                    <ui style="border:None;display:flex">
+                    <li style="border:None;display:flex">
                         <a href="{{ source.link }}" style="display:inherit">
-                            <img src="{%if source.archived %}{%static 'web_logos/WA.png'%}{%else%}https://icon.horse/icon/{{source.get_domain}}{%endif%}" alt="{{ source.name }}" width="25px" height="25px" style="padding-inline:1em">
+                            <img src="{%if source.archived %}{%static 'web_logos/WA.png'%}{%else%}https://icon.horse/icon/{{source.get_domain}}{%endif%}" alt="{{ source.name }} favicon" width="25px" height="25px" style="padding-inline:1em">
                             <span>{{source.name}}</span>
                         </a>
                         <span style="padding-inline:1em">{%if source.archived %} archived. {%else%} last accessed {{source.last_accessed}}. {%endif%}</span>
-                    </ui>
+                    </li>
                 </ul>
         {% endfor %}
-
-
-    {% else %}
-        There is no event with this ID.
-    {% endif %}
 </div>
 {% endblock %}

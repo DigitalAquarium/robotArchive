@@ -1,50 +1,48 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
-    <title> {{ fight }} - Roboteer's Tavern </title>
+{% block head %}
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
-	<link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
 {% endblock %}
 {% block content %}
     {% if fight %}
         <div class="main-content">
-        <h1> {{ fight }}
-            {% if can_change %}
-                <a href="{% url 'main:edtFightOverview' fight.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Fight"></a>
-            {% endif %}
-        </h1>
+            <h1> {{ fight.non_latin_name }}
+                {% if can_change %}
+                    <a href="{% url 'main:edtFightOverview' fight.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Fight"></a>
+                {% endif %}
+            </h1>
+            <h4 style="font-weight:normal">A {% if fight.fight_type == "NC" %}round of{% else %}fight at{% endif %} the <a href="{% url 'main:contestDetail' fight.contest.id %}">{{fight.contest}}</a> contest at <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{fight.contest.event}}</a></h4>
+
+            <div class="fight-media">
+                {%include "snippets/fight_media.html" with fight=fight %}
+            </div>
+
         <h4>{{ fight.get_fight_type_display }} </h4>
         {% if fight.fight_version_set.last.tag_team == 0 %}
-            <div class="gridview-row competitor-row">
-                {% for version in fight.competitors.all %}
+            <div class="gridview-container{%if fight.fight_version_set.all|length == 2%} vs-is-present{%endif%}">
+                {% for fv in fight.fight_version_set.all %}
                     {% if forloop.counter == 2 and forloop.last %}
                         <div class="competitor-vs">
                             <p>vs</p>
                         </div>
                     {% endif %}
-                    <div class="gridview-square competitor-square">
+                    <div class="gridview-square competitor-square {%if fv.won%} winners-box {%endif%}">
                         <div class="gridview-title">
-                            <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
-                            <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
+                            <img class="flag-image" src="{{ fv.version.get_flag }}" alt="{{fv.version.country}} Flag">
+                            <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
                         </div>
                         <div class="gridview-image-container">
-                            <img class="fit-image" src="
-
-                                    {% if version.image %}{{ version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
-                                 alt="Robot Image">
+                            <img class="fit-image" src="{% if fv.version.image %}{{ fv.version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
+                                 alt="{%if fv.version.image %}Robot {{fv.version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
                         </div>
                     </div>
-
-                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
-                        </div>
-                        <div class="gridview-row">
-                    {% endif %}
                 {% endfor %}
                 </div>
         {% elif fight.competitors.all|length > 2 and fight.fight_version_set.last.tag_team > 0 %}
-            {% for team in fight.teams %}
-                <div class="gridview-row">
-                    {% for version in team %}
+            {% for team in fight.teams_fv %}
+                <div class="gridview-container{%if team|length == 2%} vs-is-present{%endif%}{%if team.0.won%} winners-box{%endif%}">
+                    {% for fv in team %}
                         {% if forloop.counter == 2 and forloop.last %}
                             <div class="competitor-and">
                                 <p>&</p>
@@ -52,20 +50,14 @@
                         {% endif %}
                         <div class="gridview-square">
                             <div class="gridview-title">
-                                <img class="flag-image" src="{{ version.get_flag }}" alt="Flag">
-                                <a href="{% url 'main:versionDetail' version.id %}">{{ version }}</a>
+                                <img class="flag-image" src="{{ fv.version.get_flag }}" alt="{{fv.version.country}} Flag">
+                                <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
                             </div>
                             <div class="gridview-image-container">
-                                <img class="fit-image" src="
-
-                                        {% if version.image %}{{ version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
-                                     alt="Robot Image">
+                                <img class="fit-image" src="{% if fv.version.image %}{{ fv.version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
+                                     alt="{%if fv.version.image%}Robot {{fv.version}}{%else%}Unknown Robot Placeholder Image{%endif%}">
                             </div>
                         </div>
-                        {% if forloop.counter|divisibleby:3 and not forloop.last %}
-                            </div>
-                            <div class="gridview-row">
-                        {% endif %}
                     {% endfor %}
                     </div>
                 {% if not forloop.last %}
@@ -88,66 +80,22 @@
                 {{ fight.get_method_display }}
             </p>
         </div>
-
-
-        <div class="fight-media">
-            {% if fight.internal_media or fight.external_media %}
-                {% if fight.media_type == "LI" %}
-                    <img class="fight-image" src="{{ fight.internal_media.url }}" alt="This Image is Broken, please change it.">
-
-                {% elif fight.media_type == "EI" %}
-                    <img class="fight-image" src="{{ fight.external_media }}" alt="This Image is Broken, please change it.">
-
-                {% elif fight.media_type == "LV" %}
-					<video id="my-video" class="video-js" controls preload="auto" width="800" height="450" data-setup="{}" >     
-						<source src="{{ fight.internal_media.url }}" type="video/mp4" /> 
-						<video src="{{ fight.internal_media.url }}" width="800" height="450" controls></video>
-						<p class="vjs-no-js"> To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
-					</video>
-					<script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
-					
-                {% elif fight.media_type == "FB" %}
-                    <div id="fb-root"></div>
-                    <script async defer crossorigin="anonymous"
-                            src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v13.0"
-                            nonce="DsgXG9yz"></script>
-                    <div class="fb-video" data-href="{{ fight.external_media }}" data-width="800" data-height="450"
-                         data-show-text="false">
-                        <blockquote cite="{{ fight.external_media }}" class="fb-xfbml-parse-ignore">
-                            <a href="{{ fight.external_media }}">Fight Video</a>
-                        </blockquote>
-                    </div>
-
-                {% elif fight.media_type == "IF" %}
-                    <iframe src="{{ fight.external_media }}" width="800px" height="480px" title="Fight Video"
-                            allowfullscreen></iframe>
-
-                {% elif fight.media_type == "IG" %}
-                    <blockquote class="instagram-media" data-instgrm-permalink="{{ fight.external_media }}"
-                                data-instgrm-version="14">
-                        Fight video on Instagram
-                    </blockquote>
-                    <script async src="http://www.instagram.com/embed.js"></script>
-
-                {% elif fight.media_type == "TW" %}
-                    <blockquote style="width: 800px;height:450px" class="twitter-tweet"><a
-                            href="{{ fight.external_media }}">Fight video on Twitter.</a></blockquote>
-                    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-                {% elif fight.media_type == "TT" %}
-                    <blockquote class="tiktok-embed" cite="{{ fight.external_media }}"
-                                data-video-id="{{ fight.get_tt_id }}">
-                        <section></section> <!--This section tag is required, embed will fail without it. -->
-                    </blockquote>
-                    <script async src="https://www.tiktok.com/embed.js"></script>
-
-                {% else %}
-                    <p>We're unsure how to embed this media, here's a <a href="{{ fight.external_media }}">link.</a></p>
-                {% endif %}
-            {% endif %}
-
-        </div>
-
+            <br>
+            <br>
+            <div class="fight-nav">
+                <div class="fight-nav-text">
+                {%if previous_fight %}
+                    <a href="{%url 'main:fightDetail' previous_fight.id %}"><< Previous {% if previous_fight.fight_type == "NC" %}Round{% else %}Fight{% endif %}</a>
+                    <p>{{previous_fight}}</p>
+                {%endif%}
+                </div>
+                <div class="fight-nav-text fnt-right">
+                {%if next_fight %}
+                    <a href="{%url 'main:fightDetail' next_fight.id %}">Next {% if next_fight.fight_type == "NC" %}Round{% else %}Fight{% endif %} >></a>
+                    <p>{{next_fight}}</p>
+                {%endif%}
+                </div>
+            </div>
     {% else %}
         something has gone wrong
     {% endif %}

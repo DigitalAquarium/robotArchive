@@ -1,15 +1,10 @@
 {% extends "base.html" %}
 {% load bonus_filters %}
 {% load static %}
-
-{% block meta %}
-    <title>Editor Home - Roboteer's Tavern</title>
-{% endblock %}
-
 {% block content %}
     <section class="search-params">
         <form class="search-form" method="get"
-          action="{% url "main:edtSelectRobot" %}">
+          action="{% url 'main:edtSelectRobot' %}">
              <label> Search Term:
                 <input name="name" type="text" value={{ name }}>
             </label>
@@ -34,13 +29,12 @@
             </thead>
             <tbody>
             {% for robot in robot_list %}
-                <tr id="row-{{ event.id }}" {% if forloop.counter|divisibleby:2 %}
-                    style="background-color: #eeeeee"{% endif %}>
+                <tr id="row-{{ event.id }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
                     <td style="text-align: center; padding: 1px 0 0 1px;">
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
-                             src="{% if robot.version_set.last.image %} {{ robot.version_set.last.image.url }} {% else %} {% static "unknown.png" %}  {% endif %}" alt="{{ robot.name }} image"></td>
-                    <td style="text-align: center"><img class="flag-image" src="{{ robot.get_flag }}" alt="{{ robot.version_set.last.country|upper }} Flag"></td>
-                    <td><a href="{% url "main:edtSelectVersion" robot.id %}">{{ robot }}</a></td>
+                             src="{% if robot.last_version.image %} {{ robot.last_version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="{{ robot.name }} image"></td>
+                    <td style="text-align: center"><img class="flag-image" src="{{ robot.get_flag }}" alt="{{ robot.last_version.country|upper }} Flag"></td>
+                    <td><a href="{% url 'main:edtSelectVersion' robot.id %}">{{ robot }}</a></td>
                 </tr>
             {% endfor %}
             </tbody>

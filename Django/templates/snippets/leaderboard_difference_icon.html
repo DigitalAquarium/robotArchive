@@ -1,0 +1,25 @@
+{%if not first_year%}
+
+<span>
+    {%if lb.difference == 101%}<span id="lb-icon-{{lb.id}}" class="material-symbols-outlined mouseover-target lb-positive" style="transform: scaleX(-1);">new_label</span><span id="lb-tooltip-{{lb.id}}" class="tooltip lb-positive">New for {{lb.year}}</span>
+    {%elif lb.difference == 102%}<span class="material-symbols-outlined mouseover-target lb-neutral">where_to_vote</span><span class="tooltip lb-neutral">Moved from another weight class</span>
+    {%elif lb.difference == -101%}<span class="material-symbols-outlined mouseover-target lb-negative">close</span><span class="tooltip lb-negative">Rank too low</span>
+    {%elif lb.difference == -102%}<span class="material-symbols-outlined mouseover-target lb-negative">timer</span><span class="tooltip lb-negative">Robot too old, Last competed over 5 years ago</span>
+    {%elif lb.difference == -103%}<span class="material-symbols-outlined mouseover-target lb-neutral">wrong_location</span><span class="tooltip lb-neutral">Moved weight class, can be found on a different leaderboard</span>
+    {%else%}
+        {%if lb.difference <= -25 %}<span class="material-symbols-outlined mouseover-target lb-negative">stat_minus_3</span>
+        {%elif lb.difference < -10 %}<span class="material-symbols-outlined mouseover-target lb-negative">stat_minus_2</span>
+        {%elif lb.difference <= -1 %}<span class="material-symbols-outlined mouseover-target lb-negative">stat_minus_1</span>
+        {%elif lb.difference == 0 %}<span class="material-symbols-outlined mouseover-target lb-neutral">remove</span>
+        {%elif lb.difference < 10 %}<span class="material-symbols-outlined mouseover-target lb-positive">stat_1</span>
+        {%elif lb.difference < 25 %}<span class="material-symbols-outlined mouseover-target lb-positive">stat_2</span>
+        {%else%} <span class="material-symbols-outlined mouseover-target lb-positive">stat_3</span>
+        {%endif%}
+    {%if lb.difference == 0 %}<span class="tooltip lb-neutral">No change</span>
+    {%elif lb.difference > 0 %}<span class="tooltip lb-positive">+{{lb.difference}} position{%if lb.difference != 1 %}s{%endif%}</span>
+    {%else%}<span class="tooltip lb-negative">{{lb.difference}} position{%if lb.difference != -1 %}s{%endif%}</span>
+    {%endif%}
+
+    {%endif%}
+</span>
+{%endif%}

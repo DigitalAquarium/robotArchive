@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
-    <title>"{{ search_term }}" - Roboteer's Tavern</title>
+{%load bonus_filters%}
+{% block head %}
     <link rel="stylesheet" href="{% static 'style/team_detail.css' %}">
 {% endblock %}
 {% block content %}
@@ -15,25 +15,32 @@
                 <span class="hrz-index-image">
                     <img class="fit-image"
                          src="{{robot.get_image}}"
-                         alt="Robot Image">
+                         alt="{{robot}}">
                 </span>
                 <div class="hrz-index-content">
                     <span class="hrz-index-title">
-                        <img class="flag-image" src="{{ robot.get_flag }}" alt="Flag">
-                        <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot.name }}</a>
+                        <a href="{% url 'main:robotDetail' robot.slug %}">{{robot|generate_title}}</a>
                     </span>
                     <span class="hrz-index-details">
                         {% if not robot.opt_out %}<span>Rank: {{ robot.ranking|floatformat:0 }}</span>{% endif %}
-                        <span>Weight Class: {{ robot.version_set.last.weight_class.weight_string }}</span>
+                        <span>Weight Class: {{ robot.last_version.weight_class.weight_string }}</span>
                         {% if robot.awards|length > 0 %}<span> Awards: {{ robot.awards|length }}</span>{% endif %}
                         {% if robot.last_fought %}
-                            <span>Last Competed: {{ robot.last_fought|date:"M Y" }}</span>{% endif %}
+                            <span>Time Competing:
+                                        {% if robot.first_fought|date:"F Y" == robot.last_fought|date:"F Y" %}
+                                            {{ robot.first_fought|date:"F Y" }}
+                                        {% elif robot.first_fought|date:"Y" == robot.last_fought|date:"Y" %}
+                                            {{ robot.first_fought|date:"F" }} - {{ robot.last_fought|date:"F Y" }}
+                                        {%else%}
+                                            {{ robot.first_fought|date:"F Y" }} - {{ robot.last_fought|date:"F Y" }}
+                                        {% endif %}</span>
+                        {%endif%}
                     </span>
                     <span class="hrz-index-description">
                         {% if robot.description %}
                             {{ robot.description|truncatechars:650 }}
                         {% else %}
-                            {{ robot.version_set.last.description }}
+                            {{ robot.last_version.description }}
                         {% endif %}
                     </span>
                 </div>
@@ -53,7 +60,7 @@
         </span>
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
-                <img class="flag-image" src="{{ event.get_flag }}" alt="Flag">
+                <img class="flag-image" src="{{ event.get_flag }}" alt="{{event.country}} Flag">
                 <a href="{% url 'main:eventDetail' event.slug %}">{{ event.name }}</a>
             </span>
                     <span class="hrz-index-details">

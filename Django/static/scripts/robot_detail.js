@@ -7,9 +7,17 @@ function viewRobot(versionID, robotID) {
     }
     document.getElementById("ver-" + versionID).style.display = "block";
     document.getElementById("but-" + versionID).className += " active";
-    //document.getElementById("edit-version-button").textContent = "Edit " + document.getElementById("but-" + versionID).textContent
-    document.getElementById("edit-version-button").href = "/versions/" + versionID + "/edit"
-    document.getElementById("delete-version-button").href = "/delete/version/" + versionID + "/" + robotID
-    //document.getElementById("edit-version-button").href =
-    //document.getElementById("edit-version-button").href.replace("/[0-9]{1,}/",versionID);
+}
+
+function toggleDropdown() {
+    if (document.getElementById("all-lb-entries").style.display == "none"){
+        document.getElementById("all-lb-entries").style.display = "block";
+        document.getElementById("best-lb-entry").innerHTML = document.getElementById("best-lb-entry").innerHTML.replace("🠟","🠝");
+        document.getElementById("best-lb-entry").style.margin = "0px 0px 10px 0px";
+        }
+    else{
+        document.getElementById("all-lb-entries").style.display = "none";
+        document.getElementById("best-lb-entry").innerHTML = document.getElementById("best-lb-entry").innerHTML.replace("🠝","🠟");
+        document.getElementById("best-lb-entry").style.margin = "0px 0px 20px 0px";
+        }
 }

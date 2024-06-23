@@ -1,29 +1,41 @@
 <!DOCTYPE html>
 <html lang="en-gb">
+{% load static %}
 <head>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'style/base.css' %}">
     <meta charset="UTF-8">
-    {% block meta %}
-        <title> Roboteer's Tavern </title>
-    {% endblock %}
+    {%block seo%} {% include "snippets/meta_page_info.html" with title=title description=description thumbnail=thumbnail url=url%} {%endblock seo%}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="Robot Wars, BattleBots, Robogames, Robot Combat, Combots, Robots, Technology, Fighting Sports">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{%static 'favicon/apple-touch-icon.png'%}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{%static 'favicon/favicon-32x32.png'%}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{%static 'favicon/favicon-16x16.png'%}">
+    <link rel="manifest" href="{%static 'favicon/site.webmanifest' %}">
+    <link rel="stylesheet" href="{% static 'style/base.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    {% block head %}{% endblock %}
 </head>
+
 <body>
-<nav class="navbar">
+<nav class="navbar" style="z-index:10">
     {% block navbar %}
         <div class="navtitle">
-            <span>Roboteer's Tavern</span>
+            {% block home_button %}
+                <span class="home-icon"><a class="material-symbols-outlined" href="{%url 'main:index' %}">home</a></span>
+            {% endblock home_button %}
         </div>
+    <span class="mobile-hide" style="padding-left:5%;font-size:0.8em;">Data accurate up to 2003</span>
         <div class="navlinks">
             <ul>
-                <li>
+                <li class="mobile-hide">
                     <a href="{% url 'main:eventIndex' %}"> Events </a>
                 </li>
-                <li>
+                <li class="mobile-hide">
                     <a href="{% url 'main:robotIndex' %}"> Robots </a>
                 </li>
                 <li>
-                    <form method="get" action="{% url "main:search" %}">
+                    <form method="get" action="{% url 'main:search' %}">
                         <label>
                             <input name="q" type="text">
                         </label>
@@ -33,16 +45,8 @@
                 <li>
                     {% if user.is_authenticated %}
                         <a href="{% url 'logout' %}">Logout</a>
-                    {% else %}
-                        <a href="{% url 'login' %}">Login</a>
                     {% endif %}
                 </li>
-                {% if user.is_authenticated %}
-                    <Li>
-                        <a href="{% url 'main:profile' %}">Profile</a>
-                    </Li>
-                {% endif %}
-
             </ul>
         </div>
     {% endblock %}

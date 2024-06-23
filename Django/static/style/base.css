@@ -1,15 +1,86 @@
 @import url("https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@300;500&display=swap");
+
+/*Colours*/
+@property --background-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: white;
+}
+
+@property --font-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: black;
+}
+@property --latin-font-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: grey;
+}
+@property --warning-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: red;
+}
+
+/*navbar was a shade darker than other accent colours to avoid issues, change it back?*/
+@property --accent-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: lightsteelblue;/*#babcc0;*/
+}
+
+@property --hyperlink-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: blue;
+}
+
+@property --positive-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: limegreen;
+}
+@property --negative-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: red;
+}
+
+@property --shadow-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: grey;
+}
+
+@property --flag-shadow-colour {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: black;
+}
+@property --table-accent-colour{
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #eeeeee; /*#e3e5ec*/
+}
+
+/*TODO does this require @font-face and font-display or does it work fine?*/
 * {
-  font-family: Red Hat Mono, Arial, sans-serif;
+  font-family: Verdana, Arial, sans-serif;
+}
+* {
+  font-family: Red Hat Mono;
 }
 
 a:visited, a:link {
-  color: blue;
+  color: var(--hyperlink-colour);
   text-decoration: none;
 }
 
 body {
   margin: 0;
+  background: var(--background-colour);
+  color: var(--font-colour)
 }
 
 .navbar {
@@ -17,7 +88,7 @@ body {
   padding: 0.5em;
   position: fixed;
   width: 100%;
-  background-color: darkgrey;
+  background-color: var(--accent-colour);
   overflow: hidden;
   display: inline-block;
 }
@@ -50,6 +121,20 @@ body {
 .navbar .navtitle {
   float: left;
 }
+.home-icon{
+    display: inline-flex;
+}
+.home-icon a{
+    border:none;
+    font-size:1.3em;
+    color: black;
+    transform: scale(1.5);
+}
+.home-icon img{
+    bottom: 5px;
+    height: 30px;
+    position: absolute;
+}
 
 .content {
   padding-top: 3em;
@@ -67,50 +152,46 @@ body {
 }
 
 .hrz-index-result {
-  margin: 1em 0;
   padding: 1em;
   height: 10em;
-  border: 1px solid dimgrey;
-  float: inside;
-  box-shadow: 3px 4px 4px grey;
   display: flex;
   text-align: justify;
   text-overflow: ellipsis;
 }
-.hrz-index-result .hrz-index-image {
+.hrz-index-image {
   height: 100%;
   width: 20%;
   justify-content: center;
   display: inline-flex;
 }
-.hrz-index-result .hrz-index-content {
+.hrz-index-content {
   display: inline-flex;
   flex-direction: column;
   width: 80%;
   overflow: hidden;
 }
-.hrz-index-result .hrz-index-content .hrz-index-title {
-  font-size: 24px;
+.hrz-index-title {
+  font-size: 1.5em;
   display: inline-flex;
 }
-.hrz-index-result .hrz-index-content .hrz-index-title a {
+.hrz-index-title a {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.hrz-index-result .hrz-index-content .hrz-index-details {
+.hrz-index-details {
   margin: 5px 5px;
 }
-.hrz-index-result .hrz-index-content .hrz-index-details span {
+.hrz-index-details span {
   margin: 0 1em 0 0;
 }
-.hrz-index-result .hrz-index-content .hrz-index-description {
+.hrz-index-description {
   font-size: 13px;
   margin: 0 5px;
 }
 
 .flag-image {
-  box-shadow: black 0 0 3px;
+  box-shadow: var(--flag-shadow-colour) 0 0 3px;
   margin: 3px 5px 5px 5px;
   height: 1em;
 }
@@ -124,6 +205,7 @@ body {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  border-radius: 0.5em;
 }
 
 .main-content {
@@ -136,51 +218,21 @@ body {
   }
 }
 table, th, td {
-  border: solid 1px black;
+  border: solid 1px var(--font-colour);
   border-collapse: collapse;
   padding: 0.5em;
 }
 
 th {
-  background-color: #babcc0;
+  background-color: var(--accent-colour);
   text-decoration: none;
   font-weight: normal;
 }
-
-.gridview-row {
-  display: inline-flex;
-  width: 100%;
-  height: 15em;
-  justify-content: center;
-  margin: 1em;
+.table-row-two{
+    background-color: var(--table-accent-colour);
 }
-
-.gridview-square {
-  width: 20%;
-  height: calc(100% - 2em);
-  padding: 1em;
-  text-overflow: ellipsis;
-}
-
-.gridview-title {
-  font-size: 24px;
-  width: 100%;
-  display: flex;
-  height: 1.2em;
-}
-
-.gridview-title a {
-  display: inline;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gridview-image-container {
-  width: 100%;
-  height: 90%;
-  display: flex;
-  justify-content: center;
+.table-no-bg{
+     background-color: var(--background-colour);
 }
 
 .page-nav {
@@ -199,9 +251,14 @@ th {
   float: left;
   margin-inline: 0.5em;
   width: 4em;
-  border: 1px solid white;
+  border: 1px solid var(--background-colour);
+}
+.warning{
+    color:var(--warning-colour);
 }
 
+/*editor link and delete link are editor only, so odd colour-pallet behaviour is fine.
+move this to dedicated css to reduce filesize for regular users?*/
 .editor-link {
   border: 1px black solid;
   display: inline-block;
@@ -227,7 +284,7 @@ form {
   align-items: center;
 }
 form fieldset {
-  background: #e3e5ec;
+  background: var(--table-accent-colour);
   border: none;
   border-radius: 1em;
   width: 70%;
@@ -239,6 +296,10 @@ form fieldset legend {
   form fieldset {
     width: 100% !important;
   }
+}
+textarea, input, select, option{
+  color: var(--font-colour);
+  background-color: var(--background-colour);
 }
 
 .heading {
@@ -254,7 +315,76 @@ form fieldset legend {
 
 .alphanum {
   font-size: 0.7em;
-  color: grey;
+  color: var(--latin-font-colour);
 }
 
-/*# sourceMappingURL=base.css.map */
+.robot-title {
+    display: inline-flex;
+    align-items: center;
+}
+.robot-title .flag-image {
+    margin: 3px;
+}
+.robot-title-text{
+    margin-left: 0.3em;
+}
+
+.mobile-show{
+    visibility:hidden;
+    display:none;
+}
+
+@media (max-width: 700px){
+    body{
+        font-size:0.8em;
+    }
+    .mobile-hide{
+        display:none;
+    }
+    .mobile-show{
+        visibility:visible;
+        display:block;
+    }
+    .hrz-index-result{
+        flex-direction:column-reverse;
+        padding:0.5em;
+        height:12em;
+    }
+    .hrz-index-image{
+        width:100%;
+        height:80%;
+    }
+    .hrz-index-content{
+        width:100%;
+    }
+    .hrz-index-title{
+        font-size:1.2em;
+    }
+    .hrz-index-details {
+        display:none;
+    }
+    .hrz-index-description {
+        display:none;
+    }
+    .page-nav li{
+        width:1em;
+    }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-colour: black; /*272932 - lighter option*/
+    --font-colour: white;/*#F3E8BA;/*#E9D985;*/
+    --latin-font-colour: lightsteelblue;
+    --warning-colour: #C3423F;
+    --accent-colour: #03B5AA;
+    --hyperlink-colour: #953784;/*#7A306C;*/
+    --positive-colour: #4D751A;
+    --negative-colour: #C3423F;
+    --shadow-colour: grey;
+    --flag-shadow-colour: white;
+    --table-accent-colour: #040911;
+  }
+  .dark-invert, img[src*="/static/unknown.png"]{
+    filter: invert(1);
+  }
+}

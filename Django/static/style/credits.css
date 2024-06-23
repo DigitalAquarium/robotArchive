@@ -1,0 +1,24 @@
+        .credit-row{
+            margin-bottom:2em;
+        }
+        .credit-row a{
+            display:inline-flex;
+            height:200px;
+            width:100%;
+            align-items:center;
+        }
+        .credit-image-container{
+            height:100%;
+            width:20%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin-right:1em;
+        }
+        #credit-flag{
+            box-shadow: var(--flag-shadow-colour) 3px 3px 5px;
+        }
+        .google-icons{
+            color:var(--font-colour);
+            font-size:10em;
+        }

@@ -1,87 +1,60 @@
 {% extends "base.html" %}
 {% load static %}
-{% block meta %}
-    <title>{{ fran }} - Roboteer's Tavern</title>
+{% block head %}
+    <link rel="canonical" href="https://www.robotcombatarchive.com/franchise/{{fran.slug}}">
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
     <link rel="stylesheet" href="{% static 'style/franchise_detail.css' %}">
-    <link rel="stylesheet" href="{% static 'style/web_links.css' %}">
 {% endblock %}
+
 {% block content %}
-    {% if fran %}
-        <div class="main-content">
-        <div class="heading">
-            <h1>{{ fran }}</h1>
-            {% if can_change %}
-                <a class="editor-link" href="{% url 'main:editFranchise' fran.id %}">Edit Franchise</a>
-                <a class="delete-link" href="{% url 'main:delete_noreturn' 'franchise' fran.id %}">Delete Franchise</a>
-            {% endif %}
+<div class="main-content">
+    <div class="heading">
+        <h1>{{ fran }}</h1>
+        {%if can_edit %}
+        <a href="{% url 'main:editFranchise' fran.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Franchise"></a>
+        {%endif%}
+    </div>
+
+    {% if fran.logo %}
+        <div class="franchise-logo-image">
+            <img class="fit-image" src="{{ fran.logo.url }}" alt="{{fran}} Logo">
         </div>
-        {% if can_change %}
-            <a class="delete-link" href="{% url 'main:delete_noreturn' 'person_franchise' leave_id %}">Leave
-                Franchise</a>{% endif %}
-
-        {% if fran.logo %}
-            <div class="franchise-logo-image">
-                <img class="fit-image" src="{{ fran.logo.url }}" alt="logo">
-            </div>
-        {% endif %}
-
-        <P>{{ fran.description }}</P>
-
-        {% if fran.web_link_set.all|length > 0 %}
-        <div class="web-links">
-        {% for web in fran.web_link_set.all %}
-            <span>
-            <a href="{{ web.link }}">
-                <img  src="{{ web.get_logo }}" alt="{{ web }}">
-                <span class="spacer"></span>
-                {% if web.type == "WW" %}{{ web.link }}{% else %}{{ web.get_type_display }}{% endif %}
-            </a>
-            </span>
-        {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if fran.members.all|length > 0 %}
-            <h2>Members</h2>
-            <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'franchise' fran.id %}">Add
-                Member</a>
-            <p>
-                {% for member in fran.members.all %}
-                    <span>{{ member }}</span>
-                {% endfor %}
-            </p>
-        {% endif %}
-
-
-
-        <h2>Events</h2>
-        {% if can_change %}
-            <a class="editor-link" href="{% url 'main:newEvent' fran.id %}">New Event</a>
-        {% endif %}
-        <table>
-            <thead>
-            <th>Event Name</th>
-            <th>Event Date</th>
-            {% if can_change %}
-                <th> Edit Event</th>
-                <th> Delete Event</th>
-            {% endif %}
-            </thead>
-            <tbody>
-            {% for event in fran.event_set.all %}
-                <tr>
-                    <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
-                    <td>{{ event.start_date|date:"d M Y" }}</td>
-                    {% if can_change %}
-                        <td><a class="editor-link" href="{% url 'main:editEvent' event.id %}"> Edit </a></td>
-                        <td><a class="delete-link" href="{% url 'main:delete_noreturn' 'event' event.id %}"> Delete </a>
-                        </td>
-                    {% endif %}
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        Something has gone wrong.
     {% endif %}
+
+    <P>{{ fran.description }}</P>
+
+    {%include "snippets/web_links.html" with link_set=fran.web_link_set.all%}
+
+    {% if fran.members.all|length > 0 %}
+        <h2>Members</h2>
+        <a class="editor-link" style="display: inline-block" href="{% url 'main:addMember' 'franchise' fran.id %}">Add
+            Member</a>
+        <p>
+            {% for member in fran.members.all %}
+                <span>{{ member }}</span>
+            {% endfor %}
+        </p>
+    {% endif %}
+
+
+    {%if events|length > 0%}
+    <h2>Events</h2>
+    <table>
+        <thead>
+        <th>Event Name</th>
+        <th>Event Date</th>
+        </thead>
+        <tbody>
+        {% for event in events %}
+            <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
+                <td>
+                    {{event.timespan}}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {%endif%}
+</div>
 {% endblock %}
