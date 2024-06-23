@@ -593,7 +593,6 @@ class Event(models.Model):
             return Location(name="Undefined", latitude=0, longitude=0)
 
     def timespan(self, text=False):
-        print(self.start_date, self.end_date, timespan(self.start_date, self.end_date, text))
         return timespan(self.start_date, self.end_date, text)
 
 

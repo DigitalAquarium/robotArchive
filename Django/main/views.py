@@ -182,7 +182,6 @@ def edt_contest_view(request, contest_id):
         fight.save()
 
     if request.method == "POST":
-        print(request.POST)
         if request.POST["save"] == "move":
             fight_dict = {}
             for i in range(fights.count()):
@@ -926,8 +925,8 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        Leaderboard.update_class(weight)
-        # pass
+        # Leaderboard.update_class(weight)
+        pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
 
@@ -1557,7 +1556,6 @@ def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
         )
     ))
     registered = registered.order_by("alphabetical")
-    print(registered)
 
     if vf_id is not None:
         vf = Fight_Version.objects.get(pk=vf_id)
