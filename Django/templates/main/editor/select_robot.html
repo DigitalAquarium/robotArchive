@@ -29,8 +29,7 @@
             </thead>
             <tbody>
             {% for robot in robot_list %}
-                <tr id="row-{{ event.id }}" {% if forloop.counter|divisibleby:2 %}
-                    style="background-color: #eeeeee"{% endif %}>
+                <tr id="row-{{ event.id }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
                     <td style="text-align: center; padding: 1px 0 0 1px;">
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
                              src="{% if robot.last_version.image %} {{ robot.last_version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="{{ robot.name }} image"></td>

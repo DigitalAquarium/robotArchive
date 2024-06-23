@@ -129,9 +129,13 @@ class Team(models.Model):
     def timespan(self,text=False):
         # Only select robots that fought after 1980 (all robots) as a proxy for checking that first_fought is not none
         first_first_fought = self.owned_robots().filter(first_fought__gt="1980-01-01").order_by(
-            "first_fought").first().first_fought
-        last_last_fought = self.owned_robots().order_by("-last_fought").first().last_fought
-        return timespan(first_first_fought, last_last_fought, text)
+            "first_fought").first()
+        if first_first_fought is not None:
+            first_first_fought = first_first_fought.first_fought
+            last_last_fought = self.owned_robots().order_by("-last_fought").first().last_fought
+            return timespan(first_first_fought, last_last_fought, text)
+        else:
+            return "that never competed"
 
 
 
@@ -928,7 +932,7 @@ class Fight(models.Model):
             else:
                 return "Qualified"
         else:
-            if self.method in ["KO", "JD", "TO", "OA", "PT", "OT"]:
+            if self.method in ["KO", "JD", "TO", "OA", "PT", "OT", "CV", "DK"]:
                 return "Lost"
             if self.method == "NM":
                 if len(self.competitors.filter(fight_version__won=1)) == 0:
@@ -1569,7 +1573,7 @@ def asciify(obj, commit=False):
                 obj.save()
         return output
     else:
-        return None
+        return ""
 
 
 def timespan(dateA, dateB, text=False):

@@ -88,8 +88,7 @@
             </thead>
             <tbody>
             {% for lb in robot_list %}
-                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %}
-                    class="table-row-two"{% endif %}>
+                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
 					{% if forloop.counter > 3 %}
                     <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
@@ -97,8 +96,8 @@
                     <td>
                         <span class="robot-name-cell">
                         <a href="{% url 'main:versionDetail' lb.version.id %}">
-                            {%if lb.version.loaned or lb.version.team == lb.robot.first_version.team %} {{lb.robot}}
-                            {%else%} {{ lb.version }}
+                            {%if lb.version.loaned or lb.version.team == lb.robot.first_version.team %} {{lb.robot}} {%if lb.robot.display_latin_name %} <span class="alphanum">({{lb.robot.latin_name}})</span>{%endif%}
+                            {%else%} {{ lb.version }}{%if lb.version.display_latin_name %} <span class="alphanum">({{lb.version.latin_robot_name}})</span>{%endif%}
                             {%endif%}
                         </a>
                         {% include "snippets/leaderboard_difference_icon.html" with lb=lb first_year=first_year %}
@@ -126,8 +125,7 @@
                 </tr>
             </thead>
             {% for lb in eliminations %}
-                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %}
-                    style="background-color: #eeeeee"{% endif %}>
+                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
                     <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="{{lb.robot.country}} Flag"></td>
                     <td>
                         <span class="robot-name-cell">

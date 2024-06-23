@@ -190,4 +190,11 @@
     #history-chart{
         filter: hue-rotate(147deg) invert(1);
     }
+    .tab-button {
+        background-color: var(--background-colour);
+    }
+    .tab-button.active {
+        background-color: var(--accent-colour);
+    }
+
 }

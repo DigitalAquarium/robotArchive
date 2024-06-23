@@ -61,7 +61,7 @@
 @property --table-accent-colour{
   syntax: "<color>";
   inherits: true;
-  initial-value: #eeeeee;
+  initial-value: #eeeeee; /*#e3e5ec*/
 }
 
 /*TODO does this require @font-face and font-display or does it work fine?*/
@@ -126,6 +126,9 @@ body {
 }
 .home-icon a{
     border:none;
+    font-size:1.3em;
+    color: black;
+    transform: scale(1.5);
 }
 .home-icon img{
     bottom: 5px;
@@ -281,7 +284,7 @@ form {
   align-items: center;
 }
 form fieldset {
-  background: #e3e5ec;
+  background: var(--table-accent-colour);
   border: none;
   border-radius: 1em;
   width: 70%;
@@ -293,6 +296,10 @@ form fieldset legend {
   form fieldset {
     width: 100% !important;
   }
+}
+textarea, input, select, option{
+  color: var(--font-colour);
+  background-color: var(--background-colour);
 }
 
 .heading {
@@ -372,12 +379,12 @@ form fieldset legend {
     --accent-colour: #03B5AA;
     --hyperlink-colour: #953784;/*#7A306C;*/
     --positive-colour: #4D751A;
-    --negaitve-colour: #C3423F;
+    --negative-colour: #C3423F;
     --shadow-colour: grey;
     --flag-shadow-colour: white;
     --table-accent-colour: #040911;
   }
-  .dark-invert{
+  .dark-invert, img[src*="/static/unknown.png"]{
     filter: invert(1);
   }
 }

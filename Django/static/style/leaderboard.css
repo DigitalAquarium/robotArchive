@@ -45,6 +45,9 @@
 .lb-negative{
     color:var(--negative-colour);
 }
+.alphanum{
+    font-size:1em;
+}
 .mobile-show {
     visibility: hidden;
     display: none;

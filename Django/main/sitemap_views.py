@@ -1,4 +1,5 @@
 from django.contrib.sitemaps import Sitemap
+from django.db.models import Exists, Count
 from django.urls import reverse
 
 from datetime import date
@@ -108,7 +109,9 @@ class ContestSitemap(Sitemap):
     changefreq = "yearly"
 
     def items(self):
-        return Contest.objects.all().order_by("start_date")
+        items = Contest.objects.annotate(fight_count=Count("fight"))
+        items = items.filter(fight_count__gt=0).order_by("start_date")
+        return items
 
     def location(self, item):
         return reverse("main:contestDetail", args=[item.id])

@@ -2,7 +2,7 @@
 {% load bonus_filters %}
 {% load static %}
 {% block content %}
-    {%block home_button%} <span class="home-icon"><a href="{%url 'main:index' %}?edt=stay"><img class="fit-image" src="{% static 'home_icon_google.svg'%}" alt="Home Icon"></a></span> {%endblock home_button%}
+    {%block home_button%} <span class="home-icon"><a class="material-symbols-outlined" href="{%url 'main:index' %}?edt=stay">home</a></span> {%endblock home_button%}
     <section class="search-params">
         <form class="search-form" method="get"
           action="{% url 'main:edtHome' %}">

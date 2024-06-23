@@ -182,6 +182,7 @@ def edt_contest_view(request, contest_id):
         fight.save()
 
     if request.method == "POST":
+        print(request.POST)
         if request.POST["save"] == "move":
             fight_dict = {}
             for i in range(fights.count()):
@@ -218,6 +219,14 @@ def edt_contest_view(request, contest_id):
                 f.number = i
                 i += 1
             Fight.objects.bulk_update(fights, ["number"])
+        elif request.POST["save"] == "reorder":
+            fight_update_list = []
+            for value in request.POST:
+                if value[0] == "n":
+                    fight = Fight.objects.get(id=value[7:])
+                    fight.number = int(request.POST[value])
+                    fight_update_list.append(fight)
+            Fight.objects.bulk_update(fight_update_list,['number'])
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "other_contests": other_contests, "fights": fights,
                    "applications": registrations, "title": "edt" + str(contest)})
@@ -628,6 +637,11 @@ def event_index_view(request):
     event_list = event_list.order_by("name").order_by("start_date")
     results = len(event_list)
     event_list = event_list[num * (page - 1):num * page]
+    if len(event_list) > 0:
+        description = "List of robot combat events "+ timespan(event_list[0].start_date,
+                                                                            event_list[-1].end_date, True) + "."
+    else:
+        description = "Search for robot combat events returned no results."
 
     return render(request, "main/event_index.html",
                   {"event_list": event_list,
@@ -642,9 +656,8 @@ def event_index_view(request):
                    "date_from": date_from,
                    "date_to": date_to,
                    "past": past,
-
                    "title": "Events",
-                   "description": "List of robot combat events " + timespan(event_list[0].start_date,event_list[-1].end_date,True) + ".",
+                   "description": description,
                    "url": reverse("main:eventIndex"),
                    })
 
@@ -832,14 +845,14 @@ def robot_index_view(request):
         else:
             robot_list = robot_list.filter(version__country=country_code).distinct()
 
-    if name != "" and name is not None:
+    if weapon != "" and weapon is not None:
+        robot_list = robot_list.filter(version__weapon_type__icontains=weapon).distinct()
+
+    if name != "" and name is not None:  # union must be last.
         robot_list = robot_list.filter(name__icontains=name).union(
             robot_list.filter(version__robot_name__icontains=name)).union(
             robot_list.filter(latin_name__icontains=name)).union(
             robot_list.filter(version__latin_robot_name__icontains=name))
-
-    if weapon != "" and weapon is not None:
-        robot_list = robot_list.filter(version__weapon_type__icontains=weapon).distinct()
 
     if has_awards == "on":
         bad = []
@@ -876,8 +889,8 @@ def robot_index_view(request):
                    "weapon": weapon,
 
                    "title": "Robots",
-                   "description": "A list of combat robots in alphabetical order from " + robot_list[
-                       0].name + " to " + robot_list[-1].name + ".",
+                   "description": ("A list of combat robots in alphabetical order from " + robot_list[
+                       0].name + " to " + robot_list[-1].name + ".") if len(robot_list) > 1 else "",
                    "url": reverse("main:robotIndex"),
                    })
 
@@ -1006,6 +1019,11 @@ def robot_detail_view(request, slug):
 
     fights_tuple = [(rowspans[i], fights[i]) for i in range(len(fights))]
 
+    description = "Information about " + str(r) + ", a combat robot that has fought " + str(fights.count()) + \
+                  " fight" + ("" if fights.count() == 1 else "s") + " " + r.timespan(True) + "."
+    if r.wins > 0 or r.losses > 0:
+        description += " Winning " + str(r.wins) + " and losing " + str(r.losses) + " in head to head battle."
+
     return render(request, "main/robot_detail.html",
                   {"robot": r, "fights_tuple": fights_tuple, "awards": awards, "ver": v, "can_change": can_change,
                    "version_set": r.version_set.all().order_by("number"),
@@ -1013,12 +1031,8 @@ def robot_detail_view(request, slug):
                    "current_lb_entry": current_lb_entry, "is_random": is_random,
                    "missing_brackets_flag": True if fights.filter(
                        contest__event__missing_brackets=True).exists() else False,
-
                    "title": r.name,
-                   "description": "Information about " + str(r) + ", a combat robot that has fought " + str(
-                       fights.count()) + " fight" + ("" if fights.count == 0 else "s") + " " + r.timespan(True) + ". Winning " + str(
-                       r.wins) + " and losing " + str(r.losses) + " in head to head battle.",
-                   "thumbnail": v.image.url if v and v.image else r.get_image(),
+                   "description": description,
                    "url": reverse("main:robotDetail", args=[r.slug]),
                    })
 
@@ -1215,6 +1229,11 @@ def team_index_view(request):
     team_list = team_list.order_by("name")
     results = len(team_list)
     team_list = team_list[num * (page - 1):num * page]
+    if results > 0:
+        description = "A list of robot combat teams in alphabetical order from " + team_list[
+            0].name + " to " + team_list[-1].name + "."
+    else:
+        description = "Search for robot combat teams returned no results."
     return render(request, "main/team_index.html",
                   {"team_list": team_list,
                    "page": page,
@@ -1224,8 +1243,7 @@ def team_index_view(request):
                    "name": name,
 
                    "title": "Teams",
-                   "description": "A list of robot combat teams in alphabetical order from " + team_list[
-                       0].name + " to " + team_list[-1].name + ".",
+                   "description": description,
                    "url": reverse("main:teamIndex"),
                    })
 
@@ -1263,6 +1281,7 @@ def new_robot_view(request):  # TODO: FORM
         form = NewRobotForm()
         if fight_id != 0:
             form.fields["weight_class"].initial = Fight.objects.get(id=fight_id).contest.weight_class
+            form.fields["country"].initial = Fight.objects.get(id=fight_id).contest.event.country
         if team_id:
             form.fields['country'].initial = team.country
         response = render(request, "main/new_robot.html", {"form": form, "team": team, "fight_id": fight_id})
@@ -1395,7 +1414,9 @@ def franchise_detail_view(request, slug):
     return render(request, "main/franchise_detail.html",
                   {"fran": fran, "events": events, "leave_id": 1,  # TODO: lol
                    "title": fran,
-                   "description": "Information about " + fran.name + ", a robot combat event organiser who organised " + str(events.count()) + " event" + ("" if events.count == 1 else "s") + " " + fran.timespan(True) + ".",
+                   "description": "Information about " + fran.name + ", a robot combat event organiser who organised " + str(
+                       events.count()) + " event" + ("" if events.count == 1 else "s") + " " + fran.timespan(
+                       True) + ".",
                    "thumbnail": fran.logo.url if fran.logo else None,
                    "url": reverse("main:franchiseDetail", args=[fran.slug]),
                    })
@@ -1525,12 +1546,18 @@ def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
     can_change = fight.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
+
     registered = Version.objects.filter(registration__contest=fight.contest.id).annotate(alphabetical=Case(
-        When(robot_name="", then=F("robot__name")),
-        default=F("robot_name")
-    )
-    )
+        When(robot_name="",
+             then=Case(
+                 When(robot__display_latin_name=True, then=F("robot__latin_name")), default=F("robot__name")),
+             ),
+        default=Case(
+            When(display_latin_name=True, then=F("latin_robot_name")), default=F("robot_name")
+        )
+    ))
     registered = registered.order_by("alphabetical")
+    print(registered)
 
     if vf_id is not None:
         vf = Fight_Version.objects.get(pk=vf_id)
@@ -1545,7 +1572,7 @@ def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
         else:
             response = redirect("main:editWholeFight", fight_id)
     else:
-        form.fields['version'].queryset = registered
+        form.fields['version'].choices = [(None, "----------")] + [(v.id, v.english_readable_name) for v in registered]
         response = render(request, "main/modify_fight_version.html",
                           {"form": form, "fight_id": fight_id, "fight_version_id": vf_id, "editor": editor,
                            "title": "Modify Fight Version"})

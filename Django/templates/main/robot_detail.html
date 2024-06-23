@@ -7,6 +7,7 @@
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="{%static 'scripts/history_chart.js' %}"></script>
     <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
+     <link rel="stylesheet" href="{% static 'style/fight_icon.css' %}">
 {% endblock %}
 
 {% block navbar %}
@@ -181,7 +182,7 @@
                             </td>
                             {% endif %}
                             <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
-                            <td><a class="fight-link" style="display:inline-flex" href="{% url 'main:fightDetail' fight.id %}">
+                            <td><a class="fight-link" href="{% url 'main:fightDetail' fight.id %}">
                                 {{ fight|fight_opponents:robot }}
                                 {% include "snippets/fight_icon.html" with fight=fight %}
                             </a></td>
