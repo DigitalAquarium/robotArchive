@@ -79,6 +79,7 @@ urlpatterns = [
     path('editor/link/<str:obj_type>/<int:obj_id>', views.edt_team_view, name='edtLink'),
     # path('editor/pruneMedia', views.prune_media, name='edtPrune'),
     path('editor/recalculate', views.recalc_all, name='recalculateAll'),
+    path('editor/calculate_test',views.calc_test, name='calcTest'),
     # path('test/tourny', views.tournament_tree, name='tournament_test'),
     # path('import', views.importView, name='import'),
     # path('test/graph', views.graph_test, name='graph_test'),

@@ -847,6 +847,131 @@ class Fight(models.Model):
                 fv.save()
         return [fvs, v_dict]
 
+    def new_calculate(self, competitors=[], commit=True):
+        # Preprocessing
+        fvs = self.fight_version_set.all()
+        if self.fight_type == "NC":
+            return [fvs, competitors]
+        K = 25
+        if self.fight_type == "NS":
+            # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a
+            # spinner and those robots typically do more fights anyway due to being less destroyed.
+            K /= 2
+
+        if len(competitors) == 0:
+            competitors = [fv.version for fv in fvs]
+        else:
+            commit=False
+
+        # Skip Rank Calculation (and tag team pre- / post-processing) if it isn't relevant
+        if (self.fight_type == "FC" or self.fight_type == "NS") and (sum([fv.won for fv in fvs]) > 0 or self.method == "DR"):
+            tt_fight_flag = fvs.filter(tag_team__gt=0).count() > 1
+            if tt_fight_flag:
+                # If the match is a tag team match, create dummy competitors and fvs for the fight calculation representing the average robot per team.
+                tteams = []
+                newfvs = []
+                tteams_key = {}
+                # sort the competitors & fvs so they line up properly when tag teams are made.
+                fvs = sorted(fvs,key=lambda x: x.tag_team)
+                new_competitors = []
+                for fv in fvs:
+                    for competitor in competitors:
+                        if fv.version.id == competitor.id:
+                            new_competitors.append(competitor)
+                competitors = new_competitors
+                oldfvs = fvs
+                for i in range(len(competitors)):  # Sort fvs into teams in a 2D array
+                    try:
+                        tteams[tteams_key[fvs[i].tag_team]].append(competitors[i])
+                    except KeyError:
+                        tteams_key[fvs[i].tag_team] = len(tteams) # tteams_key tells the index of each team in the list. the length of the list finds this for the next team in line
+                        tteams.append([competitors[i]])
+                competitors = []
+                i = -1
+                for tt in tteams:  # Convert 2D array into 1D array of dummies and reorder fight versions to be along with teams so they line up again when unwrapped later.
+                    averageTTRank = 0
+                    for member in tt:
+                        i += 1
+                        averageTTRank += member.robot.ranking
+                    averageTTRank /= len(tt)
+                    competitors.append(Version())
+                    competitors[-1].robot = Robot()
+                    competitors[-1].robot.ranking = averageTTRank
+                    newfvs.append(Fight_Version())
+                    newfvs[-1].won = fvs[i].won
+                fvs = newfvs
+
+            numWinners = sum([fv.won for fv in fvs])
+
+
+            # Rank Calculation
+            if len(competitors) == 2:
+                q1 = 10 ** (competitors[0].robot.ranking / 400)
+                q2 = 10 ** (competitors[1].robot.ranking / 400)
+                expected1 = q1 / (q1 + q2)
+                if numWinners == 0:
+                    score1 = 0.5
+                elif fvs[0].won == 1:
+                    score1 = 1
+                else:
+                    score1 = 0
+                change = K * (score1 - expected1)
+                fvs[0].ranking_change = change
+                fvs[1].ranking_change = -change
+            else:
+                # Take an amount of points for a loss/draw against the average of the group, divided by the number of
+                # robots off each robot and then add fair share of that back to the winners/everyone. Makes it a low
+                # stakes loss, but still a win equal to a normal fight if you're the only winner of the rumble
+                averageRank = 0
+                for competitor in competitors:
+                    averageRank += competitor.robot.ranking / len(competitors)
+                averageQ = 10 ** (averageRank / 400)
+                pool = 0
+                for i in range(len(competitors)):
+                    q = 10 ** (competitors[i].robot.ranking / 400)
+                    averageExpected = averageQ / (averageQ + q)
+                    if self.method == "DR":  # Some elo here may get lost on the floor or gained due to floating points
+                        change = (K * (0.5 - averageExpected)) / len(competitors)
+                    else:
+                        change = (K * (1 - averageExpected)) / len(competitors)
+                        pool += change
+                    fvs[i].ranking_change = -change
+
+                for i in range(len(competitors)):  # Distribute this based on amount of elo maybe
+                    if fvs[i].won == 1:
+                        fvs[i].ranking_change += pool / numWinners
+
+            #Post Processing
+            if tt_fight_flag:
+                #Convert data from dummy fvs back onto the real fvs and unwrap the tteams 2D array back to a competitors 1D array
+                unwraped_competitors = []
+                k = 0
+                for i in range(len(tteams)):
+                    for j in range(len(tteams[i])):
+                        unwraped_competitors.append(tteams[i][j])
+                        oldfvs[k].ranking_change = fvs[i].ranking_change / len(tteams[i])
+                        k += 1
+                fvs = oldfvs
+                competitors = unwraped_competitors
+
+            for i in range(len(competitors)): # Apply ranking change to robots.
+                competitors[i].robot.ranking += fvs[i].ranking_change
+
+        #Sportsman and plastic can gain wins but not rank
+        if len(competitors) == 2 and sum([fv.won for fv in fvs]) == 1 and self.fight_type in ["FC", "NS", "SP", "PL"]:
+            for i in [0,1]:
+                if fvs[i].won:
+                    competitors[i].robot.wins += 1
+                else:
+                    competitors[i].robot.losses += 1
+
+        if commit:
+            robs = [competitor.robot for competitor in competitors]
+            Robot.objects.bulk_update(robs, ["ranking", "wins", "losses"])
+            Fight_Version.objects.bulk_update(fvs, ["ranking_change"])
+
+        return [fvs, competitors]
+
     def format_external_media(self):  # TODO: Youtube Shorts
         if re.match("(https?://)?(www\.)?youtu\.?be",
                     self.external_media) is not None and "/embed/" not in self.external_media:

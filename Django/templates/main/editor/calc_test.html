@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="main-content">
+    <h1>Fight Calculation Testing Page</h1>
+    <h2>{{results|linebreaks}}</h2>
+    <form method="get">
+        <button class="editor-link" name="test" value="regular">Test 1v1 Fight</button>
+        <button class="editor-link" name="test" value="rumble">Test Melee</button>
+        <button class="editor-link" name="test" value="big_rumble">Test Large Rumble</button>
+        <button class="editor-link" name="test" value="annihilator">Test One-Loser Rumble</button>
+        <button class="editor-link" name="test" value="tag_team">Test Tag Team Fight</button>
+        <button class="editor-link" name="test" value="unbalanced_tag_team">Test Unequal Tag Team Fight</button>
+    </form>
+
+</div>
+{%endblock%}

@@ -129,16 +129,11 @@ class RobotForm(forms.ModelForm):
         return slug
 
     def save(self, commit=True):
-<<<<<<< HEAD
-        rob = super().save()
-        rob.slugify()
-=======
         rob = super().save(commit=False)
         if not rob.slug:
             rob.slug = rob.slugify()
         if commit:
             rob.save()
->>>>>>> main
 
 
 class VersionForm(forms.ModelForm):

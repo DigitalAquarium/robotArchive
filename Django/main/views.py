@@ -1963,77 +1963,113 @@ def futures_features_view(request):
 def ranking_system_view(request):
     pass
 
+def calc_test(request):
+    test_type = request.GET.get("test") or ""
+    results_text = "Before: \n"
+    if test_type == "tag_team":
+        test_fight = Fight.objects.get(pk=1791)
+    if test_type == "regular":
+        test_fight = Fight.objects.get(pk=2000) # Hypno-Disc vs Bigger Brother
+    if test_type == "rumble":
+        test_fight = Fight.objects.get(pk=1991)  # Wild Thing vs S3 vs Spawn Again
+    if test_type == "big_rumble":
+        test_fight = Fight.objects.get(pk=1358)  # Battlebots 3.0 Lightweight Royal Rumble
+    if test_type == "annihilator":
+        test_fight = Fight.objects.get(pk=985)  # Northern Annihilator Round 1
+    if test_type == "unbalanced_tag_team":
+        test_fight = Fight.objects.get(pk=7057)  # Stinger vs Kan Opener & Thz
+
+    if test_type != "":
+        for fv in test_fight.fight_version_set.all():
+            results_text +=str(fv.version) + " " + str(fv.version.robot.ranking) + "\n"
+        results_text += "\n"
+
+        results = test_fight.new_calculate(commit=False)
+
+        results_text += "After: \n"
+        for i in range(len(results[0])):
+            results_text += str(results[1][i]) + " " + str(results[1][i].robot.ranking) + " Change " + str(results[0][i].ranking_change) + "\n"
+
+    return render(request, "main/editor/calc_test.html", {"results":results_text})
 
 def recalc_all(request):
-    def save_contest(contest_cache):
-        vers_up = []
-        robs_up = []
-        print("updating robots")
-        for reg in contest_cache.registration_set.all():
-            if reg.version.update_fought_range(contest_cache, False):
-                vers_up.append(reg.version)
-                robs_up.append(reg.version.robot)
-        Version.objects.bulk_update(vers_up, ["first_fought", "last_fought"])
-        Robot.objects.bulk_update(robs_up, ["first_fought", "last_fought"])
-        robs_up = []
-        for reg in contest_cache.registration_set.all():
-            robs_up.append(Leaderboard.update_robot_weight_class(reg.version.robot, commit=False,
-                                                                 year=contest_cache.end_date.year))
-        Robot.objects.bulk_update(robs_up, ["lb_weight_class"])
+    def save_year(year, version_dictionary, robot_dictionary, fvs):
+        print("Saving data for year: " + str(year))
+        vers = [v for v in version_dictionary.values()]
+        robs = [r for r in robot_dictionary.values()]
+        Version.objects.bulk_update(vers, ["first_fought", "last_fought"])
+        for r in robs:
+            if r.slug == "wipeout-number-2":
+                breakpoint()
+            Leaderboard.update_robot_weight_class(r, commit=False, year=year)
+        Robot.objects.bulk_update(robs, ["ranking", "wins", "losses", "first_fought", "last_fought", "lb_weight_class"])
+        Fight_Version.objects.bulk_update(fvs, ["ranking_change"])
+
+        '''for rob in robs: # Test to ensure that the sum of rank changes adds up to the same as the robot's ranking
+            thingy = Fight_Version.objects.filter(version__robot=rob,
+                                                  fight__contest__end_date__lte=datetime.datetime(year,12,31))
+            calculated_rank = 1000 + sum([x.ranking_change for x in thingy])
+            if abs(rob.ranking - calculated_rank) > 0.0001:
+                print(rob)
+                print(rob.ranking)
+                print(thingy)
+                print(1000 + sum([x.ranking_change for x in thingy]))
+                raise IndexError'''
+
+        print("Creating Leaderboard for year: " + str(year))
+        Leaderboard.update_all(year)
+
 
     # Need top update more robots than currently doing to add the X to them
     Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X", first_fought=None,
                                last_fought=None)
     Version.objects.all().update(first_fought=None, last_fought=None)
+    Fight_Version.objects.all().update(ranking_change=0)
 
     fights = Fight.objects.all().order_by("contest__start_date", "contest__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")
-    contest_cache = None
-    fvs = []
     version_dictionary = {}
+    robot_dictionary = {}
+    fvs = []
+    contest_cache = None
     for fight in fights:
         if contest_cache != fight.contest:
             if contest_cache is not None:
-                #print("updating robots")
-                #for reg in contest_cache.registration_set.all():
-                #    Leaderboard.update_robot_weight_class(reg.version.robot, year=contest_cache.event.end_date.year)
-                if contest_cache.event.end_date.year != fight.contest.event.end_date.year:
-                    if fight.contest.event.end_date.year == 1998:
-                        return
-                    #breakpoint()
-                    print("~~~~~~~~~~~~~~~~~~~~~~~~~~Saving year " + str(contest_cache.event.end_date.year)+"~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                    with transaction.atomic():
-                        for fv in fvs:
-                            fv.save()
-                        for v in version_dictionary.values():
-                            v.save()
-                            v.robot.save()
+                for ver in Version.objects.filter(fight__contest=contest_cache):
+                    ver = version_dictionary[ver.id]
+                    ver.update_fought_range(contest_cache, False)
 
 
-                    print("updating leaderboard")
-                    for v in version_dictionary.values():
-                        Leaderboard.update_robot_weight_class(v.robot, year=contest_cache.event.end_date.year)
-                    Leaderboard.update_all(contest_cache.event.end_date.year)
-                    fvs = []
-                    version_dictionary = {}
-    for fight in fights:
-        if contest_cache != fight.contest:
-            if contest_cache is not None:
-                save_contest(contest_cache)
                 if contest_cache.end_date.year != fight.contest.end_date.year:
-                    print("Creating Leaderboard for year: " + str(contest_cache.end_date.year))
-                    Leaderboard.update_all(contest_cache.end_date.year)
-        result = fight.calculate(False,version_dictionary)
+                    save_year(contest_cache.end_date.year,version_dictionary,robot_dictionary,fvs)
+                    version_dictionary = {}
+                    robot_dictionary = {}
+                    fvs = []
+            contest_cache = fight.contest
+            print("Saving:", contest_cache, fight.contest.event)
+
+        competitors = []
+        for fv in fight.fight_version_set.all():
+            #if fv.version.robot.id == 30:
+            #    breakpoint()
+            if fv.version.id not in version_dictionary.keys():
+                version_dictionary[fv.version.id] = fv.version
+                if fv.version.robot.id not in robot_dictionary.keys():
+                    robot_dictionary[fv.version.robot.id] = fv.version.robot
+                else:
+                    version_dictionary[fv.version.id].robot = robot_dictionary[fv.version.robot.id]
+            competitors.append(version_dictionary[fv.version.id])
+
+        result = fight.new_calculate(competitors)
         fvs += result[0]
-        version_dictionary = result[1]
 
     print("Saving Final Batch")
-    with transaction.atomic(): # Save the leftovers
-        for fv in fvs:
-            fv.save()
-            fv.version.save()
-            fv.version.robot.save()
+    save_year(fight.contest.end_date.year,version_dictionary,robot_dictionary,fvs)
     print("Done!")
+    thingy = Fight_Version.objects.filter(version__robot__slug="tornado",)
+    calculated_rank = 1000 + sum([x.ranking_change for x in thingy])
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~Tornado " + str(thingy[0].version.robot.ranking) + " " + str(
+            calculated_rank) + "~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     return render(request, "main/credits.html", {})
 
 
