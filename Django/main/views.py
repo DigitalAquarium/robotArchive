@@ -1978,6 +1978,23 @@ def calc_test(request):
         test_fight = Fight.objects.get(pk=985)  # Northern Annihilator Round 1
     if test_type == "unbalanced_tag_team":
         test_fight = Fight.objects.get(pk=7057)  # Stinger vs Kan Opener & Thz
+    if test_type == "unbalanced_tag_team_2":
+        test_fight = Fight.objects.get(pk=4057)
+    if test_type[:3] == "old":
+        if test_type == "old_tag_team":
+            test_fight = Fight.objects.get(pk=1791)
+        if test_type == "old_unbalanced_tag_team":
+            test_fight = Fight.objects.get(pk=7057)  # Stinger vs Kan Opener & Thz
+        if test_type == "old_unbalanced_tag_team_2":
+            test_fight = Fight.objects.get(pk=4057)
+        for fv in test_fight.fight_version_set.all():
+            results_text +=str(fv.version) + " " + str(fv.version.robot.ranking) + "\n"
+        results_text += "\n"
+        results = test_fight.old_calculate(commit=False)
+        results_text += "After: \n"
+        for result in results:
+            results_text += str(result.version.robot) + " " + str(result.version.robot.ranking) + " Change " + str(result.ranking_change) + "\n"
+        return render(request, "main/editor/calc_test.html", {"fight":test_fight,"test":test_type,"results":results_text})
 
     if test_type != "":
         for fv in test_fight.fight_version_set.all():
@@ -1990,7 +2007,7 @@ def calc_test(request):
         for i in range(len(results[0])):
             results_text += str(results[1][i]) + " " + str(results[1][i].robot.ranking) + " Change " + str(results[0][i].ranking_change) + "\n"
 
-    return render(request, "main/editor/calc_test.html", {"results":results_text})
+    return render(request, "main/editor/calc_test.html", {"fight":test_fight,"test":test_type,"results":results_text})
 
 def recalc_all(request):
     def save_year(year, version_dictionary, robot_dictionary, fvs):
@@ -1999,8 +2016,6 @@ def recalc_all(request):
         robs = [r for r in robot_dictionary.values()]
         Version.objects.bulk_update(vers, ["first_fought", "last_fought"])
         for r in robs:
-            if r.slug == "wipeout-number-2":
-                breakpoint()
             Leaderboard.update_robot_weight_class(r, commit=False, year=year)
         Robot.objects.bulk_update(robs, ["ranking", "wins", "losses", "first_fought", "last_fought", "lb_weight_class"])
         Fight_Version.objects.bulk_update(fvs, ["ranking_change"])
@@ -2066,10 +2081,6 @@ def recalc_all(request):
     print("Saving Final Batch")
     save_year(fight.contest.end_date.year,version_dictionary,robot_dictionary,fvs)
     print("Done!")
-    thingy = Fight_Version.objects.filter(version__robot__slug="tornado",)
-    calculated_rank = 1000 + sum([x.ranking_change for x in thingy])
-    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~Tornado " + str(thingy[0].version.robot.ranking) + " " + str(
-            calculated_rank) + "~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     return render(request, "main/credits.html", {})
 
 

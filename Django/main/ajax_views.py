@@ -25,17 +25,6 @@ def get_history(request):
     rank = 1000
     fights = [{"name": "Initial Rank", "rank": 1000, "year": None, "event_name": None, "href": None}]
     history = [1000]
-    print(1000 + sum([x.ranking_change for x in fight_versions]))
-    thingy = Fight_Version.objects.filter(version__robot=robot)
-    calculated_rank = 1000 + sum([x.ranking_change for x in thingy])
-    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~" +str(robot) + " " + str(thingy[0].version.robot.ranking) + " " + str(
-        calculated_rank) + "~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-
-    '''test_fvs = thingy.exclude(fight__fight_type__in=["FC", "NS"],fight__method__in=
-                              ["KO","DK","JD","CV","TO","OA","PT","DR","NM","OT"])
-    print(len(thingy),len(fight_versions))
-    for fv in test_fvs:
-        print(fv.fight,fv.fight.fight_type,fv.ranking_change)'''
     for fv in fight_versions:
         rank += fv.ranking_change
 

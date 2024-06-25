@@ -676,37 +676,23 @@ class Fight(models.Model):
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
 
-    def calculate(self, commit=True, v_dict=None):
-        #if self.id == 981:
-        #    breakpoint()
+    def old_calculate(self, commit=True):
         if self.fight_type == "NC":
-            return [[], v_dict]
+            return
         K = 25
         if self.fight_type == "NS":
-            # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a spinner
-            # and those robots typically do more fights anyway due to being less destroyed.
+            # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a
+            # spinner and those robots typically do more fights anyway due to being less destroyed.
             K /= 2
         fvs = self.fight_version_set.all()
         numBots = len(fvs)  # Must be len and not count because lazy loading causes the robot to not save otherwise
         numWinners = fvs.filter(won=True).count()
-
-        if not v_dict:
-            v_dict = {}
-        for fv in fvs:
-            if fv.version.id not in v_dict:
-                v_dict[fv.version.id] = fv.version
-        # print(v_dict)
-
-        startverif = []
-        for fv in fvs:
-            startverif.append(v_dict[fv.version.id].robot.ranking)
-
         if (self.fight_type == "FC" or self.fight_type == "NS") and (numWinners > 0 or self.method == "DR"):
             tag = fvs.filter(tag_team__gt=0).count() > 1
 
             if numBots == 2:
-                q1 = 10 ** (v_dict[fvs[0].version.id].robot.ranking / 400)
-                q2 = 10 ** (v_dict[fvs[1].version.id].robot.ranking / 400)
+                q1 = 10 ** (fvs[0].version.robot.ranking / 400)
+                q2 = 10 ** (fvs[1].version.robot.ranking / 400)
                 expected1 = q1 / (q1 + q2)
                 if fvs[0].won:
                     score1 = 1
@@ -715,9 +701,9 @@ class Fight(models.Model):
                 else:
                     score1 = 0
                 change = K * (score1 - expected1)
-                v_dict[fvs[0].version.id].robot.ranking += change
+                fvs[0].version.robot.ranking += change
                 fvs[0].ranking_change = change
-                v_dict[fvs[1].version.id].robot.ranking -= change
+                fvs[1].version.robot.ranking -= change
                 fvs[1].ranking_change = -change
 
             elif not tag:
@@ -726,11 +712,11 @@ class Fight(models.Model):
                 # stakes loss, but still a win equal to a normal fight if you're the only winner of the rumble
                 averageRank = 0
                 for fv in fvs:
-                    averageRank += v_dict[fv.version.id].robot.ranking / numBots
+                    averageRank += fv.version.robot.ranking / numBots
                 averageQ = 10 ** (averageRank / 400)
                 pool = 0
                 for i in range(numBots):
-                    q = 10 ** (v_dict[fvs[i].version.id].robot.ranking / 400)
+                    q = 10 ** (fvs[i].version.robot.ranking / 400)
                     averageExpected = averageQ / (averageQ + q)
                     if self.method == "DR":  # Some elo here may get lost on the floor or gained due to floating points
                         change = (K * (0.5 - averageExpected)) / numBots
@@ -742,7 +728,7 @@ class Fight(models.Model):
 
                 for i in range(numBots):  # Distribute this based on amount of elo maybe
                     if fvs[i].won == 1:
-                        v_dict[fvs[i].version.id].robot.ranking += pool / numWinners
+                        fvs[i].version.robot.ranking += pool / numWinners
                         fvs[i].ranking_change += pool / numWinners
 
             else:
@@ -759,7 +745,7 @@ class Fight(models.Model):
                 for tt in tteams:
                     tavg = 0
                     for fv in tt:
-                        tavg += v_dict[fv.version.id].robot.ranking
+                        tavg += fv.version.robot.ranking
                     tavg /= len(tteams)
                     tteamsAvg.append(tavg)
 
@@ -776,10 +762,10 @@ class Fight(models.Model):
                     change = K * (score1 - expected1)
                     for fv in tteams[0]:
                         fv.ranking_change = change / len(tteams[0])
-                        v_dict[fv.version.id].robot.ranking += change / len(tteams[0])
+                        fv.version.robot.ranking += change / len(tteams[0])
                     for fv in tteams[1]:
                         fv.ranking_change = -change / len(tteams[1])
-                        v_dict[fv.version.id].robot.ranking -= change / len(tteams[1])
+                        fv.version.robot.ranking -= change / len(tteams[1])
 
                 else:
                     averageRank = 0
@@ -796,56 +782,35 @@ class Fight(models.Model):
                             change = (K * (1 - averageExpected)) / len(tteams)
                             pool += change
                         for fv in tteams[i]:
-                            v_dict[fv.version.id].robot.ranking -= change
+                            fv.version.robot.ranking -= change
                             fv.ranking_change = -change
 
                     for i in range(len(tteams)):
                         if fvs[i].won == 1:
-                            v_dict[fvs[i].version.id].robot.ranking += pool / numWinners
+                            fvs[i].version.robot.ranking += pool / numWinners
                             fvs[i].ranking_change += pool / numWinners
-        else:
-            for fv in fvs:
-                fv.ranking_change = 0
 
         if numBots == 2 and numWinners == 1 and self.fight_type in ["FC", "NS", "SP", "PL"]:
             for fv in fvs:
                 if fv.won:
-                    v_dict[fv.version.id].robot.wins += 1
+                    fv.version.robot.wins += 1
                 else:
-                    v_dict[fv.version.id].robot.losses += 1
+                    fv.version.robot.losses += 1
 
         rank_changed = False
         for fv in fvs:
-            if not v_dict[fv.version.id].first_fought or v_dict[fv.version.id].first_fought > fv.fight.contest.event.start_date:
-                v_dict[fv.version.id].first_fought = fv.fight.contest.event.start_date
-                vupdateFlag = True
-            if not v_dict[fv.version.id].robot.first_fought or v_dict[fv.version.id].robot.first_fought > fv.fight.contest.event.start_date:
-                v_dict[fv.version.id].robot.first_fought = fv.fight.contest.event.start_date
+            if fv.ranking_change != 0:
+                rank_changed = True
+                break
 
-            if not v_dict[fv.version.id].last_fought or v_dict[fv.version.id].last_fought < fv.fight.contest.event.end_date:
-                v_dict[fv.version.id].last_fought = fv.fight.contest.event.end_date
-                vupdateFlag = True
-            if not v_dict[fv.version.id].robot.last_fought or v_dict[fv.version.id].robot.last_fought < fv.fight.contest.event.end_date:
-                v_dict[fv.version.id].robot.last_fought = fv.fight.contest.event.end_date
-
-        #Verification
-        iterator = 0
-        for fv in fvs:
-            change = fv.ranking_change
-            start = startverif[iterator]
-            end = v_dict[fv.version.id].robot.ranking
-            startpluschange = start + change
-            if abs(abs(startpluschange)-abs(end)) > 0.05:
-                breakpoint()
-            iterator += 1
-
-        if commit:
+        if commit and rank_changed:
+            robs = []
             for fv in fvs:
-                if vupdateFlag:
-                    v_dict[fv.version.id].save()
-                v_dict[fv.version.id].robot.save()
-                fv.save()
-        return [fvs, v_dict]
+                robs.append(fv.version.robot)
+            Robot.objects.bulk_update(robs, ["ranking", "wins", "losses"])
+            Fight_Version.objects.bulk_update(fvs, ["ranking_change"])
+
+        return fvs
 
     def new_calculate(self, competitors=[], commit=True):
         # Preprocessing
@@ -861,7 +826,7 @@ class Fight(models.Model):
         if len(competitors) == 0:
             competitors = [fv.version for fv in fvs]
         else:
-            commit=False
+            commit = False
 
         # Skip Rank Calculation (and tag team pre- / post-processing) if it isn't relevant
         if (self.fight_type == "FC" or self.fight_type == "NS") and (sum([fv.won for fv in fvs]) > 0 or self.method == "DR"):
@@ -904,7 +869,7 @@ class Fight(models.Model):
             numWinners = sum([fv.won for fv in fvs])
 
 
-            # Rank Calculation
+            # ~~~~~~~~~~~~~~~~~~~Rank Calculation~~~~~~~~~~~~~~~~~~~~~~~~~~
             if len(competitors) == 2:
                 q1 = 10 ** (competitors[0].robot.ranking / 400)
                 q2 = 10 ** (competitors[1].robot.ranking / 400)
@@ -919,15 +884,17 @@ class Fight(models.Model):
                 fvs[0].ranking_change = change
                 fvs[1].ranking_change = -change
             else:
-                # Take an amount of points for a loss/draw against the average of the group, divided by the number of
+                # Take an amount of points for a loss/draw against the average of the group (minus yourself), divided by the number of
                 # robots off each robot and then add fair share of that back to the winners/everyone. Makes it a low
                 # stakes loss, but still a win equal to a normal fight if you're the only winner of the rumble
-                averageRank = 0
-                for competitor in competitors:
-                    averageRank += competitor.robot.ranking / len(competitors)
-                averageQ = 10 ** (averageRank / 400)
                 pool = 0
                 for i in range(len(competitors)):
+                    averageRank = 0
+                    for competitor in competitors:
+                        if competitor != competitors[i]: # Don't Count yourself
+                            averageRank += competitor.robot.ranking / (len(competitors) - 1)
+                    averageQ = 10 ** (averageRank / 400)
+
                     q = 10 ** (competitors[i].robot.ranking / 400)
                     averageExpected = averageQ / (averageQ + q)
                     if self.method == "DR":  # Some elo here may get lost on the floor or gained due to floating points
@@ -938,10 +905,10 @@ class Fight(models.Model):
                     fvs[i].ranking_change = -change
 
                 for i in range(len(competitors)):  # Distribute this based on amount of elo maybe
-                    if fvs[i].won == 1:
+                    if fvs[i].won == 1 or self.method == "DR":
                         fvs[i].ranking_change += pool / numWinners
 
-            #Post Processing
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~Post Processing~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if tt_fight_flag:
                 #Convert data from dummy fvs back onto the real fvs and unwrap the tteams 2D array back to a competitors 1D array
                 unwraped_competitors = []
