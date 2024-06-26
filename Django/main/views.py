@@ -1990,7 +1990,7 @@ def calc_test(request):
             results_text +=str(fv.version) + " " + str(fv.version.robot.ranking) + "\n"
         results_text += "\n"
 
-        results = test_fight.new_calculate(commit=False)
+        results = test_fight.calculate(commit=False)
 
         results_text += "After: \n"
         for i in range(len(results[0])):
