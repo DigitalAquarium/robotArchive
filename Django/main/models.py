@@ -203,6 +203,16 @@ class Weight_Class(models.Model):
         return round(self.weight_grams / 453.59237)
 
     def find_lb_class(self):
+        #Cover for the early weight classes
+        if self.id in [7,8]:
+            return "F"
+        elif self.id in [4,12]:
+            return "L"
+        elif self.id in [2,6,11]:
+            return "M"
+        elif self.id in [3,5,9]:
+            return "H"
+
         grams = self.weight_grams
         # [2,3,4,5,6,7,8,9]
         nearest_weight_class = min(Weight_Class.LEADERBOARD_VALID_GRAMS, key=lambda x: abs(x - grams))
@@ -676,143 +686,7 @@ class Fight(models.Model):
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
 
-    def old_calculate(self, commit=True):
-        if self.fight_type == "NC":
-            return
-        K = 25
-        if self.fight_type == "NS":
-            # Penalty for Non Spinner fights, Iron Awe & co can't be the best ranked if they can't take a shot from a
-            # spinner and those robots typically do more fights anyway due to being less destroyed.
-            K /= 2
-        fvs = self.fight_version_set.all()
-        numBots = len(fvs)  # Must be len and not count because lazy loading causes the robot to not save otherwise
-        numWinners = fvs.filter(won=True).count()
-        if (self.fight_type == "FC" or self.fight_type == "NS") and (numWinners > 0 or self.method == "DR"):
-            tag = fvs.filter(tag_team__gt=0).count() > 1
-
-            if numBots == 2:
-                q1 = 10 ** (fvs[0].version.robot.ranking / 400)
-                q2 = 10 ** (fvs[1].version.robot.ranking / 400)
-                expected1 = q1 / (q1 + q2)
-                if fvs[0].won:
-                    score1 = 1
-                elif numWinners == 0:
-                    score1 = 0.5
-                else:
-                    score1 = 0
-                change = K * (score1 - expected1)
-                fvs[0].version.robot.ranking += change
-                fvs[0].ranking_change = change
-                fvs[1].version.robot.ranking -= change
-                fvs[1].ranking_change = -change
-
-            elif not tag:
-                # Take an amount of points for a loss/draw against the average of the group, divided by the number of
-                # robots off each robot and then add fair share of that back to the winners/everyone. Makes it a low
-                # stakes loss, but still a win equal to a normal fight if you're the only winner of the rumble
-                averageRank = 0
-                for fv in fvs:
-                    averageRank += fv.version.robot.ranking / numBots
-                averageQ = 10 ** (averageRank / 400)
-                pool = 0
-                for i in range(numBots):
-                    q = 10 ** (fvs[i].version.robot.ranking / 400)
-                    averageExpected = averageQ / (averageQ + q)
-                    if self.method == "DR":  # Some elo here may get lost on the floor or gained due to floating points
-                        change = (K * (0.5 - averageExpected)) / numBots
-                    else:
-                        change = (K * (1 - averageExpected)) / numBots
-                        pool += change
-                    fvs[i].version.robot.ranking -= change
-                    fvs[i].ranking_change = -change
-
-                for i in range(numBots):  # Distribute this based on amount of elo maybe
-                    if fvs[i].won == 1:
-                        fvs[i].version.robot.ranking += pool / numWinners
-                        fvs[i].ranking_change += pool / numWinners
-
-            else:
-                tteams = []
-                tteams_key = {}
-                for i in range(numBots):  # Sort fvs into teams in a 2D array
-                    try:
-                        tteams[tteams_key[fvs[i].tag_team]].append(fvs[i])
-                    except KeyError:
-                        tteams_key[fvs[i].tag_team] = len(tteams)
-                        tteams.append([fvs[i]])
-
-                tteamsAvg = []
-                for tt in tteams:
-                    tavg = 0
-                    for fv in tt:
-                        tavg += fv.version.robot.ranking
-                    tavg /= len(tteams)
-                    tteamsAvg.append(tavg)
-
-                if len(tteams) == 2:
-                    q1 = 10 ** (tteamsAvg[0] / 400)
-                    q2 = 10 ** (tteamsAvg[1] / 400)
-                    expected1 = q1 / (q1 + q2)
-                    if tteams[0][0].won:
-                        score1 = 1
-                    elif numWinners == 0:
-                        score1 = 0.5
-                    else:
-                        score1 = 0
-                    change = K * (score1 - expected1)
-                    for fv in tteams[0]:
-                        fv.ranking_change = change / len(tteams[0])
-                        fv.version.robot.ranking += change / len(tteams[0])
-                    for fv in tteams[1]:
-                        fv.ranking_change = -change / len(tteams[1])
-                        fv.version.robot.ranking -= change / len(tteams[1])
-
-                else:
-                    averageRank = 0
-                    for i in range(len(tteams)):
-                        averageRank += tteamsAvg[i] / numBots
-                    averageQ = 10 ** (averageRank / 400)
-                    pool = 0
-                    for i in range(len(tteams)):
-                        q = 10 ** (tteamsAvg[i] / 400)
-                        averageExpected = averageQ / (averageQ + q)
-                        if self.method == "DR":
-                            change = (K * (0.5 - averageExpected)) / len(tteams)
-                        else:
-                            change = (K * (1 - averageExpected)) / len(tteams)
-                            pool += change
-                        for fv in tteams[i]:
-                            fv.version.robot.ranking -= change
-                            fv.ranking_change = -change
-
-                    for i in range(len(tteams)):
-                        if fvs[i].won == 1:
-                            fvs[i].version.robot.ranking += pool / numWinners
-                            fvs[i].ranking_change += pool / numWinners
-
-        if numBots == 2 and numWinners == 1 and self.fight_type in ["FC", "NS", "SP", "PL"]:
-            for fv in fvs:
-                if fv.won:
-                    fv.version.robot.wins += 1
-                else:
-                    fv.version.robot.losses += 1
-
-        rank_changed = False
-        for fv in fvs:
-            if fv.ranking_change != 0:
-                rank_changed = True
-                break
-
-        if commit and rank_changed:
-            robs = []
-            for fv in fvs:
-                robs.append(fv.version.robot)
-            Robot.objects.bulk_update(robs, ["ranking", "wins", "losses"])
-            Fight_Version.objects.bulk_update(fvs, ["ranking_change"])
-
-        return fvs
-
-    def new_calculate(self, competitors=[], commit=True):
+    def calculate(self, competitors=[], commit=True):
         # Preprocessing
         fvs = self.fight_version_set.all()
         if self.fight_type == "NC":
@@ -905,8 +779,10 @@ class Fight(models.Model):
                     fvs[i].ranking_change = -change
 
                 for i in range(len(competitors)):  # Distribute this based on amount of elo maybe
-                    if fvs[i].won == 1 or self.method == "DR":
+                    if fvs[i].won == 1:
                         fvs[i].ranking_change += pool / numWinners
+                    elif self.method == "DR":
+                        fvs[i].ranking_change += pool / len(competitors)
 
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~Post Processing~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if tt_fight_flag:
@@ -1232,6 +1108,7 @@ class Leaderboard(models.Model):
     version = models.ForeignKey(Version, on_delete=models.CASCADE)
 
     # lb.robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")
+    CUTOFF_YEARS = 3
 
     @staticmethod
     def update_class(wc, current_year=None):
@@ -1248,8 +1125,8 @@ class Leaderboard(models.Model):
         else:
             date = datetime.date(current_year, 12, 31)
 
-        five_years_ago = date - relativedelta(years=5)
-        Robot.objects.filter(last_fought__lte=five_years_ago).exclude(lb_weight_class="X").update(lb_weight_class="X")
+        cutoff_date = date - relativedelta(years=Leaderboard.CUTOFF_YEARS)
+        Robot.objects.filter(last_fought__lte=cutoff_date).exclude(lb_weight_class="X").update(lb_weight_class="X")
 
         top_100 = Robot.objects.filter(lb_weight_class=wc).order_by("-ranking")[:100]
         if current_year:
@@ -1306,12 +1183,12 @@ class Leaderboard(models.Model):
                     update_list.append(entry)
             i += 1
 
-        for entry in previous_year:
+        '''for entry in previous_year:
             if entry.id not in still_here:
                 if Leaderboard.objects.filter(year=current_year, robot=entry.robot).count() > 0:
                     # reason = "Switched Weight Class"
                     diff = -103
-                elif entry.robot.version_set.filter(last_fought__gte=five_years_ago).count() == 0:
+                elif entry.robot.version_set.filter(last_fought__gte=cutoff_date).count() == 0:
                     # reason = "Too Old: Timed Out"
                     diff = -102
                 else:
@@ -1328,7 +1205,7 @@ class Leaderboard(models.Model):
                         entry.robot.version_set.filter(first_fought__year__lte=current_year).order_by("-last_fought")[
                             0]
                     new_entry.difference = diff
-                    new_entry.save()
+                    new_entry.save()'''
 
         for entry in lb.filter(position=101):
             if entry.robot in lb.filter(position__lte=100):
@@ -1357,9 +1234,9 @@ class Leaderboard(models.Model):
         else:
             date = datetime.date(year, 12, 31)
 
-        five_years_ago = date - relativedelta(years=5)
+        date_cutoff = date - relativedelta(years=Leaderboard.CUTOFF_YEARS)
 
-        if not robot.last_fought or robot.last_fought < five_years_ago:
+        if not robot.last_fought or robot.last_fought < date_cutoff:
             robot.lb_weight_class = "X"
             if commit: robot.save()
             return robot
@@ -1384,13 +1261,13 @@ class Leaderboard(models.Model):
 
             # Count number of fights each weight class has to determine which it should be a part of. not perfect if the same version goes to events more than 5 years ago
             fights = {"X": 0}
-            for version in robot.version_set.filter(first_fought__lte=date, last_fought__gte=five_years_ago):
-                if not version.last_fought or version.last_fought < five_years_ago:
+            for version in robot.version_set.filter(first_fought__lte=date, last_fought__gte=date_cutoff):
+                if not version.last_fought or version.last_fought < date_cutoff:
                     continue
                 wc = version.weight_class.find_lb_class()
                 if wc not in fights.keys():
                     fights[wc] = 0
-                fights[wc] += version.fight_set.count()
+                fights[wc] += version.fight_set.filter(fight_type__in=["NS","FC"],contest__end_date__lte=date).count()
             actual_weight_class = "X"
             for key in fights:
                 if fights[key] >= fights[actual_weight_class]:

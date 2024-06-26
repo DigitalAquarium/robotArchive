@@ -1966,6 +1966,10 @@ def ranking_system_view(request):
 def calc_test(request):
     test_type = request.GET.get("test") or ""
     results_text = "Before: \n"
+    test_fight = "N/A"
+    if test_type == "recalculate":
+        recalc_all()
+        render(request, "main/editor/calc_test.html", {"fight": "N/A", "test": test_type, "results": "Recalculated Ranks!"})
     if test_type == "tag_team":
         test_fight = Fight.objects.get(pk=1791)
     if test_type == "regular":
@@ -1980,21 +1984,6 @@ def calc_test(request):
         test_fight = Fight.objects.get(pk=7057)  # Stinger vs Kan Opener & Thz
     if test_type == "unbalanced_tag_team_2":
         test_fight = Fight.objects.get(pk=4057)
-    if test_type[:3] == "old":
-        if test_type == "old_tag_team":
-            test_fight = Fight.objects.get(pk=1791)
-        if test_type == "old_unbalanced_tag_team":
-            test_fight = Fight.objects.get(pk=7057)  # Stinger vs Kan Opener & Thz
-        if test_type == "old_unbalanced_tag_team_2":
-            test_fight = Fight.objects.get(pk=4057)
-        for fv in test_fight.fight_version_set.all():
-            results_text +=str(fv.version) + " " + str(fv.version.robot.ranking) + "\n"
-        results_text += "\n"
-        results = test_fight.old_calculate(commit=False)
-        results_text += "After: \n"
-        for result in results:
-            results_text += str(result.version.robot) + " " + str(result.version.robot.ranking) + " Change " + str(result.ranking_change) + "\n"
-        return render(request, "main/editor/calc_test.html", {"fight":test_fight,"test":test_type,"results":results_text})
 
     if test_type != "":
         for fv in test_fight.fight_version_set.all():
@@ -2009,7 +1998,7 @@ def calc_test(request):
 
     return render(request, "main/editor/calc_test.html", {"fight":test_fight,"test":test_type,"results":results_text})
 
-def recalc_all(request):
+def recalc_all():
     def save_year(year, version_dictionary, robot_dictionary, fvs):
         print("Saving data for year: " + str(year))
         vers = [v for v in version_dictionary.values()]
@@ -2075,7 +2064,7 @@ def recalc_all(request):
                     version_dictionary[fv.version.id].robot = robot_dictionary[fv.version.robot.id]
             competitors.append(version_dictionary[fv.version.id])
 
-        result = fight.new_calculate(competitors)
+        result = fight.calculate(competitors)
         fvs += result[0]
 
     print("Saving Final Batch")
