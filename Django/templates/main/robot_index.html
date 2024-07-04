@@ -3,45 +3,51 @@
 {%load bonus_filters%}
 {% block head %}
     <link rel="stylesheet" href="{% static 'style/robot_index.css' %}" />
+    <link rel="stylesheet" href="{% static 'style/index_view.css' %}"/>
+    <script src="{% static 'scripts/showhide.js' %}"></script>
 {% endblock %}
 
 {% block content %}
+
+    <div class="main-content">
     <section class="search-params">
-        <form class="search-form" method="get"
-              style="display:block; padding-left: 10%; padding-right: 10%; text-align: center" method="get"
-              action="{% url 'main:robotIndex' %}">
-            <label> Search Term:
-                <input name="name" type="text" value={{ name }}>
-            </label>
-            <label> Country:
+        <form class="search-form" method="get" action="{% url 'main:robotIndex' %}">
+            <div class="search-box-container">
+                <input class="search-box" name="name" type="text" value="{{ name }}"/>
+                <input class="search-button material-symbols-outlined" type="submit" value="Search"/>
+                <div id="more-options-dropdown" class="material-symbols-outlined" onclick="showHide('additional-options','more-options-dropdown')">Settings</div>
+            </div>
+            <ul id="additional-options" class="additional-options" style="display:{%if not chosen_country and not chosen_weight and not weapon %}none{%else%}block{%endif%}">
+            <li>
+                <label> Country:</label>
                 <select name="country">
                     {% for country in countries %}
                         <option value="{{ country|first }}"
                                 {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
                     {% endfor %}
                 </select>
-            </label>
-            <label> Include Territories:
+            </li>
+            <!--<label> Include Territories:
                 <input name="regions" type="checkbox" checked>
-            </label>
-            <label> Weight Class:
+            </label>-->
+            <li>
+                <label> Weight Class: </label>
                 <select name="weight">
                     {% for wc in weights %}
                         <option value="{{ wc|first }}"
                                 {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
                     {% endfor %}
                 </select>
-            </label>
+            </li>
             {% comment %}<input name="has_awards" type="checkbox" {% if has_awards %}checked{% endif %}>{% endcomment %}
-            <label>Weapon Type:
-                <input name="weapon" type="text" value={{ weapon }}>
-            </label>
-            <br>
-            <input style="margin: 0.2em" type="submit" value="Search">
+            <li>
+                <label>Weapon Type:</label>
+                <input name="weapon" type="text" value="{{ weapon }}">
+            </li>
+            </ul>
         </form>
     </section>
 
-    <div class="main-content">
         {% for robot in robot_list %}
             <div class="hrz-index-result">
                 <span class="hrz-index-image">

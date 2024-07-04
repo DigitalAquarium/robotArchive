@@ -102,25 +102,45 @@ body {
   height: 100%;
   text-decoration: none;
 }
-.navbar a {
+.nav-index-link, .nav-index-link:visited {
   display: inline-block;
   text-decoration: none;
-  border: dimgrey 2px solid;
-  height: 100%;
-  margin-inline: 0.5em;
+  border: var(--background-colour) 2px solid;
+  margin-inline: 0.25em;
   box-sizing: border-box;
+  background: var(--background-colour);
+  border-radius:1em;
+  padding-inline:0.25em;
+  color: var(--font-colour);
+  height:26px;
 }
 .navbar .navlinks {
   display: inline-block;
   float: right;
   padding-right: 2em;
 }
+.navbar .navlinks input{
+  border: none;
+  border-radius: 1em 0 0 1em;
+  padding: 0 6px 0 9px;
+  font-size: 16px;
+  width: 120px;
+  height: 26px;
+  margin-left:0.25em;
+}
 .navbar .navlinks button {
   border: none;
+  border-radius: 0 1em 1em 0;
+  background-color: var(--background-colour);
+  color: var(--text-colour);
+  height: 26px;
+  margin-right:0.25em;
+  cursor:pointer;
 }
 .navbar .navtitle {
   float: left;
 }
+
 .home-icon{
     display: inline-flex;
 }
@@ -128,7 +148,7 @@ body {
     border:none;
     font-size:1.3em;
     color: black;
-    transform: scale(1.5);
+    transform: scale(1.5) translateY(2px);
 }
 .home-icon img{
     bottom: 5px;

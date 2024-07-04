@@ -7,7 +7,7 @@
         <form class="search-form" method="get"
           action="{% url 'main:edtSelectTeam' fight_id %}">
              <label> Search Term:
-                <input name="name" type="text" value={{ name }}>
+                <input name="name" type="text" value="{{ name }}">
             </label>
             <br>
             <input type="submit" value="Search">

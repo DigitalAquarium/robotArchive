@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
 	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}"/>
     <link rel="stylesheet" href="{% static 'style/tooltip.css' %}"/>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <script src="{%static 'scripts/leaderboard.js' %}"></script>
     <script src="{%static 'scripts/tooltip.js' %}"></script>
 {% endblock %}
 
@@ -56,7 +56,7 @@
 	<div class="gridview-container grid-width-3">
 		{% for entry in top_three %}
             <div class="gridview-square {% if forloop.counter == 1 %} mobile-hide{%endif%}">
-				<div class="gridview-title">
+				<div id="row-{{entry.robot.slug}}" class="gridview-title">
                     <img class="big-trophy" {% if forloop.counter == 1 %} src="{% static 'awards/trophy_gold.png' %}" alt="Gold Trophy" {% elif forloop.counter == 2 %} src="{% static 'awards/trophy_silver.png' %}" alt="Silver Trophy"{%else%} src="{% static 'awards/trophy_bronze.png' %}" alt="Bronze Trophy"{%endif%} >
                     <a href="{% url 'main:versionDetail' entry.version.id %}">{{ entry.version }}</a>{% include "snippets/leaderboard_difference_icon.html" with lb=entry first_year=first_year %}
                 </div>
@@ -87,8 +87,8 @@
             </thead>
             <tbody>
             {% for lb in robot_list %}
+                {% if forloop.counter > 3 %}
                 <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
-					{% if forloop.counter > 3 %}
                     <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
                     <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="{{lb.robot.country}} Flag"></td>
@@ -107,8 +107,8 @@
                     <td class="mobile-hide" style="text-align: center">{{ lb.robot.losses }}</td>
                     <td class="mobile-hide" style="text-align: center">{{ lb.robot.awards|length }}</td>
 					{%endif%}
-					{%endif%}
                 </tr>
+                {%endif%}
             {% endfor %}
             </tbody>
         </table>

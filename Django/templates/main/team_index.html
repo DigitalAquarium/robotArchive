@@ -1,35 +1,38 @@
 {% extends "base.html" %}
 {% load static %}
 {% block head %}
-    <style>.searchform label {
-        display: inline-block;
-        margin: 0.3em;
-    }</style>
+    <link rel="stylesheet" href="{% static 'style/index_view.css' %}"/>
+    <script src="{% static 'scripts/showhide.js' %}"></script>
 {% endblock %}
 {% block content %}
-    <form class="search-form" method="get"
-          style="display:block; padding-left: 10%; padding-right: 10%; text-align: center"
-          action="{% url 'main:teamIndex' %}">
-        <label> Search Term:
-            <input name="name" type="text" value={{ name }}>
-        </label>
-        <label> Country:
+<div class="main-content">
+<section class="search-params">
+    <form class="search-form" method="get" action="{% url 'main:teamIndex' %}">
+         <div class="search-box-container">
+            <input class="search-box" name="name" type="text" value="{{ name }}"/>
+            <input class="search-button material-symbols-outlined" type="submit" value="Search"/>
+            <div id="more-options-dropdown" class="material-symbols-outlined" onclick="showHide('additional-options','more-options-dropdown')">Settings</div>
+        </div>
+         <ul id="additional-options" class="additional-options" style="display:{%if not chosen_country%}none{%else%}block{%endif%}">
+        <li>
+            <label> Country:</label>
             <select name="country">
                 {% for country in countries %}
                     <option value="{{ country|first }}"
                             {% if chosen_country == country|first %}selected{% endif %}>{{ country|last }}</option>
                 {% endfor %}
             </select>
-        </label>
-        <label>Include Territories:
+        </li>
+             {%comment%}
+        <li>
+            <label>Include Territories:</label>
             <input name="regions" type="checkbox" checked>
-        </label>
-        <input style="margin: 0.3em" type="submit" value="Search">
+        </li>
+             {%endcomment%}
+         </ul>
     </form>
+</section>
 
-
-
-    <div class="main-content">
         {% for team in team_list %}
             <div class="hrz-index-result">
         <span class="hrz-index-image">

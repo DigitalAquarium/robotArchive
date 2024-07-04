@@ -4,10 +4,11 @@
 {% block head %}
     <link rel="canonical" href="https://www.robotcombatarchive.com/robot/{{robot.slug}}">
     <script src="{% static 'scripts/robot_detail.js' %}"></script>
+    <script src="{% static 'scripts/showhide.js' %}"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="{%static 'scripts/history_chart.js' %}"></script>
     <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
-     <link rel="stylesheet" href="{% static 'style/fight_icon.css' %}">
+    <link rel="stylesheet" href="{% static 'style/fight_icon.css' %}">
 {% endblock %}
 
 {% block navbar %}
@@ -31,8 +32,8 @@
         </div>
             {% if not robot.opt_out %}
                 <h2>Rank{%if current_lb_entry%}ed
-                    <span class="{% if current_lb_entry.position == 1 %}gold{% elif current_lb_entry.position == 2 %}silver {% elif current_lb_entry.position == 3 %} bronze {%else%}top-hundred{% endif %}">
-                        #{{current_lb_entry.position}} {{current_lb_entry.wc_to_string}}:</span>{%else%}:{%endif%} {{ robot.ranking|floatformat:2 }}
+                    <a class="{% if current_lb_entry.position == 1 %}gold{% elif current_lb_entry.position == 2 %}silver{% elif current_lb_entry.position == 3 %}bronze{%else%}top-hundred{% endif %}" href="{%url 'main:leaderboard'%}?weight={{current_lb_entry.weight}}&year={{current_lb_entry.year}}#row-{{robot.slug}}">
+                        #{{current_lb_entry.position}} {{current_lb_entry.wc_to_string}}:</a>{%else%}:{%endif%} {{ robot.ranking|floatformat:2 }}
                 </h2>
                 <h2>Win/Loss: {{ robot.wins }}/{{ robot.losses }}</h2>
             {% endif %}
@@ -49,19 +50,24 @@
         {%if missing_brackets_flag%}<p class="warning">{{robot}} has fought at events where the brackets are missing, so this data may be incomplete. These events are highlighted in its fight history in red.</p> {%endif%}
 
         {%if best_lb_entry%}
-            <button id="best-lb-entry" onclick="toggleDropdown()" class="{% if best_lb_entry.position == 1 %}gold{% elif best_lb_entry.position == 2 %}silver {% elif best_lb_entry.position == 3 %}bronze {%else%}top-hundred{% endif %}" style="{%if leaderboard_entries%}cursor:pointer{%endif%}">Ranked #{{best_lb_entry.position}} {{best_lb_entry.wc_to_string}} in {{best_lb_entry.year}} {%if leaderboard_entries%}🠟{%endif%}</button>
-            <div id="all-lb-entries" style="display:none">
+        <p id="best-lb-entry" class="{% if best_lb_entry.position == 1 %}gold{% elif best_lb_entry.position == 2 %}silver {% elif best_lb_entry.position == 3 %}bronze {%else%}top-hundred{% endif %}">
+            Ranked <a href="{%url 'main:leaderboard'%}?weight={{best_lb_entry.weight}}&year={{best_lb_entry.year}}#row-{{robot.slug}}">#{{best_lb_entry.position}} {{best_lb_entry.wc_to_string}}</a> in {{best_lb_entry.year}}
+            {%if leaderboard_entries%}<button id="lb-dropdown" class="material-symbols-outlined" onclick="showHide('all-lb-entries','lb-dropdown','arrow_circle_up')">arrow_circle_down</button>{%endif%}
+        </p>
+            <div id="all-lb-entries" class="showhide-block" style="display:none">
                 {%for entry in leaderboard_entries%}
-                <p class="{% if entry.position == 1 %}gold{% elif entry.position == 2 %}silver {% elif entry.position == 3 %}bronze{% endif %}" style="{%if not forloop.last%}margin:2px 0px{%else%}margin:2px 0px 20px 0px{%endif%}">
-                <span {%if entry.position < 10 %}style="margin-right:0.6em"{%endif%}> #{{entry.position}}</span> <span>{{entry.wc_to_string}} in {{entry.year}}</span></p>
+                <p class="{% if entry.position == 1 %}gold{% elif entry.position == 2 %}silver {% elif entry.position == 3 %}bronze {%else%}top-hundred{% endif %}" style="{%if forloop.last%}margin:2px 0 20px 0 {%elif forloop.first%}margin: -10px 0 2px 0 {%else%}margin:2px 0{%endif%}">
+                <span {%if entry.position < 10 %}style="margin-right:0.6em"{%endif%}> #{{entry.position}}</span> <span>{{entry.wc_to_string}} in <a href="{%url 'main:leaderboard'%}?weight={{entry.weight}}&year={{entry.year}}#row-{{robot.slug}}">{{entry.year}}</a></span></p>
                 {%endfor%}
             </div>
         {%endif%}
             <div>
-                <div class="version tabs">
+                <button id="btn-scroll-left" class="scroll-button" onclick="scrollVersions('left')"><</button>
+                <button id="btn-scroll-right" class="scroll-button" onclick="scrollVersions('right')">></button>
+                <div id="version-tabs" class="version-tabs">
                     {% for v in version_set %}
                         <button class="tab-button{% if ver == v %} active{% elif not ver and forloop.last %} active{% endif %}"
-                                id="but-{{ v.id }}" onclick="viewRobot({{ v.id }},{{ robot.id }})">
+                                id="but-{{ v.id }}" onclick="viewRobot({{ v.id }})">
                             {% comment %}{% if v.robot_name == "" or v.robot_name == v.robot.name %}{{ v.name }}{% else %}{{ v.robot_name }}{% endif %}{% endcomment%}
                             {{ v.get_full_name }}
 

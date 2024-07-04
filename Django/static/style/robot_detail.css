@@ -14,8 +14,11 @@
   initial-value: darkgoldenrod;
 }
 
-
-.tab-button {
+.version-tabs{
+    white-space: nowrap;
+    overflow-x: hidden;
+}
+.tab-button, .scroll-button {
     background-color: var(--accent-colour);
     border-radius: 0;
     border: var(--font-colour) 2px solid;
@@ -23,10 +26,24 @@
     border-top-left-radius: 0.5em;
     border-top-right-radius: 0.5em;
     color: var(--font-colour);
+    cursor:pointer;
+    position:relative;
 }
 
 .tab-button.active {
     background-color: var(--background-colour);
+    cursor:default;
+}
+.scroll-button{
+    display:none;
+    z-index: 1;
+    position: relative;
+}
+#btn-scroll-left{
+    float:left;
+}
+#btn-scroll-right{
+    float:right;
 }
 
 .version-block {
@@ -96,17 +113,28 @@
     background:none;
 }
 
-.gold{
+#lb-dropdown{
+    background: none;
+    color: inherit;
+    border: none;
+    transform: translateY(0.2em);
+    cursor: pointer;
+}
+
+.gold, .gold a, .gold:visited, .gold:link{
     color:var(--gold)
 }
-.silver{
+.silver, .silver a, .silver:visited, .silver:link{
     color:var(--silver)
 }
-.bronze{
+.bronze, .bronze a, .bronze:visited, .bronze:link{
     color:var(--bronze)
 }
-.top-hundred{
+.top-hundred, .top-hundred a, .top-hundred:visited, .top-hundred:link{
     color:var(--font-colour)
+}
+.gold a, .gold:visited, .gold:link, .silver a, .silver:visited, .silver:link, .bronze a, bronze:visited, .bronze:link, .top-hundred a, top-hundred:visited, .top-hundred:link {
+    text-decoration:underline;
 }
 
 .random-robot a{
@@ -121,6 +149,7 @@
     font-size: 1.2em;
     font-weight: bold;
     width: 2em;
+    border-radius: 1em;
 
     background: linear-gradient(270deg, #dd3d19, #e49003, #efff1c, #0799ec, #02d930, #3a00f0, #a400f0);
     background-size: 1400% 1400%;
@@ -190,7 +219,7 @@
     #history-chart{
         filter: hue-rotate(147deg) invert(1);
     }
-    .tab-button {
+    .tab-button, .scroll-button {
         background-color: var(--background-colour);
     }
     .tab-button.active {

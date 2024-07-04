@@ -31,10 +31,10 @@
     align-items: center;
 }
 
-.material-symbols-outlined{
-            position:relative;
-            bottom: -0.115em
-       }
+.difference-icon{
+    position:relative;
+    bottom: -0.115em
+}
 
 .lb-positive{
     color: var(--positive-colour);

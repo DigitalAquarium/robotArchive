@@ -6,7 +6,7 @@
         <form class="search-form" method="get"
           action="{% url 'main:edtSelectRobot' %}">
              <label> Search Term:
-                <input name="name" type="text" value={{ name }}>
+                <input name="name" type="text" value="{{ name }}">
             </label>
             <label>  Ignore Weight:
                 <input name="nowc" type="checkbox">

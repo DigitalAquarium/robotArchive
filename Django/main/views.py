@@ -8,7 +8,6 @@ from django.db.models import F, When, Case
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.db import transaction
 from django.http import Http404
 
 from main import subdivisions
@@ -227,7 +226,7 @@ def edt_contest_view(request, contest_id):
                     fight = Fight.objects.get(id=value[7:])
                     fight.number = int(request.POST[value])
                     fight_update_list.append(fight)
-            Fight.objects.bulk_update(fight_update_list,['number'])
+            Fight.objects.bulk_update(fight_update_list, ['number'])
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "other_contests": other_contests, "fights": fights,
                    "applications": registrations, "title": "edt" + str(contest)})
@@ -639,8 +638,8 @@ def event_index_view(request):
     results = len(event_list)
     event_list = event_list[num * (page - 1):num * page]
     if len(event_list) > 0:
-        description = "List of robot combat events "+ timespan(event_list[0].start_date,
-                                                                            event_list[-1].end_date, True) + "."
+        description = "List of robot combat events " + timespan(event_list[0].start_date,
+                                                                event_list[-1].end_date, True) + "."
     else:
         description = "Search for robot combat events returned no results."
 
@@ -985,7 +984,7 @@ def robot_detail_view(request, slug):
         try:
             version_id = int(version_id)
             v = Version.objects.get(pk=version_id)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, ObjectDoesNotExist):
             v = None
     fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date", "contest__id", "number")
     awards = Award.objects.filter(version__robot=r)
@@ -1227,6 +1226,16 @@ def team_index_view(request):
     if name != "" and name is not None:
         team_list = team_list.filter(name__icontains=name)
 
+    countries_list = Team.objects.values("country").distinct()
+    countries = []
+    for country in countries_list:
+        if country["country"] in ["XE", "XS", "XW", "XI", "XX"]:
+            continue
+        countries.append((country["country"], pycountry.countries.get(alpha_2=country["country"]).name))
+    countries.extend([('XE', "England"), ('XS', "Scotland"), ('XW', "Wales"), ('XI', "Northern Ireland")])
+    countries.sort(key=lambda x: x[1])
+    countries = [("", "")] + countries
+
     team_list = team_list.order_by("name")
     results = len(team_list)
     team_list = team_list[num * (page - 1):num * page]
@@ -1239,7 +1248,7 @@ def team_index_view(request):
                   {"team_list": team_list,
                    "page": page,
                    "pages": results // num if results % num == 0 else results // num + 1,
-                   "countries": [("", "")] + COUNTRY_CHOICES,
+                   "countries": countries,
                    "chosen_country": country_code,
                    "name": name,
 
@@ -1963,17 +1972,19 @@ def futures_features_view(request):
 def ranking_system_view(request):
     pass
 
+
 def calc_test(request):
     test_type = request.GET.get("test") or ""
     results_text = "Before: \n"
     test_fight = "N/A"
     if test_type == "recalculate":
         recalc_all()
-        render(request, "main/editor/calc_test.html", {"fight": "N/A", "test": test_type, "results": "Recalculated Ranks!"})
+        return render(request, "main/editor/calc_test.html",
+               {"fight": "N/A", "test": test_type, "results": "Recalculated Ranks!"})
     if test_type == "tag_team":
         test_fight = Fight.objects.get(pk=1791)
     if test_type == "regular":
-        test_fight = Fight.objects.get(pk=2000) # Hypno-Disc vs Bigger Brother
+        test_fight = Fight.objects.get(pk=2000)  # Hypno-Disc vs Bigger Brother
     if test_type == "rumble":
         test_fight = Fight.objects.get(pk=1991)  # Wild Thing vs S3 vs Spawn Again
     if test_type == "big_rumble":
@@ -1987,16 +1998,19 @@ def calc_test(request):
 
     if test_type != "":
         for fv in test_fight.fight_version_set.all():
-            results_text +=str(fv.version) + " " + str(fv.version.robot.ranking) + "\n"
+            results_text += str(fv.version) + " " + str(fv.version.robot.ranking) + "\n"
         results_text += "\n"
 
         results = test_fight.calculate(commit=False)
 
         results_text += "After: \n"
         for i in range(len(results[0])):
-            results_text += str(results[1][i]) + " " + str(results[1][i].robot.ranking) + " Change " + str(results[0][i].ranking_change) + "\n"
+            results_text += str(results[1][i]) + " " + str(results[1][i].robot.ranking) + " Change " + str(
+                results[0][i].ranking_change) + "\n"
 
-    return render(request, "main/editor/calc_test.html", {"fight":test_fight,"test":test_type,"results":results_text})
+    return render(request, "main/editor/calc_test.html",
+                  {"fight": test_fight, "test": test_type, "results": results_text})
+
 
 def recalc_all():
     def save_year(year, version_dictionary, robot_dictionary, fvs):
@@ -2023,7 +2037,6 @@ def recalc_all():
         print("Creating Leaderboard for year: " + str(year))
         Leaderboard.update_all(year)
 
-
     # Need top update more robots than currently doing to add the X to them
     Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X", first_fought=None,
                                last_fought=None)
@@ -2043,9 +2056,8 @@ def recalc_all():
                     ver = version_dictionary[ver.id]
                     ver.update_fought_range(contest_cache, False)
 
-
                 if contest_cache.end_date.year != fight.contest.end_date.year:
-                    save_year(contest_cache.end_date.year,version_dictionary,robot_dictionary,fvs)
+                    save_year(contest_cache.end_date.year, version_dictionary, robot_dictionary, fvs)
                     version_dictionary = {}
                     robot_dictionary = {}
                     fvs = []
@@ -2054,7 +2066,7 @@ def recalc_all():
 
         competitors = []
         for fv in fight.fight_version_set.all():
-            #if fv.version.robot.id == 30:
+            # if fv.version.robot.id == 30:
             #    breakpoint()
             if fv.version.id not in version_dictionary.keys():
                 version_dictionary[fv.version.id] = fv.version
@@ -2068,55 +2080,8 @@ def recalc_all():
         fvs += result[0]
 
     print("Saving Final Batch")
-    save_year(fight.contest.end_date.year,version_dictionary,robot_dictionary,fvs)
+    save_year(fight.contest.end_date.year, version_dictionary, robot_dictionary, fvs)
     print("Done!")
-    return render(request, "main/credits.html", {})
-
-
-'''for year2 in [1994,1995,1996,1997,1998,1999,2000,2001,2002,2003]:
-        weights = ["L","M","H","S"]
-        if year2 == 1996:
-            weights.append("F")
-        if year2 == 1998:
-            weights = weights[:-1]
-        for weight2 in weights:
-            robot_list = Leaderboard.objects.filter(weight=weight2, year=year2, position__lt=101).order_by("-ranking")
-            previous_year = Leaderboard.objects.filter(weight=weight2, year=year2 - 1, position__lt=101)
-            still_here = []
-            for lb in robot_list:
-                prev_entry = previous_year.filter(robot=lb.robot)
-                flag = False
-                if prev_entry.count() > 0:
-                    flag = True
-                    prev_entry = prev_entry[0]
-                    still_here.append(prev_entry.id)
-                    lb.difference = prev_entry.position - lb.position
-                else:
-                    lb.difference = 101
-                print(year2,weight2,lb.robot, prev_entry.position if flag else "x","->",lb.position,lb.difference)
-                lb.save()
-
-            for lb in previous_year:
-                if lb.id not in still_here:
-                    if Leaderboard.objects.filter(year=year2, robot=lb.robot).count() > 0:
-                        #reason = "Switched Weight Class"
-                        diff = -103
-                    elif lb.robot.version_set.filter(last_fought__gte=datetime.date(year2 - 5, 12, 31)).count() == 0:  # TODO: Hardcoded year cutoff
-                        #reason = "Too Old: Timed Out"
-                        diff = -102
-                    else:
-                        #reason = "Rank Too Low: Eliminated"
-                        diff = -101
-                    print(year2,weight2,lb.robot, lb.position, "->", "x", diff)
-                    new_entry = Leaderboard()
-                    new_entry.year = year2
-                    new_entry.weight = weight2
-                    new_entry.robot = lb.robot
-                    new_entry.ranking = 0
-                    new_entry.position = 101
-                    new_entry.version = lb.robot.version_set.filter(first_fought__year__lte=year2).order_by("-last_fought")[0]
-                    new_entry.difference = diff
-                    new_entry.save()'''
 
 
 # This shouldn't delete any data that is in use but just in case here's some permissions.

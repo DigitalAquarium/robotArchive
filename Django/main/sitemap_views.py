@@ -6,7 +6,7 @@ from datetime import date
 
 from main.models import *
 
-LAST_MAJOR_SITE_UPDATE = date(2024, 5, 29)
+LAST_MAJOR_SITE_UPDATE = date(2024, 7, 4)
 
 class StaticSitemap(Sitemap):
     priority = 0.1
