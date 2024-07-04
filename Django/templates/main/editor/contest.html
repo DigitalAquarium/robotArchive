@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 {% block head %}
-    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+<link rel="stylesheet" href="{% static 'style/gridview.css' %}" xmlns="http://www.w3.org/1999/html"/>
+    <link rel="stylesheet" href="{% static 'style/fight_icon.css' %}" />
 {% endblock %}
 {% block content %}
     {% if contest %}
@@ -17,22 +18,25 @@
         <a class="editor-link" href="{% url 'main:newFight' contest.id %}?editor=true">Add Fight</a>
         <br>
         {% if fights|length > 0 %}
+            <form method="post" style="display:block">
             <table>
                 <thead>
                 <tr>
+                    <th>#</th>
                     <th>Fight</th>
                     <th>Type</th>
                     <th>Winners</th>
-					<th>Move Fight</th>
-					<th>Recursive Move</th>
+					<!--<th>Move Fight</th>
+					<th>Recursive Move</th>-->
                 </tr>
                 </thead>
                 <tbody>
-				<form method="post">
+
                 {% csrf_token %}
                 {% for fight in fights %}
-                    <tr {% if forloop.counter|divisibleby:2 %} style="background-color: #eeeeee"{% endif %}>
-                        <td><a href="{% url 'main:edtFightOverview' fight.id %}" style="display:inline-flex">{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %} </a></td>
+                    <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                        <td><input id="number-{{fight.id}}" name="number-{{fight.id}}"  style="width:30px" type="text" value="{{fight.number}}"></td>
+                        <td><a href="{% url 'main:edtFightOverview' fight.id %}" class="fight-link">{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %} </a></td>
                         <td>{{ fight.get_fight_type_display }}</td>
                         <td>
                             {% if fight.winners|length > 0 %}
@@ -63,8 +67,9 @@
                 {% endfor %}
                 </tbody>
             </table>
-			<button class="editor-link" name="save" value="move">Move Fights</button>
-			</form>
+            <button class="editor-link" name="save" value="reorder">Update Fight Order</button>
+            <button class="editor-link" name="save" value="move">Move Fights</button>
+            </form>
         {% endif %}
 		{%if applications|length > 0 %}
 			<div class="gridview-container">
@@ -83,7 +88,6 @@
                     </div>
                 {% endfor %}
                 </div>
-            </div>
 			<form method="post">{%csrf_token%}<button class="editor-link" name="save" value="prune">Prune Entries & Clean Contest</button></form>
 		{% endif %}
     {% endif %}

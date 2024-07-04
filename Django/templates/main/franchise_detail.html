@@ -46,18 +46,10 @@
         </thead>
         <tbody>
         {% for event in events %}
-            <tr>
+            <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
                 <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
                 <td>
-                    {% if event.start_date|date:"d M Y" == event.end_date|date:"d M Y" %}
-                        {{ event.start_date|date:"d M Y" }}
-                    {% elif event.start_date|date:"M" == event.end_date|date:"M" %}
-                        {{ event.start_date|date:"d" }} - {{ event.end_date|date:"d M Y" }}
-                    {% elif event.start_date|date:"Y" == event.end_date|date:"Y" %}
-                        {{ event.start_date|date:"d M" }} - {{ event.end_date|date:"d M Y" }}
-                    {%else%}
-                        {{ event.start_date|date:"d M Y" }} - {{ event.end_date|date:"d M Y" }}
-                    {% endif %}
+                    {{event.timespan}}
                 </td>
             </tr>
         {% endfor %}

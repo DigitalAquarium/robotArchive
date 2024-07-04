@@ -2,7 +2,7 @@
 {% load bonus_filters %}
 {% load static %}
 {% block content %}
-    {%block home_button%} <span class="home-icon"><a href="{%url 'main:index' %}?edt=stay"><img class="fit-image" src="{% static 'home_icon_google.svg'%}" alt="Home Icon"></a></span> {%endblock home_button%}
+    {%block home_button%} <span class="home-icon"><a class="material-symbols-outlined" href="{%url 'main:index' %}?edt=stay">home</a></span> {%endblock home_button%}
     <section class="search-params">
         <form class="search-form" method="get"
           action="{% url 'main:edtHome' %}">
@@ -27,8 +27,7 @@
             </thead>
             <tbody>
             {% for event in event_list %}
-                <tr id="row-{{ event.id }}" {% if forloop.counter|divisibleby:2 %}
-                    style="background-color: #eeeeee"{% endif %}>
+                <tr id="row-{{ event.id }}" {{% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
                     <td style="text-align: center; padding: 1px 0 0 1px;">
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
                              src="{{event.get_logo_url}}" alt="{{ event.name }} logo"></td>

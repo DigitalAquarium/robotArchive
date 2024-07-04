@@ -27,6 +27,7 @@ def get_history(request):
         history = [1000]
         for fv in fight_versions:
             rank += fv.ranking_change
+
             fight = {'name': str(fv.fight),
                      'rank': rank,
                      'year': fv.fight.contest.event.start_date.year,

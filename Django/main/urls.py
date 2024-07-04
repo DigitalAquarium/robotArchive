@@ -62,7 +62,6 @@ urlpatterns = [
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
     path('credits', views.credits_view, name='credits'),
-
     #path('editor/home', views.edt_home_view, name='edtHome'),
     #path('editor/newEvent', views.edt_new_event_view, name='edtNewEvent'),
     #path('editor/event/<int:event_id>', views.edt_event_view, name='edtEvent'),
@@ -77,6 +76,7 @@ urlpatterns = [
     #path('editor/link/<str:obj_type>/<int:obj_id>', views.edt_team_view, name='edtLink'),
     #path('editor/pruneMedia', views.prune_media, name='edtPrune'),
     #path('editor/recalculate', views.recalc_all, name='recalculateAll'),
+
 
     path('ajax/get_location', ajax_views.get_location, name='ajax_getLocation'),
     path('ajax/get_history', ajax_views.get_history, name='ajax_getHistory'),

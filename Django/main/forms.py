@@ -29,6 +29,7 @@ class RegistrationForm(UserCreationForm):
 
 class NewRobotForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
+    latin_name = forms.CharField(max_length=255, required=False,show_hidden_initial="hidden")
     slug = forms.CharField(max_length=100, required=False)
     vname = forms.CharField(max_length=255, required=False, label="Name of first version if different from main name")
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
@@ -50,6 +51,12 @@ class NewRobotForm(forms.Form):
         v = Version()
         r.name = self.cleaned_data['name']
         r.slug = self.cleaned_data['slug']
+        r.latin_name = self.cleaned_data['latin_name']
+        if r.latin_name != "":
+            r.display_latin_name = True
+        else:
+            r.display_latin_name = False
+            r.latin_name = asciify(r)
         v.robot_name = self.cleaned_data['vname']
         r.country = self.cleaned_data['country']
         v.country = self.cleaned_data['country']
@@ -111,7 +118,7 @@ class RobotForm(forms.ModelForm):
 
     class Meta:
         model = Robot
-        fields = ['name', 'slug', "country", 'description', "opt_out"]
+        fields = ['name', 'latin_name','display_latin_name', 'slug', "country", 'description', "opt_out"]
 
     def clean_slug(self):
         slug = self.cleaned_data['slug']
@@ -256,7 +263,7 @@ class NewEventFormEDT(forms.Form):
 
         if self.cleaned_data['prev_logo']:
             e.logo = self.cleaned_data['prev_logo']
-        elif self.cleaned_data['logo_img']:
+        elif self.cleaned_data['logo_txt']:
             save_img(self.cleaned_data['logo_txt'], e.logo, e.name)
         else:
             e.logo = self.cleaned_data['logo_img']

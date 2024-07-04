@@ -6,7 +6,7 @@
     {% for web in link_set %}
         <span>
             <a href="{{ web.link }}">
-                <img  src="{{ web.get_logo }}" alt="{{ web.alt }}">
+                <img {%if web.type == "WW" %} class="dark-invert" {%endif%} src="{{ web.get_logo }}" alt="{{ web.alt }}">
                 <span class="spacer"></span>
                 {{web.get_display}}
             </a>

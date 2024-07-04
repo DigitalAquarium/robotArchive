@@ -1,11 +1,12 @@
 from django.contrib.sitemaps import Sitemap
+from django.db.models import Exists, Count
 from django.urls import reverse
 
 from datetime import date
 
 from main.models import *
 
-LAST_MAJOR_SITE_UPDATE = date(2024, 5, 29)
+LAST_MAJOR_SITE_UPDATE = date(2024, 7, 4)
 
 class StaticSitemap(Sitemap):
     priority = 0.1
@@ -34,7 +35,7 @@ class LeaderboardSitemap(Sitemap):
     def items(self):
         items = []
         for lb in Leaderboard.objects.values("year", "weight").order_by("-year").distinct():
-            items.append("?weight=" + lb["weight"] + "&year" + str(lb["year"]))
+            items.append("?weight=" + lb["weight"] + "&year=" + str(lb["year"]))
         return items
 
     def location(self, item):
@@ -108,7 +109,9 @@ class ContestSitemap(Sitemap):
     changefreq = "yearly"
 
     def items(self):
-        return Contest.objects.all().order_by("start_date")
+        items = Contest.objects.annotate(fight_count=Count("fight"))
+        items = items.filter(fight_count__gt=0).order_by("start_date")
+        return items
 
     def location(self, item):
         return reverse("main:contestDetail", args=[item.id])

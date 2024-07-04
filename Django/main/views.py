@@ -1,8 +1,9 @@
-# from os import listdir, remove
 import random
+# from os import listdir, replace, makedirs
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.validators import URLValidator
+from django.db.models import F, When, Case
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -217,6 +218,14 @@ def edt_contest_view(request, contest_id):
                 f.number = i
                 i += 1
             Fight.objects.bulk_update(fights, ["number"])
+        elif request.POST["save"] == "reorder":
+            fight_update_list = []
+            for value in request.POST:
+                if value[0] == "n":
+                    fight = Fight.objects.get(id=value[7:])
+                    fight.number = int(request.POST[value])
+                    fight_update_list.append(fight)
+            Fight.objects.bulk_update(fight_update_list, ['number'])
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "other_contests": other_contests, "fights": fights,
                    "applications": registrations, "title": "edt" + str(contest)})
@@ -627,6 +636,11 @@ def event_index_view(request):
     event_list = event_list.order_by("name").order_by("start_date")
     results = len(event_list)
     event_list = event_list[num * (page - 1):num * page]
+    if len(event_list) > 0:
+        description = "List of robot combat events " + timespan(event_list[0].start_date,
+                                                                event_list[-1].end_date, True) + "."
+    else:
+        description = "Search for robot combat events returned no results."
 
     return render(request, "main/event_index.html",
                   {"event_list": event_list,
@@ -641,10 +655,8 @@ def event_index_view(request):
                    "date_from": date_from,
                    "date_to": date_to,
                    "past": past,
-
                    "title": "Events",
-                   "description": "List of robot combat events from " + str(event_list[0].start_date) + " to " + str(
-                       event_list[-1].end_date),
+                   "description": description,
                    "url": reverse("main:eventIndex"),
                    })
 
@@ -669,8 +681,7 @@ def event_detail_view(request, slug):
 
                    "title": event.name,
                    "description": "Information about " + str(event) + ", an event organised by " + str(
-                       event.franchise) + (" on " + str(event.start_date) if event.is_one_day else " from " + str(
-                       event.start_date) + " to " + str(event.end_date)) + " with " + str(
+                       event.franchise) + " " + event.timespan(True) + " with " + str(
                        num_competitors) + " robots competing.",
                    "thumbnail": event.logo.url if event.logo else (
                        event.franchise.logo.url if event.franchise.logo else None),
@@ -833,14 +844,14 @@ def robot_index_view(request):
         else:
             robot_list = robot_list.filter(version__country=country_code).distinct()
 
-    if name != "" and name is not None:
+    if weapon != "" and weapon is not None:
+        robot_list = robot_list.filter(version__weapon_type__icontains=weapon).distinct()
+
+    if name != "" and name is not None:  # union must be last.
         robot_list = robot_list.filter(name__icontains=name).union(
             robot_list.filter(version__robot_name__icontains=name)).union(
             robot_list.filter(latin_name__icontains=name)).union(
             robot_list.filter(version__latin_robot_name__icontains=name))
-
-    if weapon != "" and weapon is not None:
-        robot_list = robot_list.filter(version__weapon_type__icontains=weapon).distinct()
 
     if has_awards == "on":
         bad = []
@@ -877,8 +888,8 @@ def robot_index_view(request):
                    "weapon": weapon,
 
                    "title": "Robots",
-                   "description": "A list of combat robots in alphabetical order from " + robot_list[
-                       0].name + " to " + robot_list[-1].name + ".",
+                   "description": ("A list of combat robots in alphabetical order from " + robot_list[
+                       0].name + " to " + robot_list[-1].name + ".") if len(robot_list) > 1 else "",
                    "url": reverse("main:robotIndex"),
                    })
 
@@ -914,8 +925,8 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        Leaderboard.update_class(weight)
-        # pass
+        # Leaderboard.update_class(weight)
+        pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
 
@@ -972,7 +983,7 @@ def robot_detail_view(request, slug):
         try:
             version_id = int(version_id)
             v = Version.objects.get(pk=version_id)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, ObjectDoesNotExist):
             v = None
     fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date", "contest__id", "number")
     awards = Award.objects.filter(version__robot=r)
@@ -1007,6 +1018,11 @@ def robot_detail_view(request, slug):
 
     fights_tuple = [(rowspans[i], fights[i]) for i in range(len(fights))]
 
+    description = "Information about " + str(r) + ", a combat robot that has fought " + str(fights.count()) + \
+                  " fight" + ("" if fights.count() == 1 else "s") + " " + r.timespan(True) + "."
+    if r.wins > 0 or r.losses > 0:
+        description += " Winning " + str(r.wins) + " and losing " + str(r.losses) + " in head to head battle."
+
     return render(request, "main/robot_detail.html",
                   {"robot": r, "fights_tuple": fights_tuple, "awards": awards, "ver": v, "can_change": can_change,
                    "version_set": r.version_set.all().order_by("number"),
@@ -1014,13 +1030,8 @@ def robot_detail_view(request, slug):
                    "current_lb_entry": current_lb_entry, "is_random": is_random,
                    "missing_brackets_flag": True if fights.filter(
                        contest__event__missing_brackets=True).exists() else False,
-
                    "title": r.name,
-                   "description": "Information about " + str(r) + ", a combat robot that has fought " + str(
-                       fights.count()) + " fight" + ("" if fights.count == 0 else "s") + " from " + str(
-                       r.first_fought) + " to " + str(r.last_fought) + ". Winning " + str(
-                       r.wins) + " and losing " + str(r.losses) + " in head to head battle.",
-                   "thumbnail": v.image.url if v and v.image else r.get_image(),
+                   "description": description,
                    "url": reverse("main:robotDetail", args=[r.slug]),
                    })
 
@@ -1176,16 +1187,12 @@ def team_detail_view(request, slug):
     robots = team.owned_robots().order_by("-last_fought")
     loaners = team.loaners().order_by("-last_fought")
 
-    first_first_fought = team.owned_robots().order_by("first_fought").first().first_fought
-    last_last_fought = team.owned_robots().order_by("-last_fought").first().last_fought
     return render(request, "main/team_detail.html",
                   {"team": team, "robots": robots, "loaners": loaners, "can_change": can_change,
 
                    "title": team,
                    "description": "Overview of " + str(team) + ", a robot combat team that built " + str(
-                       robots.count()) + " robots " + ("from " + str(first_first_fought.year) + " to " + str(
-                       last_last_fought.year) if first_first_fought.year != last_last_fought.year else "in " + str(
-                       first_first_fought.year)) + ".",
+                       robots.count()) + " robots " + team.timespan(True) + ".",
                    "thumbnail": team.logo.url if team.logo else None,
                    "url": reverse("main:teamDetail", args=[slug]),
                    })
@@ -1218,20 +1225,34 @@ def team_index_view(request):
     if name != "" and name is not None:
         team_list = team_list.filter(name__icontains=name)
 
+    countries_list = Team.objects.values("country").distinct()
+    countries = []
+    for country in countries_list:
+        if country["country"] in ["XE", "XS", "XW", "XI", "XX"]:
+            continue
+        countries.append((country["country"], pycountry.countries.get(alpha_2=country["country"]).name))
+    countries.extend([('XE', "England"), ('XS', "Scotland"), ('XW', "Wales"), ('XI', "Northern Ireland")])
+    countries.sort(key=lambda x: x[1])
+    countries = [("", "")] + countries
+
     team_list = team_list.order_by("name")
     results = len(team_list)
     team_list = team_list[num * (page - 1):num * page]
+    if results > 0:
+        description = "A list of robot combat teams in alphabetical order from " + team_list[
+            0].name + " to " + team_list[-1].name + "."
+    else:
+        description = "Search for robot combat teams returned no results."
     return render(request, "main/team_index.html",
                   {"team_list": team_list,
                    "page": page,
                    "pages": results // num if results % num == 0 else results // num + 1,
-                   "countries": [("", "")] + COUNTRY_CHOICES,
+                   "countries": countries,
                    "chosen_country": country_code,
                    "name": name,
 
                    "title": "Teams",
-                   "description": "A list of robot combat teams in alphabetical order from " + team_list[
-                       0].name + " to " + team_list[-1].name + ".",
+                   "description": description,
                    "url": reverse("main:teamIndex"),
                    })
 
@@ -1269,6 +1290,7 @@ def new_robot_view(request):  # TODO: FORM
         form = NewRobotForm()
         if fight_id != 0:
             form.fields["weight_class"].initial = Fight.objects.get(id=fight_id).contest.weight_class
+            form.fields["country"].initial = Fight.objects.get(id=fight_id).contest.event.country
         if team_id:
             form.fields['country'].initial = team.country
         response = render(request, "main/new_robot.html", {"form": form, "team": team, "fight_id": fight_id})
@@ -1402,9 +1424,8 @@ def franchise_detail_view(request, slug):
                   {"fran": fran, "events": events, "leave_id": 1,  # TODO: lol
                    "title": fran,
                    "description": "Information about " + fran.name + ", a robot combat event organiser who organised " + str(
-                       events.count()) + " event" + (
-                                      "" if events.count == 1 else "s") + " from " + events.first().start_date.strftime(
-                       "%d %M %Y") + " to " + events.last().end_date.strftime("%d %M %Y") + ".",
+                       events.count()) + " event" + ("" if events.count == 1 else "s") + " " + fran.timespan(
+                       True) + ".",
                    "thumbnail": fran.logo.url if fran.logo else None,
                    "url": reverse("main:franchiseDetail", args=[fran.slug]),
                    })
@@ -1534,7 +1555,17 @@ def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
     can_change = fight.can_edit(request.user)
     if not can_change:
         return redirect("%s?m=%s" % (reverse("main:message"), "You do not have permission to edit this fight."))
-    registered = Version.objects.filter(registration__contest=fight.contest.id).order_by("name", "robot__name")
+
+    registered = Version.objects.filter(registration__contest=fight.contest.id).annotate(alphabetical=Case(
+        When(robot_name="",
+             then=Case(
+                 When(robot__display_latin_name=True, then=F("robot__latin_name")), default=F("robot__name")),
+             ),
+        default=Case(
+            When(display_latin_name=True, then=F("latin_robot_name")), default=F("robot_name")
+        )
+    ))
+    registered = registered.order_by("alphabetical")
 
     if vf_id is not None:
         vf = Fight_Version.objects.get(pk=vf_id)
@@ -1549,7 +1580,7 @@ def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
         else:
             response = redirect("main:editWholeFight", fight_id)
     else:
-        form.fields['version'].queryset = registered
+        form.fields['version'].choices = [(None, "----------")] + [(v.id, v.english_readable_name) for v in registered]
         response = render(request, "main/modify_fight_version.html",
                           {"form": form, "fight_id": fight_id, "fight_version_id": vf_id, "editor": editor,
                            "title": "Modify Fight Version"})
@@ -1941,49 +1972,116 @@ def ranking_system_view(request):
     pass
 
 
-def recalc_all(request):
-    def save_contest(contest_cache):
-        vers_up = []
-        robs_up = []
-        print("updating robots")
-        for reg in contest_cache.registration_set.all():
-            if reg.version.update_fought_range(contest_cache, False):
-                vers_up.append(reg.version)
-                robs_up.append(reg.version.robot)
-        Version.objects.bulk_update(vers_up, ["first_fought", "last_fought"])
-        Robot.objects.bulk_update(robs_up, ["first_fought", "last_fought"])
-        robs_up = []
-        for reg in contest_cache.registration_set.all():
-            robs_up.append(Leaderboard.update_robot_weight_class(reg.version.robot, commit=False,
-                                                                 year=contest_cache.end_date.year))
-        Robot.objects.bulk_update(robs_up, ["lb_weight_class"])
+'''
+def calc_test(request):
+    test_type = request.GET.get("test") or ""
+    results_text = "Before: \n"
+    test_fight = "N/A"
+    if test_type == "recalculate":
+        recalc_all()
+        return render(request, "main/editor/calc_test.html",
+               {"fight": "N/A", "test": test_type, "results": "Recalculated Ranks!"})
+    if test_type == "tag_team":
+        test_fight = Fight.objects.get(pk=1791)
+    if test_type == "regular":
+        test_fight = Fight.objects.get(pk=2000)  # Hypno-Disc vs Bigger Brother
+    if test_type == "rumble":
+        test_fight = Fight.objects.get(pk=1991)  # Wild Thing vs S3 vs Spawn Again
+    if test_type == "big_rumble":
+        test_fight = Fight.objects.get(pk=1358)  # Battlebots 3.0 Lightweight Royal Rumble
+    if test_type == "annihilator":
+        test_fight = Fight.objects.get(pk=985)  # Northern Annihilator Round 1
+    if test_type == "unbalanced_tag_team":
+        test_fight = Fight.objects.get(pk=7057)  # Stinger vs Kan Opener & Thz
+    if test_type == "unbalanced_tag_team_2":
+        test_fight = Fight.objects.get(pk=4057)
+
+    if test_type != "":
+        for fv in test_fight.fight_version_set.all():
+            results_text += str(fv.version) + " " + str(fv.version.robot.ranking) + "\n"
+        results_text += "\n"
+
+        results = test_fight.calculate(commit=False)
+
+        results_text += "After: \n"
+        for i in range(len(results[0])):
+            results_text += str(results[1][i]) + " " + str(results[1][i].robot.ranking) + " Change " + str(
+                results[0][i].ranking_change) + "\n"
+
+    return render(request, "main/editor/calc_test.html",
+                  {"fight": test_fight, "test": test_type, "results": results_text})
+
+
+def recalc_all():
+    def save_year(year, version_dictionary, robot_dictionary, fvs):
+        print("Saving data for year: " + str(year))
+        vers = [v for v in version_dictionary.values()]
+        robs = [r for r in robot_dictionary.values()]
+        Version.objects.bulk_update(vers, ["first_fought", "last_fought"])
+        for r in robs:
+            Leaderboard.update_robot_weight_class(r, commit=False, year=year)
+        Robot.objects.bulk_update(robs, ["ranking", "wins", "losses", "first_fought", "last_fought", "lb_weight_class"])
+        Fight_Version.objects.bulk_update(fvs, ["ranking_change"])
+
+        for rob in robs: # Test to ensure that the sum of rank changes adds up to the same as the robot's ranking
+            thingy = Fight_Version.objects.filter(version__robot=rob,
+                                                  fight__contest__end_date__lte=datetime.datetime(year,12,31))
+            calculated_rank = 1000 + sum([x.ranking_change for x in thingy])
+            if abs(rob.ranking - calculated_rank) > 0.0001:
+                print(rob)
+                print(rob.ranking)
+                print(thingy)
+                print(1000 + sum([x.ranking_change for x in thingy]))
+                raise IndexError
+
+        print("Creating Leaderboard for year: " + str(year))
+        Leaderboard.update_all(year)
 
     # Need top update more robots than currently doing to add the X to them
     Robot.objects.all().update(ranking=Robot.RANKING_DEFAULT, wins=0, losses=0, lb_weight_class="X", first_fought=None,
                                last_fought=None)
     Version.objects.all().update(first_fought=None, last_fought=None)
+    Fight_Version.objects.all().update(ranking_change=0)
 
     fights = Fight.objects.all().order_by("contest__start_date", "contest__end_date",
                                           "contest__weight_class__weight_grams", "contest_id", "number")
+    version_dictionary = {}
+    robot_dictionary = {}
+    fvs = []
     contest_cache = None
     for fight in fights:
         if contest_cache != fight.contest:
             if contest_cache is not None:
-                save_contest(contest_cache)
+                for ver in Version.objects.filter(fight__contest=contest_cache):
+                    ver = version_dictionary[ver.id]
+                    ver.update_fought_range(contest_cache, False)
+
                 if contest_cache.end_date.year != fight.contest.end_date.year:
-                    print("Creating Leaderboard for year: " + str(contest_cache.end_date.year))
-                    Leaderboard.update_all(contest_cache.end_date.year)
+                    save_year(contest_cache.end_date.year, version_dictionary, robot_dictionary, fvs)
+                    version_dictionary = {}
+                    robot_dictionary = {}
+                    fvs = []
             contest_cache = fight.contest
             print("Saving:", contest_cache, fight.contest.event)
-        fight.calculate(True)
 
-    # Final Pass
-    print("Final Pass: updating robots")
-    save_contest(contest_cache)
-    print("Creating Leaderboard for year: " + str(contest_cache.end_date.year))
-    Leaderboard.update_all(contest_cache.end_date.year)
-    return render(request, "main/credits.html", {})
+        competitors = []
+        for fv in fight.fight_version_set.all():
+            # if fv.version.robot.id == 30:
+            #    breakpoint()
+            if fv.version.id not in version_dictionary.keys():
+                version_dictionary[fv.version.id] = fv.version
+                if fv.version.robot.id not in robot_dictionary.keys():
+                    robot_dictionary[fv.version.robot.id] = fv.version.robot
+                else:
+                    version_dictionary[fv.version.id].robot = robot_dictionary[fv.version.robot.id]
+            competitors.append(version_dictionary[fv.version.id])
 
+        result = fight.calculate(competitors)
+        fvs += result[0]
+
+    print("Saving Final Batch")
+    save_year(fight.contest.end_date.year, version_dictionary, robot_dictionary, fvs)
+    print("Done!")
 
 
 # This shouldn't delete any data that is in use but just in case here's some permissions.
@@ -1996,12 +2094,13 @@ def prune_media(request):
     bad_images = []
 
     def check_media(used_files, dir):
-        year = datetime.date.today().year
-        filenames = listdir(settings.MEDIA_ROOT + "/" + dir + str(year))
-        for filename in filenames:
-            f = dir + str(year) + "/" + filename
-            if f not in used_files:
-                bad_images.append(f)
+        cyear = datetime.date.today().year
+        for year in range(2022, cyear + 1):
+            filenames = listdir(settings.MEDIA_ROOT + "/" + dir + str(year))
+            for filename in filenames:
+                f = dir + str(year) + "/" + filename
+                if f not in used_files:
+                    bad_images.append(f)
 
     robot_images = Version.objects.all().values("image").distinct()
     robot_images = [i['image'] for i in robot_images]
@@ -2025,4 +2124,61 @@ def prune_media(request):
 
     print("deleting", bad_images)
     for i in bad_images:
-        remove(settings.MEDIA_ROOT + "/" + i)
+        try:
+            replace(settings.MEDIA_ROOT + "/" + i, settings.MEDIA_ROOT + "/deleted/" + i)
+        except:
+            dir = settings.MEDIA_ROOT + "/deleted/" + i.split("/")[0] + "/" + i.split("/")[1]
+            makedirs(dir)
+            replace(settings.MEDIA_ROOT + "/" + i, settings.MEDIA_ROOT + "/deleted/" + i)
+
+
+def tournament_tree(request):
+    # 97
+    # 3216
+    contest = Contest.objects.get(pk=97)
+    all_fights = Fight.objects.filter(contest=contest)
+    entry = Fight.objects.get(pk=3216)
+    fights = [entry]
+    links = {}
+    out = ""
+    entrantDict = {}
+    for i, version in enumerate(Version.objects.filter(fight__in=all_fights).distinct()):
+        entrantDict[version.id] = i + 1
+
+    for fight in fights:
+        # print(fight)
+        for fv in fight.fight_version_set.all():
+            prev = all_fights.filter(fight_version__version=fv.version)
+            prev = prev.exclude(number__gte=fight.number).order_by("-number")
+            if len(prev) > 0:
+                fights.append(prev[0])
+                links[prev[0].fight_version_set.get(version=fv.version)] = fight
+    localIDDict = {}
+    i = 0
+    # print(links)
+    for fight in all_fights:
+        out += "<fight"
+        try:
+            localID = localIDDict[fight]
+        except KeyError:
+            i += 1
+            localID = localIDDict[fight] = i
+        out += ' id="' + str(localID) + '">\n'
+        out += "\t<db_id>" + str(fight.id) + "</db_id>\n"
+        for fv in fight.fight_version_set.all():
+            out += '\t<competitor entrant="' + str(entrantDict[fv.version.id]) + '">\n'
+            try:
+                next_fight = links[fv]
+                try:
+                    nextLocalID = localIDDict[next_fight]
+                except KeyError:
+                    i += 1
+                    nextLocalID = localIDDict[next_fight] = i
+                out += "\t\t<next>" + str(nextLocalID) + "</next>\n"
+            except KeyError:
+                out += "\t\t<eliminated/>\n"
+            out += "\t</competitor>\n"
+        out += "</fight>\n"
+    print(out)
+
+    return render(request, "main/credits.html", {})'''
