@@ -1,6 +1,5 @@
-# from os import listdir, remove
 import random
-from os import listdir, remove
+#from os import listdir, replace, makedirs
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.validators import URLValidator
@@ -2094,12 +2093,13 @@ def prune_media(request):
     bad_images = []
 
     def check_media(used_files, dir):
-        year = datetime.date.today().year
-        filenames = listdir(settings.MEDIA_ROOT + "/" + dir + str(year))
-        for filename in filenames:
-            f = dir + str(year) + "/" + filename
-            if f not in used_files:
-                bad_images.append(f)
+        cyear = datetime.date.today().year
+        for year in range(2022, cyear + 1):
+            filenames = listdir(settings.MEDIA_ROOT + "/" + dir + str(year))
+            for filename in filenames:
+                f = dir + str(year) + "/" + filename
+                if f not in used_files:
+                    bad_images.append(f)
 
     robot_images = Version.objects.all().values("image").distinct()
     robot_images = [i['image'] for i in robot_images]
@@ -2123,7 +2123,12 @@ def prune_media(request):
 
     print("deleting", bad_images)
     for i in bad_images:
-        remove(settings.MEDIA_ROOT + "/" + i)
+        try:
+            replace(settings.MEDIA_ROOT + "/" + i, settings.MEDIA_ROOT + "/deleted/" + i)
+        except:
+            dir = settings.MEDIA_ROOT + "/deleted/" + i.split("/")[0] + "/" + i.split("/")[1]
+            makedirs(dir)
+            replace(settings.MEDIA_ROOT + "/" + i, settings.MEDIA_ROOT + "/deleted/" + i)
 
 
 def tournament_tree(request):
