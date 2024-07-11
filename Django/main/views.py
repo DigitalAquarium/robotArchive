@@ -1,5 +1,5 @@
 import random
-#from os import listdir, replace, makedirs
+# from os import listdir, replace, makedirs
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.validators import URLValidator
@@ -763,6 +763,9 @@ def new_contest_view(request, event_id):
         if form.is_valid():
             contest = form.save(commit=False)
             contest.event = event
+            if contest.end_date > event.end_date:
+                event.end_date = contest.end_date
+                event.save()
             contest.save()
             return redirect("main:edtEvent", event.id)
     else:
@@ -782,6 +785,9 @@ def edit_contest_view(request, contest_id):
     if request.method == "POST":
         form = ContestForm(request.POST, instance=contest)
         if form.is_valid():
+            if contest.end_date > contest.event.end_date:
+                contest.event.end_date = contest.end_date
+                contest.event.save()
             form.save()
             return redirect("main:edtContest", contest.id)
     else:
@@ -925,8 +931,8 @@ def leaderboard(request):
     if year not in years:
         year = current_year
     if weight != "F":
-        # Leaderboard.update_class(weight)
-        pass
+        Leaderboard.update_class(weight)
+        # pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
 
@@ -1024,14 +1030,21 @@ def robot_detail_view(request, slug):
         description += " Winning " + str(r.wins) + " and losing " + str(r.losses) + " in head to head battle."
 
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "fights_tuple": fights_tuple, "awards": awards, "ver": v, "can_change": can_change,
+                  {"robot": r,
+                   "fights_tuple": fights_tuple,
+                   "awards": awards,
+                   "ver": v,
+                   "can_change": can_change,
                    "version_set": r.version_set.all().order_by("number"),
-                   "best_lb_entry": best_lb_entry, "leaderboard_entries": leaderboard_entries,
-                   "current_lb_entry": current_lb_entry, "is_random": is_random,
+                   "best_lb_entry": best_lb_entry,
+                   "leaderboard_entries": leaderboard_entries,
+                   "current_lb_entry": current_lb_entry,
+                   "is_random": is_random,
                    "missing_brackets_flag": True if fights.filter(
                        contest__event__missing_brackets=True).exists() else False,
                    "title": r.name,
                    "description": description,
+                   "thumbnail": v.image.url if v and v.image else None if v else r.get_image() if r.get_image != settings.STATIC_URL + "unknown.png" else None,
                    "url": reverse("main:robotDetail", args=[r.slug]),
                    })
 
@@ -1427,7 +1440,7 @@ def franchise_detail_view(request, slug):
                        events.count()) + " event" + ("" if events.count == 1 else "s") + " " + fran.timespan(
                        True) + ".",
                    "thumbnail": fran.logo.url if fran.logo else None,
-                   "url": reverse("main:franchiseDetail", args=[fran.slug]),
+                   "url": reverse("main:franchiseDetail", args=[fran.slug]), "can_edit": fran.can_edit(request.user)
                    })
 
 
@@ -1623,8 +1636,18 @@ def new_award_view(request, event_id):
     else:
         form = AwardForm()
         form.fields['contest'].queryset = Contest.objects.filter(event=event)
-        form.fields['version'].queryset = Version.objects.filter(
-            registration__contest__in=event.contest_set.all()).order_by("name", "robot__name").distinct()
+        registered = Version.objects.filter(registration__contest__in=event.contest_set.all()).annotate(
+            alphabetical=Case(
+                When(robot_name="",
+                     then=Case(
+                         When(robot__display_latin_name=True, then=F("robot__latin_name")), default=F("robot__name")),
+                     ),
+                default=Case(
+                    When(display_latin_name=True, then=F("latin_robot_name")), default=F("robot_name")
+                )
+            ))
+        registered = registered.order_by("alphabetical").distinct()
+        form.fields['version'].choices = [(None, "----------")] + [(v.id, v.english_readable_name) for v in registered]
         return render(request, "main/forms/generic.html",
                       {"form": form, "title": "New Award", "next_url": reverse("main:newAward", args=[event_id])})
 
@@ -1645,8 +1668,18 @@ def award_edit_view(request, award_id):
     else:
         form = AwardForm(instance=a)
         form.fields['contest'].queryset = Contest.objects.filter(event=a.event)
-        form.fields['version'].queryset = Version.objects.filter(
-            registration__contest__in=a.event.contest_set.all()).distinct()
+        registered = Version.objects.filter(registration__contest__in=a.event.contest_set.all()).annotate(
+            alphabetical=Case(
+                When(robot_name="",
+                     then=Case(
+                         When(robot__display_latin_name=True, then=F("robot__latin_name")), default=F("robot__name")),
+                     ),
+                default=Case(
+                    When(display_latin_name=True, then=F("latin_robot_name")), default=F("robot_name")
+                )
+            ))
+        registered = registered.order_by("alphabetical").distinct()
+        form.fields['version'].choices = [(None, "----------")] + [(v.id, v.english_readable_name) for v in registered]
         return render(request, "main/forms/generic.html",
                       {"form": form, "title": "Edit Award", "next_url": reverse("main:editAward", args=[award_id])})
 
@@ -1979,7 +2012,7 @@ def calc_test(request):
     if test_type == "recalculate":
         recalc_all()
         return render(request, "main/editor/calc_test.html",
-               {"fight": "N/A", "test": test_type, "results": "Recalculated Ranks!"})
+                      {"fight": "N/A", "test": test_type, "results": "Recalculated Ranks!"})
     if test_type == "tag_team":
         test_fight = Fight.objects.get(pk=1791)
     if test_type == "regular":
@@ -2012,6 +2045,7 @@ def calc_test(request):
 
 
 def recalc_all():
+    start_time = time.time()
     def save_year(year, version_dictionary, robot_dictionary, fvs):
         print("Saving data for year: " + str(year))
         vers = [v for v in version_dictionary.values()]
@@ -2079,8 +2113,12 @@ def recalc_all():
         fvs += result[0]
 
     print("Saving Final Batch")
+    for ver in Version.objects.filter(fight__contest=contest_cache):
+        ver = version_dictionary[ver.id]
+        ver.update_fought_range(contest_cache, False)
     save_year(fight.contest.end_date.year, version_dictionary, robot_dictionary, fvs)
     print("Done!")
+    print("Took: " + str(time.time() - start_time) + " seconds.")
 
 
 # This shouldn't delete any data that is in use but just in case here's some permissions.

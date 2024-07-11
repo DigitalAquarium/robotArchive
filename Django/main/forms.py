@@ -57,6 +57,8 @@ class NewRobotForm(forms.Form):
         else:
             r.display_latin_name = False
             r.latin_name = asciify(r)
+            if r.latin_name == r.name.lower():
+                r.latin_name = ""
         v.robot_name = self.cleaned_data['vname']
         r.country = self.cleaned_data['country']
         v.country = self.cleaned_data['country']
@@ -84,6 +86,7 @@ class NewRobotForm(forms.Form):
 
 class NewVersionForm(forms.Form):
     robot_name = forms.CharField(max_length=255, required=False)
+    latin_robot_name = forms.CharField(max_length=255, required=False)
     version_name = forms.CharField(max_length=255, required=False)
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
@@ -101,6 +104,8 @@ class NewVersionForm(forms.Form):
         else:
             v.country = robot.country
         v.robot_name = self.cleaned_data['robot_name']
+        v.latin_robot_name = self.cleaned_data['latin_robot_name']
+        v.display_latin_name = v.latin_robot_name != ""
         v.name = self.cleaned_data['version_name']
         v.description = self.cleaned_data['description']
         v.image = self.cleaned_data['img']
@@ -139,7 +144,8 @@ class RobotForm(forms.ModelForm):
 class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
-        fields = ["robot_name", "name", "loaned", "country", "description", "image", "weapon_type", "team", "weight_class"]
+        fields = ["robot_name", "latin_robot_name","display_latin_name",
+                  "name", "loaned", "country", "description", "image", "weapon_type", "team", "weight_class"]
 
     def save(self, commit=True):
         ver = super().save(commit=False)
