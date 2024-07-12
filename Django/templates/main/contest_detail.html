@@ -32,26 +32,7 @@
                         <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
                             <td><a class="fight-link" href="{% url 'main:fightDetail' fight.id %}" >{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %}</a></td>
                             <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
-                            <td>
-                                {% if fight.winners|length > 0 %}
-                                    {% if fight.winners|length == 1 %}
-                                        {{ fight.winners|first }}
-                                    {% elif fight.winners|length == 2 %}
-                                        {{ fight.winners|first }} & {{ fight.winners|last }}
-                                    {% else %}
-                                        {{ fight.winners|first }}, {{ fight.winners|last }}, and
-                                        {{ fight.winners|length|add:-2 }} more…
-                                    {% endif %}
-                                {% else %}
-                                    {% if fight.method == "DR" %}
-                                        Draw
-                                    {% elif fight.method == "WU" %}
-                                        Unknown
-                                    {% else %}
-                                        None
-                                    {% endif %}
-                                {% endif %}
-                            </td>
+                            <td>{{fight.winners_string}}</td>
                         </tr>
                     {% endfor %}
 
@@ -66,7 +47,7 @@
                             <div class="gridview-square">
                                 <div class="gridview-title">
                                     <img class="flag-image" loading="lazy" src="{{ app.version.get_flag }}" alt="{{app.version.country}} Flag">
-                                    <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
+                                    <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version.english_readable_name }}</a>
                                 </div>
                                 <div class="gridview-image-container">
                                     <img class="fit-image" loading="lazy"

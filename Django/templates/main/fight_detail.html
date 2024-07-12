@@ -30,7 +30,7 @@
                     <div class="gridview-square competitor-square {%if fv.won%} winners-box {%endif%}">
                         <div class="gridview-title">
                             <img class="flag-image" src="{{ fv.version.get_flag }}" alt="{{fv.version.country}} Flag">
-                            <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
+                            <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version.english_readable_name }}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image" src="{% if fv.version.image %}{{ fv.version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
@@ -51,7 +51,7 @@
                         <div class="gridview-square">
                             <div class="gridview-title">
                                 <img class="flag-image" src="{{ fv.version.get_flag }}" alt="{{fv.version.country}} Flag">
-                                <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
+                                <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version.english_readable_name }}</a>
                             </div>
                             <div class="gridview-image-container">
                                 <img class="fit-image" src="{% if fv.version.image %}{{ fv.version.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
@@ -73,7 +73,7 @@
             <p>
                 {% if fight.winners|length > 0 %}
                     {% for robot in  fight.winners %}
-                        {{ robot }} {% if not forloop.last %} & {% endif %}
+                        {{ robot.english_readable_name }} {% if not forloop.last %} & {% endif %}
                     {% endfor %}
                     {% if fight.winners|length == 1 %}wins{% else %}win{% endif %} by
                 {% endif %}

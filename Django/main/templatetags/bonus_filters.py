@@ -37,10 +37,7 @@ def image_from_team(robot, team):
 @register.filter
 def name_from_team(robot, team):
     version = robot.get_representitive(team)
-    if version.robot_name:
-        return version.robot_name
-    else:
-        return robot.name
+    return version.english_readable_name()
 
 
 @register.filter

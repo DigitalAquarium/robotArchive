@@ -924,6 +924,24 @@ class Fight(models.Model):
                 winners.append(fv.version)
         return winners
 
+    def winners_string(self):
+        winners = self.winners()
+        if len(winners) > 0:
+            if len(winners) == 1:
+                return winners[0].english_readable_name()
+            elif len(winners) == 2:
+                return winners[0].english_readable_name() + " & " + winners[1].english_readable_name()
+            else:
+                return winners[0].english_readable_name() + ", " + winners[1].english_readable_name() + ", and " + str(
+                    len(winners) - 2) + " more…"
+        else:
+            if self.method == "DR":
+                return "Draw"
+            elif self.method == "WU":
+                return "Unknown"
+            else:
+                return "None"
+
     def result(self, r):
         this_robot = Fight_Version.objects.filter(version__robot=r, fight=self)
         if this_robot.count() > 1:

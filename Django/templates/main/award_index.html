@@ -8,6 +8,7 @@
 
 {% block content %}
     <div class="main-content">
+        <h1>Awards given out at <a href="{% url 'main:eventDetail' award_list.0.event.slug %}">{{award_list.0.event}}</a></h1>
         {% for award in award_list %}
             <div class="hrz-index-result">
                 <span class="hrz-index-image">
@@ -29,8 +30,7 @@
                         {% endif %}
                     </span>
                     <span class="hrz-index-details">
-                        <img class="flag-image" src="{{ award.version.get_flag }}" alt="{{ award.version.country }} Flag">
-                        <a href="{% url 'main:versionDetail' award.version.id %}">{{ award.version }}</a>
+                        <a href="{% url 'main:versionDetail' award.version.id %}">{{award.version|generate_title}}</a>
                     </span>
                 </div>
             </div>
