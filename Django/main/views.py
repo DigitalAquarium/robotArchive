@@ -2023,6 +2023,8 @@ def calc_test(request):
         test_fight = Fight.objects.get(pk=1358)  # Battlebots 3.0 Lightweight Royal Rumble
     if test_type == "annihilator":
         test_fight = Fight.objects.get(pk=985)  # Northern Annihilator Round 1
+    if test_type == "first_round_melee":
+        test_fight = Fight.objects.get(pk=7419)
     if test_type == "unbalanced_tag_team":
         test_fight = Fight.objects.get(pk=7057)  # Stinger vs Kan Opener & Thz
     if test_type == "unbalanced_tag_team_2":

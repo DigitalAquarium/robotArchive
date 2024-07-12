@@ -91,7 +91,7 @@
                         <tr>
                             <td><img class="award-icon" src="{{ award.get_icon }}" alt="award icon"></td>
                             <td>{{ award }}</td>
-                            <td>{{ award.version }}</td>
+                            <td>{{ award.version.english_readable_name }}</td>
                         </tr>
                     {% endfor %}
                 </table>
