@@ -32,7 +32,7 @@
                         <div class="gridview-title">
 
                             <img class="flag-image" src="{{ fv.version.get_flag }}" alt="Flag">
-                            <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version }}</a>
+                            <a href="{% url 'main:versionDetail' fv.version.id %}">{{ fv.version.english_readable_name }}</a>
                             <a href="{% url 'main:editFightVersion' fight.id fv.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Competitor"></a>
                             <a href="{% url 'main:delete_noreturn' 'fight_version' fv.id%}?redirect={% url 'main:edtFightOverview' fight.id %}"><img class="inline-image" src="{% static 'bin.png' %}" alt="Remove Competitor"></a>
                         </div>

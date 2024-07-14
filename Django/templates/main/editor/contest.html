@@ -38,20 +38,7 @@
                         <td><input id="number-{{fight.id}}" name="number-{{fight.id}}"  style="width:30px" type="text" value="{{fight.number}}"></td>
                         <td><a href="{% url 'main:edtFightOverview' fight.id %}" class="fight-link">{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %} </a></td>
                         <td>{{ fight.get_fight_type_display }}</td>
-                        <td>
-                            {% if fight.winners|length > 0 %}
-                                {% if fight.winners|length == 1 %}
-                                    {{ fight.winners|first }}
-                                {% elif fight.winners|length == 2 %}
-                                    {{ fight.winners|first }} & {{ fight.winners|last }}
-                                {% else %}
-                                    {{ fight.winners|first }}, {{ fight.winners|last }}, and
-                                    {{ fight.winners|length|add:-2 }} more…
-                                {% endif %}
-                            {% else %}
-                                None
-                            {% endif %}
-                        </td>
+                        <td>{{fight.winners_string}}</td>
                         <td>
 							<select name="fight-{{forloop.counter0}}">
 								<option value="{{ contest.id }}">Do Not Move</option>
@@ -77,7 +64,7 @@
                     <div class="gridview-square">
                         <div class="gridview-title">
                             <img class="flag-image" loading="lazy" src="{{ app.version.get_flag }}" alt="{{app.version.country}} Flag">
-                            <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version }}</a>
+                            <a href="{% url 'main:versionDetail' app.version.id %}">{{ app.version.english_readable_name }}</a>
                             <a href="{% url 'main:delete' 'registration' app.id contest.id %}"><img class="inline-image" style="display:flex" src="{% static 'bin.png' %}" alt="Remove Competitor"></a>
                         </div>
                         <div class="gridview-image-container">

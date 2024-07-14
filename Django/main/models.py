@@ -126,7 +126,7 @@ class Team(models.Model):
         if save: self.save()
         return self.slug
 
-    def timespan(self,text=False):
+    def timespan(self, text=False):
         # Only select robots that fought after 1980 (all robots) as a proxy for checking that first_fought is not none
         first_first_fought = self.owned_robots().filter(first_fought__gt="1980-01-01").order_by(
             "first_fought").first()
@@ -136,7 +136,6 @@ class Team(models.Model):
             return timespan(first_first_fought, last_last_fought, text)
         else:
             return "that never competed"
-
 
 
 class Weight_Class(models.Model):
@@ -203,14 +202,14 @@ class Weight_Class(models.Model):
         return round(self.weight_grams / 453.59237)
 
     def find_lb_class(self):
-        #Cover for the early weight classes
-        if self.id in [7,8]:
+        # Cover for the early weight classes
+        if self.id in [7, 8]:
             return "F"
-        elif self.id in [4,12]:
+        elif self.id in [4, 12]:
             return "L"
-        elif self.id in [2,6,11]:
+        elif self.id in [2, 6, 11]:
             return "M"
-        elif self.id in [3,5,9]:
+        elif self.id in [3, 5, 9]:
             return "H"
 
         grams = self.weight_grams
@@ -347,9 +346,9 @@ class Robot(models.Model):
 
     def first_version(self):
         return self.version_set.all().order_by("number")[0]
+
     def last_version(self):
         return self.version_set.all().order_by("-number")[0]
-
 
     @staticmethod
     def get_by_rough_weight(wc):
@@ -560,7 +559,6 @@ class Event(models.Model):
     slug = models.SlugField(max_length=50, unique=True)
     missing_brackets = models.BooleanField(default=False)
 
-
     def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
         self.slug = make_slug(self.name, Event.objects.all())
@@ -702,8 +700,12 @@ class Fight(models.Model):
         else:
             commit = False
 
+        if len(competitors)< 2:
+            return [fvs, competitors]
+
         # Skip Rank Calculation (and tag team pre- / post-processing) if it isn't relevant
-        if (self.fight_type == "FC" or self.fight_type == "NS") and (sum([fv.won for fv in fvs]) > 0 or self.method == "DR"):
+        if (self.fight_type == "FC" or self.fight_type == "NS") and (
+                sum([fv.won for fv in fvs]) > 0 or self.method == "DR"):
             tt_fight_flag = fvs.filter(tag_team__gt=0).count() > 1
             if tt_fight_flag:
                 # If the match is a tag team match, create dummy competitors and fvs for the fight calculation representing the average robot per team.
@@ -711,7 +713,7 @@ class Fight(models.Model):
                 newfvs = []
                 tteams_key = {}
                 # sort the competitors & fvs so they line up properly when tag teams are made.
-                fvs = sorted(fvs,key=lambda x: x.tag_team)
+                fvs = sorted(fvs, key=lambda x: x.tag_team)
                 new_competitors = []
                 for fv in fvs:
                     for competitor in competitors:
@@ -723,7 +725,8 @@ class Fight(models.Model):
                     try:
                         tteams[tteams_key[fvs[i].tag_team]].append(competitors[i])
                     except KeyError:
-                        tteams_key[fvs[i].tag_team] = len(tteams) # tteams_key tells the index of each team in the list. the length of the list finds this for the next team in line
+                        tteams_key[fvs[i].tag_team] = len(
+                            tteams)  # tteams_key tells the index of each team in the list. the length of the list finds this for the next team in line
                         tteams.append([competitors[i]])
                 competitors = []
                 i = -1
@@ -741,7 +744,6 @@ class Fight(models.Model):
                 fvs = newfvs
 
             numWinners = sum([fv.won for fv in fvs])
-
 
             # ~~~~~~~~~~~~~~~~~~~Rank Calculation~~~~~~~~~~~~~~~~~~~~~~~~~~
             if len(competitors) == 2:
@@ -765,16 +767,16 @@ class Fight(models.Model):
                 for i in range(len(competitors)):
                     averageRank = 0
                     for competitor in competitors:
-                        if competitor != competitors[i]: # Don't Count yourself
+                        if competitor != competitors[i]:  # Don't Count yourself
                             averageRank += competitor.robot.ranking / (len(competitors) - 1)
                     averageQ = 10 ** (averageRank / 400)
 
                     q = 10 ** (competitors[i].robot.ranking / 400)
                     averageExpected = averageQ / (averageQ + q)
                     if self.method == "DR":  # Some elo here may get lost on the floor or gained due to floating points
-                        change = (K * (0.5 - averageExpected)) / len(competitors)
+                        change = (K * (0.5 - averageExpected)) / (len(competitors) - 1)
                     else:
-                        change = (K * (1 - averageExpected)) / len(competitors)
+                        change = (K * (1 - averageExpected)) / (len(competitors) - 1)
                         pool += change
                     fvs[i].ranking_change = -change
 
@@ -786,7 +788,7 @@ class Fight(models.Model):
 
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~Post Processing~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if tt_fight_flag:
-                #Convert data from dummy fvs back onto the real fvs and unwrap the tteams 2D array back to a competitors 1D array
+                # Convert data from dummy fvs back onto the real fvs and unwrap the tteams 2D array back to a competitors 1D array
                 unwraped_competitors = []
                 k = 0
                 for i in range(len(tteams)):
@@ -797,12 +799,12 @@ class Fight(models.Model):
                 fvs = oldfvs
                 competitors = unwraped_competitors
 
-            for i in range(len(competitors)): # Apply ranking change to robots.
+            for i in range(len(competitors)):  # Apply ranking change to robots.
                 competitors[i].robot.ranking += fvs[i].ranking_change
 
-        #Sportsman and plastic can gain wins but not rank
+        # Sportsman and plastic can gain wins but not rank
         if len(competitors) == 2 and sum([fv.won for fv in fvs]) == 1 and self.fight_type in ["FC", "NS", "SP", "PL"]:
-            for i in [0,1]:
+            for i in [0, 1]:
                 if fvs[i].won:
                     competitors[i].robot.wins += 1
                 else:
@@ -924,6 +926,24 @@ class Fight(models.Model):
             if fv.won == 1:
                 winners.append(fv.version)
         return winners
+
+    def winners_string(self):
+        winners = self.winners()
+        if len(winners) > 0:
+            if len(winners) == 1:
+                return winners[0].english_readable_name()
+            elif len(winners) == 2:
+                return winners[0].english_readable_name() + " & " + winners[1].english_readable_name()
+            else:
+                return winners[0].english_readable_name() + ", " + winners[1].english_readable_name() + ", and " + str(
+                    len(winners) - 2) + " more…"
+        else:
+            if self.method == "DR":
+                return "Draw"
+            elif self.method == "WU":
+                return "Unknown"
+            else:
+                return "None"
 
     def result(self, r):
         this_robot = Fight_Version.objects.filter(version__robot=r, fight=self)
@@ -1243,7 +1263,9 @@ class Leaderboard(models.Model):
         else:
             has_competitively_fought = False
             for version in robot.version_set.all():
-                if version.fight_set.filter(fight_type__in=["FC", "NS"]).count() > 0:
+                # A robot has not competitively fought if we don't know any of the results.
+                if version.fight_set.filter(fight_type__in=["FC", "NS"], contest__end_date__gte=date_cutoff).exclude(
+                        method="WU").count() > 0:
                     has_competitively_fought = True
                     break
             if not has_competitively_fought:
@@ -1267,7 +1289,7 @@ class Leaderboard(models.Model):
                 wc = version.weight_class.find_lb_class()
                 if wc not in fights.keys():
                     fights[wc] = 0
-                fights[wc] += version.fight_set.filter(fight_type__in=["NS","FC"],contest__end_date__lte=date).count()
+                fights[wc] += version.fight_set.filter(fight_type__in=["NS", "FC"], contest__end_date__lte=date).count()
             actual_weight_class = "X"
             for key in fights:
                 if fights[key] >= fights[actual_weight_class]:
@@ -1538,9 +1560,9 @@ class Source(models.Model):
     def __str__(self):
         return self.name
 
-
     def can_edit(self, a):  # TODO : lol
         return True
+
 
 class HalloFame(models.Model):
     full_member = models.BooleanField()
@@ -1548,6 +1570,7 @@ class HalloFame(models.Model):
 
     def __str__(self):
         str(self.robot) + " " + ("hall of fame entry" if self.full_member else "hall of fame honorable mention")
+
 
 def asciify(obj, commit=False):
     isVersion = isinstance(obj, Version)

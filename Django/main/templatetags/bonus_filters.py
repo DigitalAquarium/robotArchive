@@ -37,10 +37,7 @@ def image_from_team(robot, team):
 @register.filter
 def name_from_team(robot, team):
     version = robot.get_representitive(team)
-    if version.robot_name:
-        return version.robot_name
-    else:
-        return robot.name
+    return version.english_readable_name()
 
 
 @register.filter
@@ -50,8 +47,8 @@ def generate_title(rob_or_ver, display_latin=True):
     name = rob_or_ver.__str__()
     html_to_return = format_html('<div class="robot-title"> <img class="flag-image" src="{}" alt="{} Flag"> '
                                  '<span class="robot-title-text">{}', flag, country, name)
-    latin = ""
-    if display_latin and rob_or_ver.display_latin_name:
+
+    if display_latin and (rob_or_ver.display_latin_name or (isinstance(rob_or_ver,Version) and rob_or_ver.robot_name == "" and rob_or_ver.robot.display_latin_name)):
         if isinstance(rob_or_ver, Robot):
             latin = rob_or_ver.latin_name
         else:

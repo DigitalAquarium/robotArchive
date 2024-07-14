@@ -52,6 +52,20 @@
     visibility: hidden;
     display: none;
 }
+.additional-options li {
+    display: inline-flex;
+}
+
+h1{
+    margin-bottom:0;
+    text-align:center;
+}
+
+.search-button{
+    border: none;
+    margin-right:0;
+    margin-left:0.25em;
+}
 
 @media (max-width: 700px){
   .gridview-container {

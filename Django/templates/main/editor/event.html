@@ -48,6 +48,8 @@
                         <tr>
                             <th>Contest Name</th>
                             <th>Weight Class</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
                             <th>Fight Type</th>
                         </tr>
                         </thead>
@@ -55,6 +57,8 @@
                             <tr>
                                 <td><a href="{% url 'main:edtContest' contest.id %}">{{ contest }}</a></td>
                                 <td>{{ contest.weight_class.weight_string }}</td>
+                                <td>{{ contest.start_date|date:"d F Y" }}</td>
+                                <td>{{ contest.end_date|date:"d F Y" }}</td>
                                 <td>{{ contest.get_fight_type_display }}</td>
                             </tr>
                         {% endfor %}
@@ -87,7 +91,7 @@
                         <tr>
                             <td><img class="award-icon" src="{{ award.get_icon }}" alt="award icon"></td>
                             <td>{{ award }}</td>
-                            <td>{{ award.version }}</td>
+                            <td>{{ award.version.english_readable_name }}</td>
                         </tr>
                     {% endfor %}
                 </table>
