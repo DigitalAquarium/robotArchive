@@ -700,6 +700,9 @@ class Fight(models.Model):
         else:
             commit = False
 
+        if len(competitors)< 2:
+            return [fvs, competitors]
+
         # Skip Rank Calculation (and tag team pre- / post-processing) if it isn't relevant
         if (self.fight_type == "FC" or self.fight_type == "NS") and (
                 sum([fv.won for fv in fvs]) > 0 or self.method == "DR"):
@@ -771,9 +774,9 @@ class Fight(models.Model):
                     q = 10 ** (competitors[i].robot.ranking / 400)
                     averageExpected = averageQ / (averageQ + q)
                     if self.method == "DR":  # Some elo here may get lost on the floor or gained due to floating points
-                        change = (K * (0.5 - averageExpected)) / len(competitors)
+                        change = (K * (0.5 - averageExpected)) / (len(competitors) - 1)
                     else:
-                        change = (K * (1 - averageExpected)) / len(competitors)
+                        change = (K * (1 - averageExpected)) / (len(competitors) - 1)
                         pool += change
                     fvs[i].ranking_change = -change
 

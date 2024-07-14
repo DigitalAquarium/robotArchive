@@ -5,6 +5,7 @@
 {% block head %}
     <link rel="canonical" href="https://www.robotcombatarchive.com{{url}}">
     <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+    <link rel="stylesheet" href="{% static 'style/index_view.css' %}"/>
 	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}"/>
     <link rel="stylesheet" href="{% static 'style/tooltip.css' %}"/>
     <script src="{%static 'scripts/leaderboard.js' %}"></script>
@@ -12,29 +13,8 @@
 {% endblock %}
 
 {% block content %}
-    <section class="search-params">
-        <form method="get" action="{% url 'main:leaderboard' %}">
-            <label>Weight Class:
-                <select name="weight">
-                    {% for wc in weights %}
-                        <option value="{{ wc|first }}"
-                                {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-			<label>Year:
-                <select name="year">
-                    {% for year in years %}
-                        <option value="{{ year }}"
-                                {% if chosen_year == year %}selected{% endif %}>{{ year }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <br>
-            <input type="submit" value="Go">
-        </form>
-    </section>
-    <div class="main-content">
+<div class="main-content">
+    <h1>RCA {{chosen_weight_text|title}} Leaderboard for {{chosen_year}}</h1>
 	{% if robot_list|length == 0%}
 	No data to display
 	{%else%}
@@ -70,6 +50,31 @@
             </div>
 		{% endfor %}
     </div>
+
+    <form method="get" action="{% url 'main:leaderboard' %}">
+        <span style="margin-right:1em">View Another Leaderboard:</span>
+        <ul class="additional-options">
+        <li><label style="display:none">Weight Class:</label>
+            <select name="weight">
+                {% for wc in weights %}
+                    <option value="{{ wc|first }}"
+                            {% if chosen_weight == wc|first %}selected{% endif %}>{{ wc|last }}</option>
+                {% endfor %}
+            </select>
+        </li>
+        <li><label style="display:none">Year:</label>
+            <select name="year">
+                {% for year in years %}
+                    <option value="{{ year }}"
+                            {% if chosen_year == year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </li>
+        </ul>
+        <button class="search-button material-symbols-outlined" type="submit" value="Go"> Search </button>
+    </form>
+    <br>
+
 	{% if robot_list|length > 3%}
 	<div class="lb-table-container">
         <table>

@@ -1,4 +1,8 @@
+import datetime
 import random
+from os.path import isdir
+from shutil import copy2
+
 # from os import listdir, replace, makedirs
 
 from django.contrib.auth.decorators import login_required, permission_required
@@ -947,10 +951,14 @@ def leaderboard(request):
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
 
+    chosen_weight_text = (lambda x: {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight",
+                                     "S": "super heayweight"}[x])(weight)
+
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
                    "weights": visible_weights,
                    "chosen_weight": weight,
+                   "chosen_weight_text": chosen_weight_text,
                    "chosen_year": year,
                    "first_year": not Leaderboard.objects.filter(weight=weight, year=year - 1).exists(),
                    "years": years,
@@ -960,10 +968,8 @@ def leaderboard(request):
                    "eliminations": eliminations,
 
                    "title": "Leaderboard",
-                   "description": "Leaderboard of " + (lambda x:
-                                                       {"F": "featherweight", "L": "lightweight", "M": "middleweight",
-                                                        "H": "heavyweight", "S": "super heayweight"}[x])(
-                       weight) + " fighting robots in the year " + str(year) + ".",
+                   "description": "Leaderboard of " + chosen_weight_text + " fighting robots in the year " + str(
+                       year) + ".",
                    "thumbnail": top_three[0].version.image.url,
                    "url": reverse("main:leaderboard") + "?weight=" + weight + "&year=" + str(year),
                    })
@@ -1371,14 +1377,28 @@ def franchise_modify_view(request, franchise_id=None):
     if request.method == "POST":
         if franchise_id is None:
             form = FranchiseForm(request.POST, request.FILES)
+            old_logo = ""
         else:
             franchise = Franchise.objects.get(pk=franchise_id)
             form = FranchiseForm(request.POST, request.FILES, instance=franchise)
+            old_logo = franchise.logo
+
         if form.is_valid():
             new = form.save()
             if franchise_id is None:
                 new.make_slug(save=True)
                 franchise_id = new.id
+            else:
+                if old_logo and new.logo != old_logo:
+                    event_logo_dir = "event_logos/" + str(datetime.date.today().year)
+                    if not isdir(settings.MEDIA_URL[1:] + event_logo_dir):
+                        new.logo = old_logo
+                        new.save()
+                        raise Exception
+                    else:
+                        new_events_logo = event_logo_dir + "/" + old_logo.url.split("/")[-1]
+                        copy2(old_logo.url[1:], settings.MEDIA_URL[1:] + new_events_logo)
+                        Event.objects.filter(franchise__id=franchise.id, logo="").update(logo=new_events_logo)
 
             franchise = new
             web_links = franchise.web_link_set.all()
@@ -2048,6 +2068,7 @@ def calc_test(request):
 
 def recalc_all():
     start_time = time.time()
+
     def save_year(year, version_dictionary, robot_dictionary, fvs):
         print("Saving data for year: " + str(year))
         vers = [v for v in version_dictionary.values()]
