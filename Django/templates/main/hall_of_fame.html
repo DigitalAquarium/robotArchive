@@ -18,7 +18,7 @@
                     <div class="gridview-square">
                         <div class="gridview-title">
                              <img class="flag-image" src="{{ robot.get_flag }}" alt="{{robot.country}} Flag">
-                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot.english_readable_name }}</a>
+                            <a href="{% url 'main:robotDetail' robot.slug %}">{%if robot.show_latin_name%}{{robot.latin_name}}{%else%}{{robot.name}}{%endif%}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"
@@ -34,7 +34,7 @@
                     <div class="gridview-square">
                         <div class="gridview-title">
                              <img class="flag-image" src="{{ robot.get_flag }}" alt="{{robot.country}} Flag">
-                            <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot.english_readable_name }}</a>
+                            <a href="{% url 'main:robotDetail' robot.slug %}">{%if robot.show_latin_name%}{{robot.latin_name}}{%else%}{{robot.name}}{%endif%}</a>
                         </div>
                         <div class="gridview-image-container">
                             <img class="fit-image"
