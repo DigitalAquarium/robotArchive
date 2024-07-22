@@ -523,8 +523,11 @@ class Franchise(models.Model):
         return self.name
 
     def can_edit(self, user):
-        p = Person.objects.get(user=user)
-        return p in self.members.all() or user.is_staff
+        try:
+            p = Person.objects.get(user=user)
+            return p in self.members.all() or user.is_staff
+        except:
+            return False
 
     def get_logo_url(self):
         if self.logo:

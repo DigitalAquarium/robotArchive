@@ -1460,7 +1460,8 @@ def franchise_detail_view(request, slug):
                        events.count()) + " event" + ("" if events.count == 1 else "s") + " " + fran.timespan(
                        True) + ".",
                    "thumbnail": fran.logo.url if fran.logo else None,
-                   "url": reverse("main:franchiseDetail", args=[fran.slug]), "can_edit": fran.can_edit(request.user)
+                   "url": reverse("main:franchiseDetail", args=[fran.slug]),
+                   "can_edit": fran.can_edit(request.user)
                    })
 
 
