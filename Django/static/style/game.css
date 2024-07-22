@@ -1,0 +1,93 @@
+:root{
+    --gridSize: 100px;
+}
+
+.resultGrid {
+    background: gray;
+    width: var(--gridSize);
+    height: var(--gridSize);
+}
+.botSuggestion{
+    display:flex;
+    height:200px;
+    font-size:3em;
+    align-items: center;
+    margin-top:1em;
+    cursor:pointer;
+}
+.botImage{
+    height:100%;
+}
+h1{
+    text-align:center;
+    font-size:3em;
+}
+h1 .battle{
+    color: #EC1B24;
+}
+h1 .bordle{
+    color: #00AEF0;
+}
+th{
+    background-color: var(--background-colour);
+    height:var(--gridSize);
+}
+table, th, td {
+    border: none;
+    border-collapse: separate;
+    padding: 0px;
+}
+.tableWrapper{
+    display:flex;
+    flex-direction:row;
+}
+.spacer, .feedbackTable{
+    flex:1;
+}
+#descriptionSpacer{
+    height:650px
+}
+#guess{
+  border: 1px solid var(--font-colour);
+  padding: 5px;
+  margin-top:1em;
+  font-size: 2em;
+  width: 50%;
+  height:1em;
+}
+#guess:focus{
+  outline:none;
+}
+.suggestionName{
+    margin-left:1.5em;
+}
+
+.answer{
+    font-size:2em;
+    text-align:center;
+    width:100%;
+}
+.answer img{
+    padding-top:0.5em;
+    max-height:300px;
+}
+
+#plzCentreTheGuessThingThx{
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+#shareResult{
+    background-color: #00AEFF;
+    margin-top: 1em;
+    font-size: 2em;
+    width: 50%;
+    cursor: pointer;
+}
+
+@media (max-width: 700px){
+    :root{
+        --gridSize: 75px;
+    }
+}

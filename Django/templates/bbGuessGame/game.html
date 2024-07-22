@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="Robot Wars, BattleBots, Robogames, Robot Combat, Combots, Robots, Technology, Fighting Sports, Wordle">
+    {%block seo%} {% include "snippets/meta_page_info.html" with title="BattleBordle"  description="BattleBordle is a BattleBots guessing game. Enter a robot into the search bar and click to guess, for each category you will get either a green square for a match, a yellow square for a near miss or a grey square for a complete miss." url="/battlebordle" %} {%endblock seo%}
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{%static 'favicon/apple-touch-icon.png'%}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{%static 'favicon/favicon-32x32.png'%}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{%static 'favicon/favicon-16x16.png'%}">
+    <link rel="manifest" href="{%static 'favicon/site.webmanifest' %}">
+    <link rel="stylesheet" href="{% static 'style/base.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://ricostacruz.com/jquery.transit/jquery.transit.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'style/game.css' %}">
+    <script src="{% static 'scripts/game.js' %}"></script>
+</head>
+
+<body>
+<nav class="navbar" style="z-index:10">
+        <div class="navtitle">
+            {% block home_button %}
+                <span class="home-icon"><a class="material-symbols-outlined" href="https://www.robotcombatarchive.com">home</a></span>
+            {% endblock home_button %}
+        </div>
+</nav>
+<div class="content">
+<div class="main-content">
+    <h1><span class="battle">Battle</span><span class="bordle">Bordle</span></h1>
+    <div class="answer" id="botOfTheDay" style="{%if not answer%}display:none;{%endif%}">
+        <div id="botOfTheDayName">{{answer}}</div>
+        <img class="botImage" id="botOfTheDayImg" src="{{answer.image.url}}">
+    </div>
+    <div class="tableWrapper">
+        <table class="feedbackTable">
+            <tr><th></th></tr>
+            <tr><th id="guessFeedback1">{%if bbNames.0%}{{bbNames.0}}{%endif%}</th></tr>
+            <tr><th id="guessFeedback2">{%if bbNames.1%}{{bbNames.1}}{%endif%}</th></tr>
+            <tr><th id="guessFeedback3">{%if bbNames.2%}{{bbNames.2}}{%endif%}</th></tr>
+            <tr><th id="guessFeedback4">{%if bbNames.3%}{{bbNames.3}}{%endif%}</th></tr>
+            <tr><th id="guessFeedback5">{%if bbNames.4%}{{bbNames.4}}{%endif%}</th></tr>
+            <tr><th id="guessFeedback6">{%if bbNames.5%}{{bbNames.5}}{%endif%}</th></tr>
+        </table>
+
+        <table class="gameTable">
+            <tr>
+                <th>First Letter</th><th>Debut Season</th><th>Weapon Type</th><th>Best Finish</th><th>Color</th><th>Country</th>
+            </tr>
+            <tr>
+                <td class="resultGrid" id="letter1" {%if colourGrid.0.0%} style="background:{{colourGrid.0.0}}" {%endif%}></td>
+                <td class="resultGrid" id="debut1" {%if colourGrid.0.1%} style="background:{{colourGrid.0.1}}" {%endif%}></td>
+                <td class="resultGrid" id="weapon1" {%if colourGrid.0.2%} style="background:{{colourGrid.0.2}}" {%endif%}></td>
+                <td class="resultGrid" id="finish1" {%if colourGrid.0.3%} style="background:{{colourGrid.0.3}}" {%endif%}></td>
+                <td class="resultGrid" id="colour1" {%if colourGrid.0.4%} style="background:{{colourGrid.0.4}}" {%endif%}></td>
+                <td class="resultGrid" id="country1" {%if colourGrid.0.5%} style="background:{{colourGrid.0.5}}" {%endif%}></td>
+            </tr>
+            <tr>
+                <td class="resultGrid" id="letter2" {%if colourGrid.1.0%} style="background:{{colourGrid.1.0}}" {%endif%}></td>
+                <td class="resultGrid" id="debut2" {%if colourGrid.1.1%} style="background:{{colourGrid.1.1}}" {%endif%}></td>
+                <td class="resultGrid" id="weapon2" {%if colourGrid.1.2%} style="background:{{colourGrid.1.2}}" {%endif%}></td>
+                <td class="resultGrid" id="finish2" {%if colourGrid.1.3%} style="background:{{colourGrid.1.3}}" {%endif%}></td>
+                <td class="resultGrid" id="colour2" {%if colourGrid.1.4%} style="background:{{colourGrid.1.4}}" {%endif%}></td>
+                <td class="resultGrid" id="country2" {%if colourGrid.1.5%} style="background:{{colourGrid.1.5}}" {%endif%}></td>
+            </tr>
+            <tr>
+                <td class="resultGrid" id="letter3" {%if colourGrid.2.0%} style="background:{{colourGrid.2.0}}" {%endif%}></td>
+                <td class="resultGrid" id="debut3" {%if colourGrid.2.1%} style="background:{{colourGrid.2.1}}" {%endif%}></td>
+                <td class="resultGrid" id="weapon3" {%if colourGrid.2.2%} style="background:{{colourGrid.2.2}}" {%endif%}></td>
+                <td class="resultGrid" id="finish3" {%if colourGrid.2.3%} style="background:{{colourGrid.2.3}}" {%endif%}></td>
+                <td class="resultGrid" id="colour3" {%if colourGrid.2.4%} style="background:{{colourGrid.2.4}}" {%endif%}></td>
+                <td class="resultGrid" id="country3" {%if colourGrid.2.5%} style="background:{{colourGrid.2.5}}" {%endif%}></td>
+            </tr>
+            <tr>
+                <td class="resultGrid" id="letter4" {%if colourGrid.3.0%} style="background:{{colourGrid.3.0}}" {%endif%}></td>
+                <td class="resultGrid" id="debut4" {%if colourGrid.3.1%} style="background:{{colourGrid.3.1}}" {%endif%}></td>
+                <td class="resultGrid" id="weapon4" {%if colourGrid.3.2%} style="background:{{colourGrid.3.2}}" {%endif%}></td>
+                <td class="resultGrid" id="finish4" {%if colourGrid.3.3%} style="background:{{colourGrid.3.3}}" {%endif%}></td>
+                <td class="resultGrid" id="colour4" {%if colourGrid.3.4%} style="background:{{colourGrid.3.4}}" {%endif%}></td>
+                <td class="resultGrid" id="country4" {%if colourGrid.3.5%} style="background:{{colourGrid.3.5}}" {%endif%}></td>
+            </tr>
+            <tr>
+                <td class="resultGrid" id="letter5" {%if colourGrid.4.0%} style="background:{{colourGrid.4.0}}" {%endif%}></td>
+                <td class="resultGrid" id="debut5" {%if colourGrid.4.1%} style="background:{{colourGrid.4.1}}" {%endif%}></td>
+                <td class="resultGrid" id="weapon5" {%if colourGrid.4.2%} style="background:{{colourGrid.4.2}}" {%endif%}></td>
+                <td class="resultGrid" id="finish5" {%if colourGrid.4.3%} style="background:{{colourGrid.4.3}}" {%endif%}></td>
+                <td class="resultGrid" id="colour5" {%if colourGrid.4.4%} style="background:{{colourGrid.4.4}}" {%endif%}></td>
+                <td class="resultGrid" id="country5" {%if colourGrid.4.5%} style="background:{{colourGrid.4.5}}" {%endif%}></td>
+            </tr>
+            <tr>
+                <td class="resultGrid" id="letter6" {%if colourGrid.5.0%} style="background:{{colourGrid.5.0}}" {%endif%}></td>
+                <td class="resultGrid" id="debut6" {%if colourGrid.5.1%} style="background:{{colourGrid.5.1}}" {%endif%}></td>
+                <td class="resultGrid" id="weapon6" {%if colourGrid.5.2%} style="background:{{colourGrid.5.2}}" {%endif%}></td>
+                <td class="resultGrid" id="finish6" {%if colourGrid.5.3%} style="background:{{colourGrid.5.3}}" {%endif%}></td>
+                <td class="resultGrid" id="colour6" {%if colourGrid.5.4%} style="background:{{colourGrid.5.4}}" {%endif%}></td>
+                <td class="resultGrid" id="country6" {%if colourGrid.5.5%} style="background:{{colourGrid.5.5}}" {%endif%}></td>
+            </tr>
+        </table>
+        <div class="spacer"></div>
+    </div>
+    <div id="plzCentreTheGuessThingThx">
+        <input id="guess" name="guess" type="text" {%if answer%} style="display:none" {%endif%}>
+        <div id="shareResult" style="{%if not answer%}display:none;{%endif%}">Share</div>
+    </div>
+
+    <div class="botSuggestion" id="suggestion1">
+        <img class="botImage" id="suggestion1Img" src="">
+        <span id="suggestion1Name" class="suggestionName"></span>
+        <span id="suggestion1ID" style="display:none"></span>
+    </div>
+    <div class="botSuggestion" id="suggestion2">
+        <img class="botImage" id="suggestion2Img" src="">
+        <span id="suggestion2Name" class="suggestionName"></span>
+        <span id="suggestion2ID" style="display:none"></span>
+    </div>
+    <div class="botSuggestion" id="suggestion3">
+        <img class="botImage" id="suggestion3Img" src="">
+        <span id="suggestion3Name" class="suggestionName"></span>
+        <span id="suggestion3ID" style="display:none"></span>
+    </div>
+    <div id="descriptionSpacer"></div>
+    <p>
+        BattleBordle is a BattleBots guessing game inspired by a concept posted to OOTA by @bravadobattlebot. Enter a robot into the search bar and click to guess, for each category you will get either a green square for a match, a yellow square for a near miss or a grey square for a complete miss.<br>
+        Info in categories are correct according to the latest appearance on the show. For example Chomp is a green and yellow axe, not a silver crusher and Red Devil is considered Canadian.<br>
+        For the sake of keeping things fun (and not making the game impossible) BattleBordle ONLY contains data from the main series of reboot battlebots, no side events / live shows included. The categories are as follows:<br>
+        <br>
+        First Letter: Does the first letter of your guess match the first letter of today's hidden BattleBot.<br><br>
+        Debut: Which season of the reboot did the robot compete at, a yellow is awarded for the seasons either side of the correct answer.<br><br>
+        Weapon: What is the primary weapon type of the robot. A weapon in the same rough category (eg drum spinner / vertical spinner) will be yellow. (As an edge case, Fusion is classed as a vert here)<br><br>
+        Best Finish: Where in the overall tournament did this robot finish? Categories are: champion, runner-up, semi-finalist, quarter-finalist, round of 16, round of 32, qualifiers/pre-qualifers/fight nights, alternate/reserve. Yellows are again awarded for 1 either side of the correct answer.<br><br>
+        Color: What color a robot is can be quite subjective, to get around this as well as possible each robot here has been assigned a primary and (mostly) a secondary color. Matching one gives a yellow square and both a green, although this might still be out sometimes depending on if you think that's a blue or a green etc. For certain very multi-colored bots where a single color is hard to determine they've been assigned the elusive "rainbow" color for a color slot.<br><br>
+        Country: Which country is this robot from? In the event in which robots are listed as being from multiple countries the first country listed on the wiki is chosen. (And as an edge case, Cobalt is considered British)
+    </p>
+</div>
+</div>
+</body>
+</html>

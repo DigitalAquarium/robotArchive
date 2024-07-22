@@ -505,6 +505,7 @@ class Version(models.Model):
 
 class Franchise(models.Model):
     name = models.CharField(max_length=50)
+    abbreviation = models.CharField(max_length=50)
     logo = models.ImageField(upload_to='franchise_logos/%Y/', blank=True)
     description = models.TextField(blank=True)
     members = models.ManyToManyField(Person, through="Person_Franchise")
