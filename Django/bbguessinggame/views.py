@@ -111,3 +111,16 @@ def getByNameView(request):
         if i == 3:
             break
     return JsonResponse(response, status=200)
+
+
+def getDebugTimes(request):
+    global today
+    tzOffset = -int(request.COOKIES["tzOffset"])
+    gameStartDay = request.COOKIES["gameStartDay"]
+    return JsonResponse({
+        "serverTime": today.strftime("%d-%m-%y %H:%M"),
+        "clientTime": (today + timedelta(minutes=tzOffset)).strftime("%d-%m-%y %H:%M"),
+        "gameStart": gameStartDay,
+        "clientToday": (today + timedelta(minutes=tzOffset)).strftime("%a")
+    }
+        , status=200)
