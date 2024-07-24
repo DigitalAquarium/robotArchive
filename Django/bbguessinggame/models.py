@@ -20,7 +20,7 @@ BEST_FINISH_CHOICES = [
 ]
 
 WEAPON_TYPE_CHOICES = [
-    ("NM", "Meltybrain"),
+    ("HM", "Meltybrain"),
 
     ("HH", "Horizontal Spinner"),
     ("HU", "Undercutter"),
