@@ -189,7 +189,9 @@
                             {% endif %}
                             <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
                             <td><a class="fight-link" href="{% url 'main:fightDetail' fight.id %}">
-                                {{ fight|fight_opponents:robot }}
+                                {%with fight|fight_opponents:robot as opponents%}
+                                    {%if opponents%}{{ opponents }}{%else%}-----{%endif%}
+                                {%endwith%}
                                 {% include "snippets/fight_icon.html" with fight=fight %}
                             </a></td>
                             <td class="mobile-hide">{{ fight|fight_result:robot }}</td>

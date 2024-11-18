@@ -9,40 +9,78 @@ from django.shortcuts import render
 
 from django.utils import timezone
 
-
-def setBotOfTheDay():
-    # Sets bot of the day - Four days in advance to prevent the answer from randomly changing on people.
-    global today
-    newRandomBot = BattleBot.objects.all().order_by("?")[0]
-    today = timezone.now()
-    fourDaysTime = (today + timedelta(days=4)).strftime("%a")
-    HBToday = HiddenBot.objects.get(day=fourDaysTime)
-    HBToday.bot = newRandomBot
-    HBToday.save()
+todayTz = timezone.now()
+today = todayTz.timetuple().tm_yday
 
 
-today = timezone.now()
-try:
-    if HiddenBot.objects.count() != 7:
+def setHiddenBots(all=False):
+    hiddenBots = HiddenBot.objects.all()
+    if len(hiddenBots) < 366:
         HiddenBot.objects.all().delete()
-        for i in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]:
-            HiddenBot(day=i, bot=BattleBot.objects.all().order_by("?")[0]).save()
-except (IntegrityError, OperationalError):
+        abot = BattleBot.objects.all()[0]
+        newhbs = []
+        for i in range(len(hiddenBots), 366):
+            hb = HiddenBot()
+            hb.day = i + 1
+            hb.bot = abot
+            newhbs.append(hb)
+        HiddenBot.objects.bulk_create(newhbs)
+
+    uniqueRobots = BattleBot.objects.count()
+    uniqueDays = 60 if uniqueRobots > 60 else uniqueRobots
+
+    hbs = HiddenBot.objects.all().order_by("-day")[0:uniqueDays // 2] | HiddenBot.objects.all().order_by("day")[
+                                                                        0:uniqueDays // 2]
+    justBots = [hb.bot for hb in hbs]
+    hbs = list(HiddenBot.objects.all().order_by("day"))
+
+    def setBot(justBots, hbs, i):
+        newBot = BattleBot.objects.all().order_by("?")[0]
+        while newBot in justBots:  # This is slower on a hit but will average to a lower use of the database than checking for uniqueness at the database layer
+            newBot = BattleBot.objects.all().order_by("?")[0]
+        hbs[i].bot = newBot
+        justBots.pop(0)
+        justBots.append(newBot)
+
+    global today
+    if all:
+        for i in range(0, 366):
+            setBot(justBots, hbs, i)
+    else:
+        if today == 1:
+            for i in range(2, 363):
+                setBot(justBots, hbs, i)
+        else:
+            for i in [363, 364, 365, 0, 1]:
+                setBot(justBots, hbs, i)
+    print(hbs)
+    HiddenBot.objects.bulk_update(hbs, ["bot"])
+
+
+try:
+    if HiddenBot.objects.count() != 366:
+        setHiddenBots(all=True)
+except:  # (IntegrityError, OperationalError):
     print("Please add some robots before continuing!!")
 
 
 def indexView(request):
-    global today
-    if today.day != timezone.now().day:
-        setBotOfTheDay()
+    global today, todayTz
+    if todayTz.day != timezone.now().day:
+        if today == 1 or today == 10:
+            # reset bots on the first of jan, then cover the areas around that date on the 10th so that it
+            # doesn't change people's result mid-game
+            setHiddenBots()
+        todayTz = timezone.now()
+        today = todayTz.timetuple().tm_yday
     try:
         won = request.COOKIES["won"]
     except KeyError:
         won = False
     try:
         tzOffset = -int(request.COOKIES["tzOffset"])
-        gameStartDay = request.COOKIES["gameStartDay"]
-        if (today + timedelta(minutes=tzOffset)).strftime("%a") == gameStartDay:
+        gameStartDay = int(request.COOKIES["gameStartDay"])
+        if (timezone.now() + timedelta(minutes=tzOffset)).timetuple().tm_yday == gameStartDay:
             resetGame = False
             guessed = request.COOKIES["guessed"].split(",")
             botOfTheDay = HiddenBot.objects.get(day=gameStartDay).bot
@@ -75,8 +113,11 @@ def indexView(request):
     return response
 
 
+def dataView(request):
+    return render(request, "bbGuessGame/data.html", {"bots": BattleBot.objects.all().order_by("debut", "name")})
+
+
 def matchView(request):
-    global today
     guess = BattleBot.objects.get(id=request.GET["id"])
     botOfTheDay = HiddenBot.objects.get(day=request.GET["gameStartDay"]).bot
 
@@ -114,13 +155,13 @@ def getByNameView(request):
 
 
 def getDebugTimes(request):
-    global today
     tzOffset = -int(request.COOKIES["tzOffset"])
     gameStartDay = request.COOKIES["gameStartDay"]
     return JsonResponse({
-        "serverTime": today.strftime("%d-%m-%y %H:%M"),
-        "clientTime": (today + timedelta(minutes=tzOffset)).strftime("%d-%m-%y %H:%M"),
+        "serverToday": todayTz.strftime("%d-%m-%y %H:%M"),
+        "serverTime": (timezone.now() + timedelta(minutes=tzOffset)).strftime("%d-%m-%y %H:%M"),
+        "clientTime": (timezone.now() + timedelta(minutes=tzOffset)).strftime("%d-%m-%y %H:%M"),
         "gameStart": gameStartDay,
-        "clientToday": (today + timedelta(minutes=tzOffset)).strftime("%a")
+        "clientToday": (timezone.now() + timedelta(minutes=tzOffset)).timetuple().tm_yday
     }
         , status=200)

@@ -139,7 +139,8 @@ class BattleBot(models.Model):
 
 
 class HiddenBot(models.Model):
-    day = models.CharField(unique=True,blank=False, max_length=3)
+    day = models.PositiveSmallIntegerField(unique=True, blank=False)
     bot = models.ForeignKey("BattleBot", on_delete=models.SET_NULL, null=True)
+
     def __str__(self):
-        return "Hidden bot for " + self.day + " " + ("NULL" if not self.bot else str(self.bot))
+        return "Hidden bot for day #" + str(self.day) + " " + ("NULL" if not self.bot else str(self.bot))

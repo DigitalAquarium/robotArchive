@@ -145,7 +145,7 @@ class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
         fields = ["robot_name", "latin_robot_name","display_latin_name",
-                  "name", "loaned", "country", "description", "image", "weapon_type", "team", "weight_class"]
+                  "name", "loaned", "number", "country", "description", "image", "weapon_type", "team", "weight_class"]
 
     def save(self, commit=True):
         ver = super().save(commit=False)

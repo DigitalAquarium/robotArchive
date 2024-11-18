@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'style/base.css' %}">
+    <link rel="stylesheet" href="{% static 'style/colourTable.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://ricostacruz.com/jquery.transit/jquery.transit.min.js"></script>
+    <script src="{% static 'scripts/game.js' %}"></script>
+</head>
+
+<body>
+<nav class="navbar" style="z-index:10">
+        <div class="navtitle">
+            {% block home_button %}
+                <span class="home-icon"><a class="material-symbols-outlined" href="https://www.robotcombatarchive.com">home</a></span>
+            {% endblock home_button %}
+        </div>
+</nav>
+<div class="content">
+  <div class="main-content">
+    <h1>Table of data!</h1>
+    <p>This table is designed to be used as a guide to why certain results occur, and to ensure data is accurate. Although you may scour this page while making a guess it isn't recommended unless you're unsure of how an edge case is defined!</p>
+    <table>
+      <tr>
+          <th>Robot</th>
+          <th>Debut Season</th>
+          <th>Weapon Type</th>
+          <th>Best Finish</th>
+          <th>Color A</th>
+          <th>Color B</th>
+          <th>Country</th>
+      </tr>
+        {%for b in bots%}
+        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+            <td>{{b.name}}</td>
+            <td>{{b.debut}}</td>
+            <td>{{b.get_weapon_type_display}}</td>
+            <td>{{b.get_best_finish_display}}</td>
+            <td class="c{{b.primaryColour}}" {%if not b.secondaryColour%} colspan="2" {%endif%} >{{b.primaryColour}}</td>
+            {%if b.secondaryColour%}<td class="c{{b.secondaryColour}}">{{b.secondaryColour}}</td>{%endif%}
+            <td>{{b.get_country_display}}</td>
+        </tr>
+        {%endfor%}
+    </table>
+  </div>
+</div>
+</body>
+</html>

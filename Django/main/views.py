@@ -3,7 +3,7 @@ import random
 from os.path import isdir
 from shutil import copy2
 
-# from os import listdir, replace, makedirs
+from os import listdir, replace, makedirs
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.validators import URLValidator
@@ -227,8 +227,16 @@ def edt_contest_view(request, contest_id):
             for value in request.POST:
                 if value[0] == "n":
                     fight = Fight.objects.get(id=value[7:])
-                    fight.number = int(request.POST[value])
-                    fight_update_list.append(fight)
+                    new_fight_number = int(request.POST[value])
+                    if fight.number != new_fight_number:
+                        if Fight.objects.filter(contest=fight.contest, number=new_fight_number).count() > 0:
+                            higher_fights = Fight.objects.filter(contest=fight.contest, number__gte=new_fight_number)
+                            for f in higher_fights:
+                                f.number += 1
+                            Fight.objects.bulk_update(higher_fights, ['number'])
+                        fight.number = new_fight_number
+                        fight_update_list.append(fight)
+
             Fight.objects.bulk_update(fight_update_list, ['number'])
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "other_contests": other_contests, "fights": fights,
@@ -951,8 +959,8 @@ def leaderboard(request):
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
 
-    chosen_weight_text = (lambda x: {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight",
-                                     "S": "super heayweight"}[x])(weight)
+    chosen_weight_text = {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight",
+                                     "S": "super heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
