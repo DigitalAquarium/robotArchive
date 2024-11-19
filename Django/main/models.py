@@ -1612,7 +1612,7 @@ def timespan(dateA, dateB, text=False):
         day_string = date.strftime("%d")
         if day_string[0] == "0":
             day_string = day_string[1]
-        if len(day_string > 1) and day_string[-2] == "1":
+        if len(day_string) > 1 and day_string[-2] == "1":
             day_string += "th"
         else:
             if day_string[-1] == "1":
