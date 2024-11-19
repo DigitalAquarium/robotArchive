@@ -1612,15 +1612,17 @@ def timespan(dateA, dateB, text=False):
         day_string = date.strftime("%d")
         if day_string[0] == "0":
             day_string = day_string[1]
-
-        if day_string[-1] == "1":
-            day_string += "st"
-        elif day_string[-1] == "2":
-            day_string += "nd"
-        elif day_string[-1] == "3":
-            day_string += "rd"
-        else:
+        if len(day_string > 1) and day_string[-2] == "1":
             day_string += "th"
+        else:
+            if day_string[-1] == "1":
+                day_string += "st"
+            elif day_string[-1] == "2":
+                day_string += "nd"
+            elif day_string[-1] == "3":
+                day_string += "rd"
+            else:
+                day_string += "th"
         return day_string
 
     year = "%Y"
