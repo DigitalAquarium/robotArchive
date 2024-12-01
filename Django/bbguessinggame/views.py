@@ -79,13 +79,8 @@ def indexView(request):
         won = False
     try:
         tzOffset = -int(request.COOKIES["tzOffset"])
-<<<<<<< HEAD
-        gameStartDay = request.COOKIES["gameStartDay"]
-        if (timezone.now() + timedelta(minutes=tzOffset)).strftime("%a") == gameStartDay:
-=======
         gameStartDay = int(request.COOKIES["gameStartDay"])
         if (timezone.now() + timedelta(minutes=tzOffset)).timetuple().tm_yday == gameStartDay:
->>>>>>> main
             resetGame = False
             guessed = request.COOKIES["guessed"].split(",")
             botOfTheDay = HiddenBot.objects.get(day=gameStartDay).bot
@@ -163,17 +158,10 @@ def getDebugTimes(request):
     tzOffset = -int(request.COOKIES["tzOffset"])
     gameStartDay = request.COOKIES["gameStartDay"]
     return JsonResponse({
-<<<<<<< HEAD
-        "serverTime": timezone.now().strftime("%d-%m-%y %H:%M"),
-        "clientTime": (timezone.now() + timedelta(minutes=tzOffset)).strftime("%d-%m-%y %H:%M"),
-        "gameStart": gameStartDay,
-        "clientToday": (timezone.now() + timedelta(minutes=tzOffset)).strftime("%a")
-=======
         "serverToday": todayTz.strftime("%d-%m-%y %H:%M"),
         "serverTime": (timezone.now() + timedelta(minutes=tzOffset)).strftime("%d-%m-%y %H:%M"),
         "clientTime": (timezone.now() + timedelta(minutes=tzOffset)).strftime("%d-%m-%y %H:%M"),
         "gameStart": gameStartDay,
         "clientToday": (timezone.now() + timedelta(minutes=tzOffset)).timetuple().tm_yday
->>>>>>> main
     }
         , status=200)
