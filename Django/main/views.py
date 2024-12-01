@@ -680,7 +680,7 @@ def event_detail_view(request, slug):
         raise Http404
 
     fran = event.franchise
-    contests = Contest.objects.filter(event=event).order_by("-weight_class__weight_grams")
+    contests = Contest.objects.filter(event=event).order_by("start_date","-weight_class__weight_grams")
     num_competitors = Version.objects.filter(registration__contest__in=contests).distinct().count()
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
