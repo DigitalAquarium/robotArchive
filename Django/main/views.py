@@ -226,8 +226,16 @@ def edt_contest_view(request, contest_id):
             for value in request.POST:
                 if value[0] == "n":
                     fight = Fight.objects.get(id=value[7:])
-                    fight.number = int(request.POST[value])
-                    fight_update_list.append(fight)
+                    new_fight_number = int(request.POST[value])
+                    if fight.number != new_fight_number:
+                        if Fight.objects.filter(contest=fight.contest, number=new_fight_number).count() > 0:
+                            higher_fights = Fight.objects.filter(contest=fight.contest, number__gte=new_fight_number)
+                            for f in higher_fights:
+                                f.number += 1
+                            Fight.objects.bulk_update(higher_fights, ['number'])
+                        fight.number = new_fight_number
+                        fight_update_list.append(fight)
+
             Fight.objects.bulk_update(fight_update_list, ['number'])
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "other_contests": other_contests, "fights": fights,
@@ -671,7 +679,7 @@ def event_detail_view(request, slug):
         raise Http404
 
     fran = event.franchise
-    contests = Contest.objects.filter(event=event).order_by("-weight_class__weight_grams")
+    contests = Contest.objects.filter(event=event).order_by("start_date","-weight_class__weight_grams")
     num_competitors = Version.objects.filter(registration__contest__in=contests).distinct().count()
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
@@ -950,8 +958,8 @@ def leaderboard(request):
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
 
-    chosen_weight_text = (lambda x: {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight",
-                                     "S": "super heayweight"}[x])(weight)
+    chosen_weight_text = {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight",
+                                     "S": "super heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,

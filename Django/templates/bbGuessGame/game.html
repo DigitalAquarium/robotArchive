@@ -4,13 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="Robot Wars, BattleBots, Robogames, Robot Combat, Combots, Robots, Technology, Fighting Sports, Wordle">
-    {%block seo%} {% include "snippets/meta_page_info.html" with title="BattleBordle"  description="BattleBordle is a BattleBots guessing game. Enter a robot into the search bar and click to guess, for each category you will get either a green square for a match, a yellow square for a near miss or a grey square for a complete miss." url="/battlebordle" %} {%endblock seo%}
-
-    <link rel="apple-touch-icon" sizes="180x180" href="{%static 'favicon/apple-touch-icon.png'%}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{%static 'favicon/favicon-32x32.png'%}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{%static 'favicon/favicon-16x16.png'%}">
-    <link rel="manifest" href="{%static 'favicon/site.webmanifest' %}">
     <link rel="stylesheet" href="{% static 'style/base.css' %}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -101,10 +94,10 @@
         </table>
         <div class="spacer"></div>
     </div>
-    <div id="plzCentreTheGuessThingThx">
+    <form id="guessForm">
         <input id="guess" name="guess" type="text" {%if answer%} style="display:none" {%endif%}>
         <div id="shareResult" style="{%if not answer%}display:none;{%endif%}">Share</div>
-    </div>
+    </form>
 
     <div class="botSuggestion" id="suggestion1">
         <img class="botImage" id="suggestion1Img" src="">
@@ -135,7 +128,7 @@
         Country: Which country is this robot from? In the event in which robots are listed as being from multiple countries the first country listed on the wiki is chosen. (And as an edge case, Cobalt is considered British)<br>
         <br>
         <br>
-        *List of Recognised Weapon Types:
+        *List of recognised weapon types. (Weapon types with no robots associated are excluded e.g. Front-Hinged Flippers)
     </p>
     <ul>
         <li>Horizontal Spinner</li>
@@ -143,32 +136,22 @@
         <li>Overhead Spinner</li>
         <li>Shell Spinner</li>
         <li>Ring Spinner</li>
-        <li>MeltyBrain</li>
         <li>Vertical Spinner</li>
         <li>Drum Spinner</li>
         <li>Eggbeater</li>
-        <li>Propeller Spinner</li>
-        <li>Angled Spinner</li>
-        <li>Articulated Spinner</li>
         <li>Axe/Hammer</li>
-        <li>Horizontal Axe</li>
         <li>Hammersaw</li>
         <li>Spear</li>
         <li>Cannon</li>
-        <li>Lifter</li>
         <li>Grabber</li>
-        <li>Horizontal Grabber</li>
         <li>Grabber-Lifter</li>
         <li>Crusher</li>
         <li>Horizontal Crusher</li>
         <li>Flipper</li>
-        <Li>Front-Hinged Flipper</Li>
-        <li>Side-Hinged Flipper</li>
         <li>Saw</li>
-        <li>Chainsaw</li>
-        <Li>Drill</Li>
         <li>Interchangeable / Multibot with multiple weapons</li>
     </ul>
+    <a href="{%url 'bbGuessGame:data' %}">For a complete table of data click here.</a>
 </div>
 </div>
 </body>

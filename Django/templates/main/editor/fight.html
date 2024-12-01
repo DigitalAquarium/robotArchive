@@ -13,6 +13,7 @@
         <div class="main-content">
         <h1> {{ fight }}</h1>
         <h2>{{ fight.get_fight_type_display }}, {{ fight.get_method_display }}</h2>
+            <a style="text-align:center" href="{%url 'main:edtContest' fight.contest.id%}">back</a>
         <form method="post" style="flex-direction: column" enctype="multipart/form-data" action="{% url 'main:edtFightOverview' fight.id %}">
             {% csrf_token %}
             <fieldset>

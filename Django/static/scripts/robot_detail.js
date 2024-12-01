@@ -7,7 +7,6 @@ function setupWidth(){
         lefts.push($(this).offset().left)
         desiredWidth += $(this).outerWidth() + 10;
     });
-    console.log(lefts,lefts[0])
     let availableWidth = $(".version-block:visible").outerWidth();
     let containerLHS = $(".tab-button:first").offset().left;
     containerRHS = containerLHS+availableWidth;
