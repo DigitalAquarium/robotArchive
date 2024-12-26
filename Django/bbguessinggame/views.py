@@ -19,7 +19,7 @@ def setHiddenBots(all=False):
         HiddenBot.objects.all().delete()
         abot = BattleBot.objects.all()[0]
         newhbs = []
-        for i in range(len(hiddenBots), 366):
+        for i in range(0, 366):
             hb = HiddenBot()
             hb.day = i + 1
             hb.bot = abot
@@ -39,12 +39,13 @@ def setHiddenBots(all=False):
         while newBot in justBots:  # This is slower on a hit but will average to a lower use of the database than checking for uniqueness at the database layer
             newBot = BattleBot.objects.all().order_by("?")[0]
         hbs[i].bot = newBot
-        justBots.pop(0)
+        if len(justBots) > uniqueDays:
+            justBots.pop(0)
         justBots.append(newBot)
 
     global today
     if all:
-        for i in range(0, 366):
+        for i in range(0, 365):
             setBot(justBots, hbs, i)
     else:
         if today == 1:
@@ -53,14 +54,13 @@ def setHiddenBots(all=False):
         else:
             for i in [363, 364, 365, 0, 1]:
                 setBot(justBots, hbs, i)
-    print(hbs)
     HiddenBot.objects.bulk_update(hbs, ["bot"])
 
 
 try:
     if HiddenBot.objects.count() != 366:
         setHiddenBots(all=True)
-except:  # (IntegrityError, OperationalError):
+except (IntegrityError, OperationalError):
     print("Please add some robots before continuing!!")
 
 
