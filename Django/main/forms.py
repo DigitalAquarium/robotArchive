@@ -9,6 +9,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
+from .form_fields import ImageAndSvgField as FormSvgField
+
 from .models import *
 
 
@@ -87,6 +89,7 @@ class NewRobotForm(forms.Form):
 class NewVersionForm(forms.Form):
     robot_name = forms.CharField(max_length=255, required=False)
     latin_robot_name = forms.CharField(max_length=255, required=False)
+    loaned = forms.BooleanField(required=False)
     version_name = forms.CharField(max_length=255, required=False)
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
@@ -99,6 +102,7 @@ class NewVersionForm(forms.Form):
     def save(self, robot, owner):
         v = Version()
         v.robot = robot
+        v.loaned = self.cleaned_data['loaned']
         if self.cleaned_data['country'] and self.cleaned_data['country'] != "XX":
             v.country = self.cleaned_data['country']
         else:
@@ -123,7 +127,7 @@ class RobotForm(forms.ModelForm):
 
     class Meta:
         model = Robot
-        fields = ['name', 'latin_name','display_latin_name', 'slug', "country", 'description', "opt_out"]
+        fields = ['name', 'latin_name', 'display_latin_name', 'slug', "country", 'description', "opt_out"]
 
     def clean_slug(self):
         slug = self.cleaned_data['slug']
@@ -157,10 +161,27 @@ class VersionForm(forms.ModelForm):
         return ver
 
 
+
 class TeamForm(forms.ModelForm):
+    #slug = forms.CharField(max_length=100, required=False)
     class Meta:
         model = Team
-        fields = ['name', 'logo', 'country']
+        fields = ['name', 'latin_name', 'display_latin_name', 'logo', 'country']
+
+    '''def clean_slug(self):
+        slug = self.cleaned_data['slug']
+        if Team.objects.filter(slug=slug).count() > 0:
+            rob = super().save(commit=False)
+            if slug != rob.slug:
+                raise ValidationError("This slug is already taken.")
+        return slug
+
+    def save(self, commit=True):
+        rob = super().save(commit=False)
+        if not rob.slug:
+            rob.slug = rob.slugify()
+        if commit:
+            rob.save()'''
 
 
 class FranchiseForm(forms.ModelForm):  # TODO: Add Web Links
@@ -248,7 +269,7 @@ class NewEventFormEDT(forms.Form):
     missing_brackets = forms.BooleanField(required=False)
     description = forms.CharField(widget=forms.Textarea, required=False)
     prev_logo = forms.ChoiceField(choices=[("", "")], required=False)
-    logo_img = forms.ImageField(required=False)
+    logo_img = FormSvgField(required=False)
     logo_txt = forms.URLField(required=False)
     start_date = forms.DateField(required=True)
     end_date = forms.DateField(required=False)

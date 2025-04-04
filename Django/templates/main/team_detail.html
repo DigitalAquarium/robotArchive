@@ -10,7 +10,7 @@
 <div class="main-content">
     <div class="team-heading">
         <img class="flag-image" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
-        <h1>{{ team }}</h1>
+        <h1>{{ team }} {%if team.display_latin_name%}<span class="alphanum">({{team.latin_name}})</span>{%endif%}</h1>
         {% if can_change %}
             <a href="{% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Team"></a>
         {% endif %}

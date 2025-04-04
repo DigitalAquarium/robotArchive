@@ -7,7 +7,8 @@ from os import listdir, replace, makedirs
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.validators import URLValidator
-from django.db.models import F, When, Case
+from django.db.models import F, When, Case, Value, ExpressionWrapper
+from django.db.models.functions import Lower, Concat
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -436,7 +437,7 @@ def edt_select_team_view(request, fight_id):
 
     team_list = Team.objects.all()
     if name != "" and name is not None:
-        team_list = team_list.filter(name__icontains=name)
+        team_list = team_list.filter(Q(name__icontains=name) | Q(latin_name__icontains=name)).distinct()
 
     team_list = team_list.order_by("name")
     num = 50
@@ -584,9 +585,8 @@ def index_view(request):
     if request.user.is_authenticated and request.user.is_superuser and editor_stay != "stay":
         return redirect("main:edtHome")
 
-    events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
-              "mechwars-iii", "robotica-season-1"]
-    robot = Robot.objects.filter(hallofame__full_member=True).order_by("?")[0]
+    events = ["bitva-robotov-perm-2015", "bronebot-autumn-warmup", "bitva-robotov-perm-2016"]
+    robot = Robot.objects.filter().order_by("?")[0]
     event = Event.objects.get(slug=random.choice(events))
     return render(request, "main/index.html", {"example_robot": robot, "example_event": event})
 
@@ -680,7 +680,7 @@ def event_detail_view(request, slug):
         raise Http404
 
     fran = event.franchise
-    contests = Contest.objects.filter(event=event).order_by("start_date","-weight_class__weight_grams")
+    contests = Contest.objects.filter(event=event).order_by("start_date", "-weight_class__weight_grams")
     num_competitors = Version.objects.filter(registration__contest__in=contests).distinct().count()
     if request.user.is_authenticated:
         can_change = fran.can_edit(request.user)
@@ -866,10 +866,10 @@ def robot_index_view(request):
         robot_list = robot_list.filter(version__weapon_type__icontains=weapon).distinct()
 
     if name != "" and name is not None:  # union must be last.
-        robot_list = robot_list.filter(name__icontains=name).union(
-            robot_list.filter(version__robot_name__icontains=name)).union(
-            robot_list.filter(latin_name__icontains=name)).union(
-            robot_list.filter(version__latin_robot_name__icontains=name))
+        robot_list = robot_list.filter(Q(name__icontains=name) |
+                                       Q(version__robot_name__icontains=name) |
+                                       Q(latin_name__icontains=name) |
+                                       Q(version__latin_robot_name__icontains=name)).distinct()
 
     if has_awards == "on":
         bad = []
@@ -878,7 +878,24 @@ def robot_index_view(request):
                 bad.append(robot.id)
         robot_list = robot_list.exclude(id__in=bad)
 
-    robot_list = robot_list.order_by("name")
+    robot_list = robot_list.annotate(
+        alphabetical=Case(
+            When(latin_name="", then=
+            Case(  # Place numbers at the end of the list by adding a high value unicode symbol to the front
+                When(name__regex="^[0-9]+.*", then=Concat(Value("😔 "), F("name"))),
+                default=F("name")
+            )
+                 ),
+            default=
+            Case(
+                When(latin_name__regex="^[0-9]+.*", then=Concat(Value("😔 "), F("latin_name"))),
+                default=F("latin_name")
+            ),
+        )
+    )
+
+    robot_list = robot_list.order_by(Lower("alphabetical"), "-last_fought")
+    #robot_list = robot_list.order_by("name", "-last_fought")
     results = len(robot_list)
     robot_list = robot_list[num * (page - 1):num * page]
 
@@ -914,11 +931,9 @@ def robot_index_view(request):
 
 def leaderboard(request):
     visible_weights = [
-        ("F", "Featherweight"),
-        ("L", "Lightweight"),
         ("M", "Middleweight"),
+        ("R", "70kg"),
         ("H", "Heavyweight"),
-        ("S", "Super Heavyweight"),
     ]
 
     # CSS Notes: row height up to 20em
@@ -928,11 +943,17 @@ def leaderboard(request):
         weight = "H"
     year = request.GET.get("year")
     current_year = Event.objects.all().order_by("-end_date")[0].end_date.year
-    if weight == "F":
-        years = [1996, 1997]  # TODO: if weight class changes are in place add 1995
+    if weight == "R":
+        years = [2012, 2014, 2015, 2016]
+    elif weight == "M":
+        years = [2014, 2016, 2017]
     else:
         years = [x['year'] for x in
                  Leaderboard.objects.filter(weight=weight).order_by("year").values("year").distinct()]
+        if 2020 in years: years.remove(2020)
+        if 2021 in years: years.remove(2021)
+        if weight == "H" and 2022 in years:
+            years.remove(2022)
     # years = [x for x in range(1994, current_year + 1)]
     try:
         year = int(year)
@@ -959,8 +980,7 @@ def leaderboard(request):
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
 
-    chosen_weight_text = {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight",
-                                     "S": "super heavyweight"}[weight]
+    chosen_weight_text = {"R": "70kg", "M": "middleweight", "H": "heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
@@ -1250,7 +1270,7 @@ def team_index_view(request):
             team_list = team_list.filter(country=country_code).distinct()
 
     if name != "" and name is not None:
-        team_list = team_list.filter(name__icontains=name)
+        team_list = team_list.filter(Q(name__icontains=name) | Q(latin_name__icontains=name))
 
     countries_list = Team.objects.values("country").distinct()
     countries = []
@@ -1398,7 +1418,7 @@ def franchise_modify_view(request, franchise_id=None):
                 franchise_id = new.id
             else:
                 if old_logo and new.logo != old_logo:
-                    event_logo_dir = "event_logos/" + str(datetime.date.today().year)
+                    event_logo_dir = "ru/event_logos/" + str(datetime.date.today().year)
                     if not isdir(settings.MEDIA_URL[1:] + event_logo_dir):
                         new.logo = old_logo
                         new.save()
@@ -1607,7 +1627,7 @@ def modify_fight_version_view(request, fight_id, vf_id=None):  # TODO SHIFT FORM
             When(display_latin_name=True, then=F("latin_robot_name")), default=F("robot_name")
         )
     ))
-    registered = registered.order_by("alphabetical")
+    registered = registered.order_by(Lower("alphabetical"))
 
     if vf_id is not None:
         vf = Fight_Version.objects.get(pk=vf_id)
@@ -1675,7 +1695,7 @@ def new_award_view(request, event_id):
                     When(display_latin_name=True, then=F("latin_robot_name")), default=F("robot_name")
                 )
             ))
-        registered = registered.order_by("alphabetical").distinct()
+        registered = registered.order_by(Lower("alphabetical")).distinct()
         form.fields['version'].choices = [(None, "----------")] + [(v.id, v.english_readable_name) for v in registered]
         return render(request, "main/forms/generic.html",
                       {"form": form, "title": "New Award", "next_url": reverse("main:newAward", args=[event_id])})
@@ -1707,7 +1727,7 @@ def award_edit_view(request, award_id):
                     When(display_latin_name=True, then=F("latin_robot_name")), default=F("robot_name")
                 )
             ))
-        registered = registered.order_by("alphabetical").distinct()
+        registered = registered.order_by(Lower("alphabetical")).distinct()
         form.fields['version'].choices = [(None, "----------")] + [(v.id, v.english_readable_name) for v in registered]
         return render(request, "main/forms/generic.html",
                       {"form": form, "title": "Edit Award", "next_url": reverse("main:editAward", args=[award_id])})
@@ -1755,7 +1775,7 @@ def search_view(request):
         franchises = Franchise.objects.filter(name__icontains=search_term).distinct()
         fran_len = len(franchises)
         franchises = franchises[:10]
-        teams = Team.objects.filter(name__icontains=search_term).distinct()
+        teams = Team.objects.filter(Q(name__icontains=search_term) | Q(latin_name__icontains=search_term)).distinct()
         team_len = len(teams)
         teams = teams[:10]
         robots = Robot.objects.filter(name__icontains=search_term).union(
@@ -2164,7 +2184,7 @@ def prune_media(request):
 
     def check_media(used_files, dir):
         cyear = datetime.date.today().year
-        for year in range(2022, cyear + 1):
+        for year in range(2025, cyear + 1):
             filenames = listdir(settings.MEDIA_ROOT + "/" + dir + str(year))
             for filename in filenames:
                 f = dir + str(year) + "/" + filename

@@ -110,7 +110,7 @@
                                         {%else%}
                                             Team:
                                         {%endif%}
-                                        <a href="{% url 'main:teamDetail' v.team.slug %}">{{ v.team }}</a>
+                                        <a href="{% url 'main:teamDetail' v.team.slug %}">{{ v.team }} {%if v.team.display_latin_name%}<span class="alphanum">({{v.team.latin_name}})</span>{%endif%}</a>
                                         {%if v.loaned%}</em>{%endif%}
                                     </span>
                                 {% endif %}
