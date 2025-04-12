@@ -3,6 +3,7 @@ import pycountry
 import datetime
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -427,6 +428,8 @@ class Version(models.Model):
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, blank=True, null=True)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(1))
 
+    site = models.ForeignKey(Site, default=1, on_delete=models.SET(1))
+
     def set_latin_name(self, commit=True):
         self.latin_robot_name = asciify(self.robot_name, "Version", self.id)
         if commit:
@@ -557,6 +560,8 @@ class Event(models.Model):
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=50, unique=True)
     missing_brackets = models.BooleanField(default=False)
+
+    site = models.ForeignKey(Site, default=1, on_delete=models.SET(1))
 
     def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
@@ -842,6 +847,10 @@ class Fight(models.Model):
             self.external_media = self.external_media[24:]
             sections = self.external_media.split("_")
             self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace("?","&")
+        elif "vkvideo.com" in self.external_media and "video_ext.php" not in self.external_media:
+            self.external_media = self.external_media[25:]
+            sections = self.external_media.split("_")
+            self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace("?","&")
 
 
     def set_media_type(self):
@@ -870,7 +879,7 @@ class Fight(models.Model):
                 self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "IF"
-            elif "vkvideo.ru" in self.external_media:
+            elif "vkvideo.ru" or "vkvideo.com" in self.external_media:
                 self.media_type = "IF"
             # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
             elif self.external_media[-4:].lower() in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:

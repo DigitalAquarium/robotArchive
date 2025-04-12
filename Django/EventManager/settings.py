@@ -83,6 +83,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'ru.sqlite3',
+    },
+    'merge': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'Merge Attempt.sqlite3',
     }
 }
 
