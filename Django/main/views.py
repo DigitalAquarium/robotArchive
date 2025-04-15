@@ -592,7 +592,8 @@ def index_view(request):
         return redirect("main:edtHome")
 
     if site == 2:
-        events = ["bitva-robotov-perm-2015", "bronebot-autumn-warmup", "bitva-robotov-perm-2016"]
+        events = ["bitva-robotov-perm-2015", "bronebot-autumn-warmup", "bitva-robotov-perm-2016",
+                  "bitva-robotov-2024-final"]
     else:
         events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
                   "mechwars-iii", "robotica-season-1"]
@@ -1517,11 +1518,12 @@ def franchise_modify_view(request, franchise_id=None):
 
 
 def franchise_detail_view(request, slug):
+    site = get_current_site(request)
     try:
         fran = Franchise.objects.get(slug=slug)
     except Franchise.DoesNotExist:
         raise Http404
-    events = fran.event_set.all().order_by("start_date")
+    events = fran.event_set.filter(site=site).order_by("start_date")
     return render(request, "main/franchise_detail.html",
                   {"fran": fran, "events": events, "leave_id": 1,  # TODO: lol
                    "title": fran,

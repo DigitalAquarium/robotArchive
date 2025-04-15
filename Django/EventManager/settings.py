@@ -82,7 +82,7 @@ WSGI_APPLICATION = 'EventManager.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'Merge Attempt.sqlite3',
+        'NAME': 'robotArchive.sqlite3',
     }
 }
 

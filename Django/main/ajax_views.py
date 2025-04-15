@@ -5,6 +5,12 @@ from django.urls import reverse
 from .forms import *
 
 
+def disclaimer(request):
+    if get_current_site(request) == 2:
+        return JsonResponse({"txt": "Russia"},status=200)
+    else:
+        return JsonResponse({"txt": "2006"}, status=200)
+
 def get_location(request):
     id = request.GET.get("id") or ""
     try:

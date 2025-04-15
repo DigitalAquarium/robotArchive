@@ -85,10 +85,12 @@
                 given out at this event</p>
         {% endif %}
             <br>
-
-
-		<div id="osm-map" style="z-index:0" location_name="{{ event.get_location.name }}" lat="{{ event.get_location.latitude }}" lng="{{ event.get_location.longitude }}"></div>
+        {%with location=event.get_location%}
+        {%if location.latitude != 0 and location.longitude != 0%}
+		<div id="osm-map" style="z-index:0" location_name="{{ location.name }}" lat="{{ location.latitude }}" lng="{{ location.longitude }}"></div>
 		<script src="{% static 'scripts/open_street_map.js' %}"></script>
+        {%endif%}
+        {%endwith%}
 
             <h2>This event has been archived using the following websites:</h2>
         {% for source in event.source_set.all %}

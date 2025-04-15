@@ -87,6 +87,7 @@ urlpatterns = [
 
     path('ajax/get_location', ajax_views.get_location, name='ajax_getLocation'),
     path('ajax/get_history', ajax_views.get_history, name='ajax_getHistory'),
+    path('ajax/disclaimer', ajax_views.disclaimer, name='ajax_disclaimer'),
 
     path("404/", error_views._404),
     path("500/", error_views._500),
