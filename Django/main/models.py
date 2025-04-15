@@ -3,11 +3,13 @@ import pycountry
 import datetime
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import slugify
+from .model_fields import ImageAndSvgField
 import uuid
 
 FIGHT_TYPE_CHOICES = [
@@ -38,6 +40,7 @@ LEADERBOARD_WEIGHTS = [
     ("F", "Featherweight"),
     ("L", "Lightweight"),
     ("M", "Middleweight"),
+    ("R", "70kg"),
     ("H", "Heavyweight"),
     ("S", "Super Heavyweight"),
     ("X", "Not Leaderboard Valid"),
@@ -84,7 +87,9 @@ class Person(models.Model):
 
 class Team(models.Model):
     name = models.CharField(max_length=255)
-    logo = models.ImageField(upload_to='team_logos/%Y/', blank=True)
+    latin_name = models.CharField(max_length=255, blank=True)
+    display_latin_name = models.BooleanField(default=False)
+    logo = ImageAndSvgField(upload_to='team_logos/%Y/', blank=True)
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     members = models.ManyToManyField(Person, through="Person_Team")
     slug = models.SlugField(max_length=50, unique=True)
@@ -119,7 +124,10 @@ class Team(models.Model):
 
     def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
-        slug_text = self.name
+        if self.latin_name is not None and self.latin_name != "":
+            slug_text = self.latin_name
+        else:
+            slug_text = self.name
         if slug_text[:5].lower() == "team ":
             slug_text = slug_text[5:]
         self.slug = make_slug(slug_text, Team.objects.all())
@@ -147,6 +155,7 @@ class Weight_Class(models.Model):
                          (13608, "Featherweight"),
                          (28000, "Lightweight"),  # 28000 over 27212 to include korean 33kg lws.
                          (50000, "Middleweight"),
+                         (70000, "Bitva Robotov"),
                          (100000, "Heavyweight"),
                          (154221, "Super Heavyweight"),
                          ]
@@ -432,6 +441,8 @@ class Version(models.Model):
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, blank=True, null=True)
     weight_class = models.ForeignKey(Weight_Class, on_delete=models.SET(1))
 
+    site = models.ForeignKey(Site, default=1, on_delete=models.SET(1))
+
     def set_latin_name(self, commit=True):
         self.latin_robot_name = asciify(self.robot_name, "Version", self.id)
         if commit:
@@ -506,7 +517,7 @@ class Version(models.Model):
 class Franchise(models.Model):
     name = models.CharField(max_length=50)
     abbreviation = models.CharField(max_length=50)
-    logo = models.ImageField(upload_to='franchise_logos/%Y/', blank=True)
+    logo = ImageAndSvgField(upload_to='franchise_logos/%Y/', blank=True)
     description = models.TextField(blank=True)
     members = models.ManyToManyField(Person, through="Person_Franchise")
     slug = models.SlugField(max_length=50, unique=True)
@@ -554,7 +565,7 @@ class Location(models.Model):
 class Event(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    logo = models.ImageField(upload_to='event_logos/%Y/', blank=True)
+    logo = ImageAndSvgField(upload_to='event_logos/%Y/', blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
@@ -562,6 +573,8 @@ class Event(models.Model):
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=50, unique=True)
     missing_brackets = models.BooleanField(default=False)
+
+    site = models.ForeignKey(Site, default=1, on_delete=models.SET(1))
 
     def make_slug(self, save=False):
         if self.slug is not None and self.slug != "": return self.slug
@@ -843,6 +856,16 @@ class Fight(models.Model):
         elif "twitch.tv/" in self.external_media:
             get_data = self.external_media[25:]
 
+        elif "vkvideo.ru" in self.external_media and "video_ext.php" not in self.external_media:
+            self.external_media = self.external_media[24:]
+            sections = self.external_media.split("_")
+            self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace("?","&")
+        elif "vkvideo.com" in self.external_media and "video_ext.php" not in self.external_media:
+            self.external_media = self.external_media[25:]
+            sections = self.external_media.split("_")
+            self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace("?","&")
+
+
     def set_media_type(self):
         self.media_type = "XX"
         self.save()
@@ -868,6 +891,8 @@ class Fight(models.Model):
             elif "archive.org" in self.external_media and "web.archive.org" not in self.external_media:
                 self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
+                self.media_type = "IF"
+            elif "vkvideo.ru" or "vkvideo.com" in self.external_media:
                 self.media_type = "IF"
             # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
             elif self.external_media[-4:].lower() in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
@@ -1242,7 +1267,10 @@ class Leaderboard(models.Model):
     @staticmethod
     def update_all(current_year=None):
         # TODO: if for whatever reason small weight classes come back change this
-        wcs = ["H", "M", "L", "S"]  # x[0] for x in LEADERBOARD_WEIGHTS]
+        if current_year > 2013:
+            wcs = ["H", "M", "R"]  # x[0] for x in LEADERBOARD_WEIGHTS]
+        else:
+            wcs = ["H", "M", "L", "S"]
         # wcs.remove("X")
         if current_year in [1995, 1996, 1997]:
             wcs.append("F")
@@ -1274,32 +1302,44 @@ class Leaderboard(models.Model):
                     break
             if not has_competitively_fought:
                 robot.lb_weight_class = "X"
-                if commit: robot.save()
-                return robot
 
             # Checks to see if there are less computationally heavy ways to test weight class
-            if robot.version_set.count() == 1:
+            elif robot.version_set.count() == 1:
                 robot.lb_weight_class = robot.last_version().weight_class.find_lb_class()
-                if commit: robot.save()
+            elif currentYear and robot.last_version().weight_class.find_lb_class() == robot.lb_weight_class:
                 return robot
-            if currentYear and robot.last_version().weight_class.find_lb_class() == robot.lb_weight_class:
-                return robot
+            else:
+                # Count number of fights each weight class has to determine which it should be a part of. not perfect if the same version goes to events more than 5 years ago
+                fights = {"X": 0}
+                for version in robot.version_set.filter(first_fought__lte=date, last_fought__gte=date_cutoff):
+                    if not version.last_fought or version.last_fought < date_cutoff:
+                        continue
+                    wc = version.weight_class.find_lb_class()
+                    if wc not in fights.keys():
+                        fights[wc] = 0
+                    fights[wc] += version.fight_set.filter(fight_type__in=["NS", "FC"], contest__end_date__lte=date).count()
+                actual_weight_class = "X"
+                for key in fights:
+                    if fights[key] >= fights[actual_weight_class]:
+                        actual_weight_class = key
 
-            # Count number of fights each weight class has to determine which it should be a part of. not perfect if the same version goes to events more than 5 years ago
-            fights = {"X": 0}
-            for version in robot.version_set.filter(first_fought__lte=date, last_fought__gte=date_cutoff):
-                if not version.last_fought or version.last_fought < date_cutoff:
-                    continue
-                wc = version.weight_class.find_lb_class()
-                if wc not in fights.keys():
-                    fights[wc] = 0
-                fights[wc] += version.fight_set.filter(fight_type__in=["NS", "FC"], contest__end_date__lte=date).count()
-            actual_weight_class = "X"
-            for key in fights:
-                if fights[key] >= fights[actual_weight_class]:
-                    actual_weight_class = key
+                robot.lb_weight_class = actual_weight_class
 
-            robot.lb_weight_class = actual_weight_class
+            #RU
+            if robot.lb_weight_class == "R" and date.year >= 2017:
+                if robot.last_version().weight_class.find_lb_class() != "R":
+                    robot.lb_weight_class = robot.last_version().weight_class.find_lb_class()
+                else:
+                    robot.lb_weight_class = "M"
+            if date.year > 2013:
+                if robot.first_fought.year < 2013:
+                    robot.lb_weight_class = "X"
+                else:
+                    fought_in_rus = Event.objects.filter(start_date__lt=date, country="RU",
+                                                         contest__registration__version__robot=robot).count() > 0
+                    if not fought_in_rus:
+                        robot.lb_weight_class = "X"
+
 
             if commit: robot.save()
             return robot
@@ -1335,6 +1375,8 @@ class Web_Link(models.Model):
         ("LI", "LinkedIn"),
         ("GH", "GitHub"),
         ("LT", "Linktree"),
+        ("VK", "VKontakte"),
+        ("TG", "Telegram")
 
     ]
     type = models.CharField(max_length=2, choices=LINK_CHOICES, default="WW")
@@ -1363,7 +1405,7 @@ class Web_Link(models.Model):
             raise ValidationError("A Web link must be attached to a franchise or team")
 
     def get_logo(self):
-        if self.type in ["TV", "GH"]:
+        if self.type in ["TV", "GH", "VK", "TG"]:
             return settings.STATIC_URL + "web_logos/" + self.type + ".svg"
         else:
             return settings.STATIC_URL + "web_logos/" + self.type + ".png"
@@ -1409,6 +1451,10 @@ class Web_Link(models.Model):
             return "GH"
         if "linktr.ee/" in link:
             return "LT"
+        if "vk.com/" in link or "vk.ru/" in link:
+            return "VK"
+        if "/t.me/" in link:
+            return "TG"
 
         return "WW"
 
@@ -1525,6 +1571,16 @@ class Web_Link(models.Model):
         elif self.type == "LT":
             ret = preprocess(self.link)
             ret = ret[10:]
+            return ret
+
+        elif self.type == "VK":
+            ret = preprocess(self.link)
+            ret = ret[7:]
+            return ret
+
+        elif self.type == "TG":
+            ret = preprocess(self.link)
+            ret = ret[5:]
             return ret
 
         else:

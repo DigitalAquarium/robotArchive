@@ -34,7 +34,7 @@
                         <img class="event logo" style="width: 4em; height:2.5em; margin:0"
                              src="{% if robot.last_version.image %} {{ robot.last_version.image.url }} {% else %} {% static 'unknown.png' %}  {% endif %}" alt="{{ robot.name }} image"></td>
                     <td style="text-align: center"><img class="flag-image" src="{{ robot.get_flag }}" alt="{{ robot.last_version.country|upper }} Flag"></td>
-                    <td><a href="{% url 'main:edtSelectVersion' robot.id %}">{{ robot }}</a></td>
+                    <td><a href="{% url 'main:edtSelectVersion' robot.id %}">{{ robot }} {%if robot.latin_name%} | {{robot.latin_name}}{%endif%}</a></td>
                 </tr>
             {% endfor %}
             </tbody>

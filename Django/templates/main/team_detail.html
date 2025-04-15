@@ -10,7 +10,7 @@
 <div class="main-content">
     <div class="team-heading">
         <img class="flag-image" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
-        <h1>{{ team }}</h1>
+        <h1>{{ team }} {%if team.display_latin_name%}<span class="alphanum">({{team.latin_name}})</span>{%endif%}</h1>
         {% if can_change %}
             <a href="{% url 'main:edtTeam' team.id %}"><img class="inline-image" src="{% static 'edit.png' %}" alt="Edit Team"></a>
         {% endif %}
@@ -57,6 +57,23 @@
             <div class="gridview-square">
                 <div class="gridview-title">
                     <a href="{% url 'main:robotDetail' robot.slug %}">{{ robot|name_from_team:team }}</a>
+                </div>
+                <div class="gridview-image-container">
+                    <img class="fit-image"
+                         src="{{robot|image_from_team:team}}"
+                         alt="{{robot}}">
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {%endif%}
+    {%if other_robots|length > 0%}
+    <h4>{{site_text}}:</h4>
+    <div class="gridview-container">
+        {% for robot in other_robots %}
+            <div class="gridview-square">
+                <div class="gridview-title">
+                    <a href="{{other_url}}{{robot.slug}}">{{ robot|name_from_team:team }}</a>
                 </div>
                 <div class="gridview-image-container">
                     <img class="fit-image"

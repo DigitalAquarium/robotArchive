@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{% static 'style/base.css' %}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="{%static 'scripts/disclaimer.js' %}"></script>
     {% block head %}{% endblock %}
 </head>
 
@@ -25,7 +26,7 @@
                 <span class="home-icon"><a class="material-symbols-outlined" href="{%url 'main:index' %}">home</a></span>
             {% endblock home_button %}
         </div>
-    <span class="mobile-hide" style="padding-left:5%;font-size:0.8em;">Data accurate up to 2005</span>
+    <span id="navbar-info-text" class="mobile-hide" style="padding-left:5%;font-size:0.8em;">Placeholder</span>
         <div class="navlinks">
             <ul>
                 <li class="mobile-hide">

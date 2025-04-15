@@ -43,7 +43,7 @@
                 <div class="hrz-index-content">
                 <span class="hrz-index-title">
                 <img class="flag-image" loading="lazy" src="{{ team.get_flag }}" alt="{{team.country}} Flag">
-                <a href="{% url 'main:teamDetail' team.slug %}">{{ team.name }}</a>
+                <a href="{% url 'main:teamDetail' team.slug %}">{{ team.name }} {%if team.display_latin_name%}<span class="alphanum">({{team.latin_name}})</span>{%endif%}</a>
             </span>
                     <span class="hrz-index-details">
                     <span>{{ team.website|urlize }}</span>
