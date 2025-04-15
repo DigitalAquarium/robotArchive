@@ -83,7 +83,7 @@ urlpatterns = [
     # path('import', views.importView, name='import'),
     # path('test/graph', views.graph_test, name='graph_test'),
     # path('test/graph_data', views.graph_data, name='graph_test'),
-    path('test/merge', views.mergeView__SCARY, name='merge'),
+    #path('test/merge', views.mergeView__SCARY, name='merge'),
 
     path('ajax/get_location', ajax_views.get_location, name='ajax_getLocation'),
     path('ajax/get_history', ajax_views.get_history, name='ajax_getHistory'),

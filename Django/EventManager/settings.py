@@ -82,10 +82,6 @@ WSGI_APPLICATION = 'EventManager.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'ru.sqlite3',
-    },
-    'merge': {
-        'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'Merge Attempt.sqlite3',
     }
 }
@@ -126,7 +122,7 @@ USE_TZ = True
 # STATIC_ROOT = os.path.join(os.getcwd(),'/static/')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),)
-MEDIA_ROOT = os.path.join(BASE_DIR, "media/ru/")
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 MEDIA_URL = '/media/'
 
 # Default primary key field type

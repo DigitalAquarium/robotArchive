@@ -1,3 +1,4 @@
+from django.contrib.sites.shortcuts import get_current_site
 from django.http import JsonResponse
 from django.urls import reverse
 
@@ -18,7 +19,7 @@ def get_history(request):
     robot_slug = request.GET.get("robot_slug")
     try:
         robot = Robot.objects.get(slug=robot_slug)
-        fight_versions = Fight_Version.objects.filter(version__robot=robot,
+        fight_versions = Fight_Version.objects.filter(version__robot=robot, fight__contest__event__site=get_current_site(request).id,
                                                       fight__fight_type__in=["FC", "NS"]).order_by(
             "fight__contest__start_date", "fight__contest__end_date", "fight__contest__id", "fight__number").exclude(
             fight__method__in=["NW", "WU"])

@@ -33,9 +33,16 @@ COUNTRY_CHOICES.sort(key=lambda x: x[1])
 COUNTRY_CHOICES = [('XX', "Unspecified")] + COUNTRY_CHOICES
 
 LEADERBOARD_WEIGHTS = [
+    ("A", "UK Antweight / US Fairyweight"),
+    ("U", "US Antweight"),
+    ("B", "Beetleweight"),
+    ("Y", "Hobbyweight"),
+    ("F", "Featherweight"),
+    ("L", "Lightweight"),
     ("M", "Middleweight"),
     ("R", "70kg"),
     ("H", "Heavyweight"),
+    ("S", "Super Heavyweight"),
     ("X", "Not Leaderboard Valid"),
 ]
 
@@ -141,10 +148,16 @@ class Team(models.Model):
 
 class Weight_Class(models.Model):
     BOUNDARY_AMOUNT = 0.21
-    LEADERBOARD_VALID = [
+    LEADERBOARD_VALID = [(150, "UK Antweight / US Fairyweight"),
+                         (454, "US Antweight"),
+                         (1361, "Beetleweight"),
+                         (6000, "Hobbyweight"),  # Should this be 5553 to remove 15lbs
+                         (13608, "Featherweight"),
+                         (28000, "Lightweight"),  # 28000 over 27212 to include korean 33kg lws.
                          (50000, "Middleweight"),
                          (70000, "Bitva Robotov"),
-                         (110000, "Heavyweight"),
+                         (100000, "Heavyweight"),
+                         (154221, "Super Heavyweight"),
                          ]
     LEADERBOARD_VALID_GRAMS = [x[0] for x in LEADERBOARD_VALID]
     name = models.CharField(max_length=30)
@@ -199,14 +212,14 @@ class Weight_Class(models.Model):
 
     def find_lb_class(self):
         # Cover for the early weight classes
-        '''if self.id in [7, 8]:
+        if self.id in [7, 8]:
             return "F"
         elif self.id in [4, 12]:
             return "L"
         elif self.id in [2, 6, 11]:
             return "M"
         elif self.id in [3, 5, 9]:
-            return "H"'''
+            return "H"
 
         grams = self.weight_grams
         # [2,3,4,5,6,7,8,9]
@@ -1254,10 +1267,13 @@ class Leaderboard(models.Model):
     @staticmethod
     def update_all(current_year=None):
         # TODO: if for whatever reason small weight classes come back change this
-        wcs = ["H", "M", "R"]  # x[0] for x in LEADERBOARD_WEIGHTS]
+        if current_year > 2013:
+            wcs = ["H", "M", "R"]  # x[0] for x in LEADERBOARD_WEIGHTS]
+        else:
+            wcs = ["H", "M", "L", "S"]
         # wcs.remove("X")
-        #if current_year in [1995, 1996, 1997]:
-         #   wcs.append("F")
+        if current_year in [1995, 1996, 1997]:
+            wcs.append("F")
         for wc in wcs:
             Leaderboard.update_class(wc, current_year)
 
@@ -1315,6 +1331,15 @@ class Leaderboard(models.Model):
                     robot.lb_weight_class = robot.last_version().weight_class.find_lb_class()
                 else:
                     robot.lb_weight_class = "M"
+            if date.year > 2013:
+                if robot.first_fought.year < 2013:
+                    robot.lb_weight_class = "X"
+                else:
+                    fought_in_rus = Event.objects.filter(start_date__lt=date, country="RU",
+                                                         contest__registration__version__robot=robot).count() > 0
+                    if not fought_in_rus:
+                        robot.lb_weight_class = "X"
+
 
             if commit: robot.save()
             return robot

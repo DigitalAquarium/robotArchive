@@ -10,8 +10,8 @@ from django.core.validators import URLValidator
 from django.db import IntegrityError
 from django.db.models import F, When, Case, Value, ExpressionWrapper
 from django.db.models.functions import Lower, Concat
-from django.shortcuts import redirect
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.http import Http404, HttpResponse
 
@@ -19,6 +19,10 @@ from main import subdivisions
 from .forms import *
 
 ONE_HOUR_TIMER = 3600
+
+
+def get_site(var):
+    return 1
 
 
 @permission_required("main.change_event", raise_exception=True)
@@ -33,7 +37,7 @@ def edt_home_view(request):
             event_list.filter(contest__name__icontains=name)).union(
             event_list.filter(franchise__name__icontains=name))
 
-    event_list = event_list.order_by("name").order_by("-start_date")
+    event_list = event_list.order_by("name").order_by("-site", "-start_date")
 
     return render(request, "main/editor/home.html",
                   {"event_list": event_list,
@@ -582,12 +586,20 @@ def delete_view(request, model, instance_id=None, next_id=None):
 
 
 def index_view(request):
+    site = get_current_site(request).id
     editor_stay = request.GET.get("edt") or ""
     if request.user.is_authenticated and request.user.is_superuser and editor_stay != "stay":
         return redirect("main:edtHome")
 
-    events = ["bitva-robotov-perm-2015", "bronebot-autumn-warmup", "bitva-robotov-perm-2016"]
-    robot = Robot.objects.filter().order_by("?")[0]
+    if site == 2:
+        events = ["bitva-robotov-perm-2015", "bronebot-autumn-warmup", "bitva-robotov-perm-2016"]
+    else:
+        events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
+                  "mechwars-iii", "robotica-season-1"]
+    robot = Robot.objects.filter(version__site=site)
+    if site == 1:
+        robot = robot.filter(hallofame__full_member=True)
+    robot = robot.order_by("?")[0]
     event = Event.objects.get(slug=random.choice(events))
     return render(request, "main/index.html", {"example_robot": robot, "example_event": event})
 
@@ -602,6 +614,7 @@ def event_index_view(request):
     date_to = request.GET.get("date_to")
     distance = request.GET.get("distance")
     weight = request.GET.get("weight")
+    site = get_current_site(request).id
 
     num = 50
     try:
@@ -618,9 +631,9 @@ def event_index_view(request):
         distance = 0
 
     if weight != 0:
-        event_list = Event.get_by_rough_weight(weight)
+        event_list = Event.get_by_rough_weight(weight).filter(site=site)
     else:
-        event_list = Event.objects.all()
+        event_list = Event.objects.filter(site=site)
 
     if country_code != "" and country_code is not None:
         country_code = country_code.upper()
@@ -836,6 +849,7 @@ def robot_index_view(request):
     weight = request.GET.get("weight")
     has_awards = request.GET.get("has_awards")
     weapon = request.GET.get("weapon") or ""
+    site = get_current_site(request).id
     num = 50
     try:
         weight = int(weight)
@@ -847,9 +861,9 @@ def robot_index_view(request):
         page = 1
 
     if weight != 0:
-        robot_list = Robot.get_by_rough_weight(weight)
+        robot_list = Robot.get_by_rough_weight(weight).filter(version__site=site).distinct()
     else:
-        robot_list = Robot.objects.all()
+        robot_list = Robot.objects.filter(version__site=site).distinct()
 
     if country_code != "" and country_code is not None:
         country_code = country_code.upper()
@@ -931,11 +945,21 @@ def robot_index_view(request):
 
 
 def leaderboard(request):
-    visible_weights = [
-        ("M", "Middleweight"),
-        ("R", "70kg"),
-        ("H", "Heavyweight"),
-    ]
+    site = get_current_site(request).id
+    if site == 1:
+        visible_weights = [
+            ("F", "Featherweight"),
+            ("L", "Lightweight"),
+            ("M", "Middleweight"),
+            ("H", "Heavyweight"),
+            ("S", "Super Heavyweight"),
+        ]
+    else:
+        visible_weights = [
+            ("M", "Middleweight"),
+            ("R", "70kg"),
+            ("H", "Heavyweight"),
+        ]
 
     # CSS Notes: row height up to 20em
     weight = request.GET.get("weight")
@@ -943,14 +967,16 @@ def leaderboard(request):
     if not weight or weight not in [x[0] for x in visible_weights]:  # LEADERBOARD_WEIGHTS]:
         weight = "H"
     year = request.GET.get("year")
-    current_year = Event.objects.all().order_by("-end_date")[0].end_date.year
-    if weight == "R":
-        years = [2012, 2014, 2015, 2016]
-    elif weight == "M":
+    current_year = Event.objects.filter(site=site).order_by("-end_date")[0].end_date.year
+    if weight == "F":
+        years = [1996, 1997]
+    elif weight == "R":
+        years = [2014, 2015, 2016]
+    elif weight == "M" and site == 2:
         years = [2014, 2016, 2017]
     else:
         years = [x['year'] for x in
-                 Leaderboard.objects.filter(weight=weight).order_by("year").values("year").distinct()]
+                 Leaderboard.objects.filter(weight=weight,version__site=site).order_by("year").values("year").distinct()]
         if 2020 in years: years.remove(2020)
         if 2021 in years: years.remove(2021)
         if weight == "H" and 2022 in years:
@@ -964,9 +990,6 @@ def leaderboard(request):
         years = [current_year]
     if year not in years:
         year = current_year
-    if weight != "F":
-        Leaderboard.update_class(weight)
-        # pass
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
 
@@ -975,18 +998,19 @@ def leaderboard(request):
         year = years[-1]
         robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
 
-    eliminations = Leaderboard.objects.filter(weight=weight, year=year, position=101).order_by("difference")
+    # eliminations = Leaderboard.objects.filter(weight=weight, year=year, position=101).order_by("difference")
 
     top_three = []
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
 
-    chosen_weight_text = {"R": "70kg", "M": "middleweight", "H": "heavyweight"}[weight]
+    chosen_weight_text = {"F": "featherweight", "L": "lightweight", "M": "middleweight", "R":"70kg", "H": "heavyweight",
+                          "S": "super heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
                    "weights": visible_weights,
-                   "chosen_weight": weight,
+                   "chosen_weight": weight, "rus": "Russian " if site == 2 else "",
                    "chosen_weight_text": chosen_weight_text,
                    "chosen_year": year,
                    "first_year": not Leaderboard.objects.filter(weight=weight, year=year - 1).exists(),
@@ -994,7 +1018,7 @@ def leaderboard(request):
                    "top_three": top_three,
                    "is_this_year": year == current_year,
                    "low_classes": ["A", "U", "B", "Y", "F"],
-                   "eliminations": eliminations,
+                   #"eliminations": eliminations,
 
                    "title": "Leaderboard",
                    "description": "Leaderboard of " + chosen_weight_text + " fighting robots in the year " + str(
@@ -1010,6 +1034,8 @@ def robot_detail_view(request, slug):
     except Robot.DoesNotExist:
         raise Http404
 
+    site = get_current_site(request).id
+    rus = "Russian " if site == 2 else ""
     v = None
     is_random = False
 
@@ -1026,11 +1052,13 @@ def robot_detail_view(request, slug):
             v = Version.objects.get(pk=version_id)
         except (ValueError, TypeError, ObjectDoesNotExist):
             v = None
-    fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date", "contest__id", "number")
-    awards = Award.objects.filter(version__robot=r)
+    fights = Fight.objects.filter(competitors__robot=r, contest__event__site=site).order_by("contest__start_date",
+                                                                                            "contest__id", "number")
+    awards = Award.objects.filter(version__robot=r, version__site=site)
 
-    leaderboard_entries = Leaderboard.objects.filter(robot=r, ranking__gt=Robot.RANKING_DEFAULT).order_by("position",
-                                                                                                          "-year")
+    leaderboard_entries = Leaderboard.objects.filter(robot=r, version__site=site,
+                                                     ranking__gt=Robot.RANKING_DEFAULT).order_by("position",
+                                                                                                 "-year")
     best_lb_entry = leaderboard_entries.first()
     current_lb_entry = leaderboard_entries.order_by(
         "-year").first() if leaderboard_entries.first() and leaderboard_entries.order_by("-year").first().year == \
@@ -1041,8 +1069,9 @@ def robot_detail_view(request, slug):
         leaderboard_entries = None
 
     # Calculate rowspans for fight table
-    contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date",
-                                                                                                "id").distinct()
+    contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r, event__site=site).order_by(
+        "start_date",
+        "id").distinct()
     rowspans_unformatted = []
     previous_contest = None
     for c in contests_attended:
@@ -1065,12 +1094,12 @@ def robot_detail_view(request, slug):
         description += " Winning " + str(r.wins) + " and losing " + str(r.losses) + " in head to head battle."
 
     return render(request, "main/robot_detail.html",
-                  {"robot": r,
+                  {"robot": r, "rus":rus,
                    "fights_tuple": fights_tuple,
                    "awards": awards,
                    "ver": v,
                    "can_change": can_change,
-                   "version_set": r.version_set.all().order_by("number"),
+                   "version_set": r.version_set.filter(site=site).order_by("number"),
                    "best_lb_entry": best_lb_entry,
                    "leaderboard_entries": leaderboard_entries,
                    "current_lb_entry": current_lb_entry,
@@ -1085,7 +1114,8 @@ def robot_detail_view(request, slug):
 
 
 def random_robot_view(unused):
-    random_robot = Robot.objects.all().order_by("?")[0]
+    site = get_current_site(request).id
+    random_robot = Robot.objects.filter(version__site=site).order_by("?")[0]
     flag = True
     while flag:
         for version in random_robot.version_set.all():
@@ -1224,6 +1254,11 @@ def new_version_view(request, robot_id):  # TODO: FORM
 
 
 def team_detail_view(request, slug):
+    site = get_current_site(request).id
+    if site == 1:
+        notsite = 2
+    else:
+        notsite = 1
     try:
         team = Team.objects.get(slug=slug)
     except Team.DoesNotExist:
@@ -1232,12 +1267,17 @@ def team_detail_view(request, slug):
         can_change = team.can_edit(request.user)
     else:
         can_change = False
-    robots = team.owned_robots().order_by("-last_fought")
-    loaners = team.loaners().order_by("-last_fought")
+    robots = team.owned_robots().filter(version__site=site,version__team=team).order_by("-last_fought")
+    other_robots = team.owned_robots().filter(version__site=notsite,version__team=team).order_by("-last_fought")
+    robots = robots.filter(version__site=site)
+    loaners = team.loaners().filter(version__site=site).order_by("-last_fought")
+    other_robots = other_robots | team.loaners().filter(version__site=notsite)
+    site_text = "See also, robots from this team on the " + ("Russian" if site == 1 else "global") + " site"
+    other_url = "https://" + Site.objects.get(pk=notsite).domain + "/robot/"
 
     return render(request, "main/team_detail.html",
                   {"team": team, "robots": robots, "loaners": loaners, "can_change": can_change,
-
+                   "other_robots": other_robots, "site_text": site_text, "other_url": other_url,
                    "title": team,
                    "description": "Overview of " + str(team) + ", a robot combat team that built " + str(
                        robots.count()) + " robots " + team.timespan(True) + ".",
@@ -1588,24 +1628,17 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
         next_fight = Fight.objects.filter(contest=fight.contest, number__gt=fight.number).order_by("number")[0]
     if Fight.objects.filter(contest=fight.contest, number__lt=fight.number).exists():
         previous_fight = Fight.objects.filter(contest=fight.contest, number__lt=fight.number).order_by("-number")[0]
-    return render(request, "main/fight_detail.html", {"fight": fight, "can_change": can_change,
-                                                      "next_fight": next_fight, "previous_fight": previous_fight,
-
-                                                      "title": fight.non_latin_name,
-                                                      "description": (
-                                                                         "Image of " if fight.media_type == "LI" or fight.media_type == "EI" else (
-                                                                             "Video of " if fight.media_type != "XX" and fight.media_type != "UN" else "Overview of ")) + str(
-                                                          fight) + ". A " + (
-                                                                         "round of " if fight.fight_type == "NC" else "fight at ") + "the " + str(
-                                                          fight.contest) + " contest at " + str(
-                                                          fight.contest.event) + ".",
-                                                      "thumbnail": fight.internal_media.url if fight.media_type == "LI" else (
-                                                          fight.external_media if fight.media_type == "EI" else None),
-                                                      "url": reverse("main:fightDetail", args=[fight_id]),
-                                                      "type": "video.other" if fight.media_type in ["LV", "IF", "TW",
-                                                                                                    "IG", "TT",
-                                                                                                    "FB"] else None,
-                                                      })
+    return render(request, "main/fight_detail.html",
+                  {"fight": fight, "can_change": can_change, "next_fight": next_fight, "previous_fight": previous_fight,
+                   "title": fight.non_latin_name,
+                   "description": (
+                                      "Image of " if fight.media_type == "LI" or fight.media_type == "EI" else (
+                                          "Video of " if fight.media_type != "XX" and fight.media_type != "UN" else "Overview of ")) + str(fight) + ". A " + ("round of " if fight.fight_type == "NC" else "fight at ") + "the " + str(fight.contest) + " contest at " + str(fight.contest.event) + ".",
+                   "thumbnail": fight.internal_media.url if fight.media_type == "LI" else (
+                      fight.external_media if fight.media_type == "EI" else None),
+                   "url": reverse("main:fightDetail", args=[fight_id]),
+                   "type": "video.other" if fight.media_type in ["LV", "IF", "TW", "IG", "TT", "FB"] else None,
+                   })
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -1762,6 +1795,7 @@ def message_view(request):
 
 
 def search_view(request):
+    site = get_current_site(request).id
     franchises = None
     fran_len = 0
     teams = None
@@ -1773,20 +1807,20 @@ def search_view(request):
     search_term = None
     if request.method == "GET":
         search_term = request.GET.get("q")
-        franchises = Franchise.objects.filter(name__icontains=search_term).distinct()
+        franchises = Franchise.objects.filter(name__icontains=search_term,event__site=site).distinct()
         fran_len = len(franchises)
         franchises = franchises[:10]
-        teams = Team.objects.filter(Q(name__icontains=search_term) | Q(latin_name__icontains=search_term)).distinct()
+        teams = Team.objects.filter(Q(name__icontains=search_term,version__site=site) | Q(latin_name__icontains=search_term,version__site=site)).distinct()
         team_len = len(teams)
         teams = teams[:10]
-        robots = Robot.objects.filter(name__icontains=search_term).union(
-            Robot.objects.filter(version__robot_name__icontains=search_term)).union(
-            Robot.objects.filter(latin_name__icontains=search_term)).union(
-            Robot.objects.filter(version__latin_robot_name__icontains=search_term))
+        robots = Robot.objects.filter(name__icontains=search_term,version__site=site).union(
+            Robot.objects.filter(version__robot_name__icontains=search_term,version__site=site)).union(
+            Robot.objects.filter(latin_name__icontains=search_term,version__site=site)).union(
+            Robot.objects.filter(version__latin_robot_name__icontains=search_term,version__site=site))
         robot_len = len(robots)
         robots = robots[:10]
-        events = Event.objects.filter(name__icontains=search_term).union(
-            Event.objects.filter(contest__name__icontains=search_term))
+        events = Event.objects.filter(name__icontains=search_term,site=site).union(
+            Event.objects.filter(contest__name__icontains=search_term,site=site))
         event_len = len(events)
         events = events[:10]
 
@@ -2305,7 +2339,7 @@ def mergeView__SCARY(request):
         "megabyte": "megabyte"
     }
     robot_slug_replacement_dict = {
-        "скорпион":"скорпион-2",
+        "скорпион": "скорпион-2",
         "sting": "sting-russia",
         "x7": "x7-russia",
         "phoenix": "phoenix-russia",
@@ -2358,7 +2392,8 @@ def mergeView__SCARY(request):
                 highest_pk -= 1
                 franchise.pk = franchise_dict[old_id]
             else:
-                franchise.slug = input("A Slug conflict has occurred with slug: " + franchise.slug + ". Please enter a new slug\n>>>")
+                franchise.slug = input(
+                    "A Slug conflict has occurred with slug: " + franchise.slug + ". Please enter a new slug\n>>>")
                 franchise.save(using="merge")
 
         for link in Web_Link.objects.filter(franchise__id=old_id):
@@ -2367,8 +2402,6 @@ def mergeView__SCARY(request):
             link.franchise_id = franchise.pk
             link.pk = highest_web_pk
             link.save(using="merge")
-
-
 
     response = "Franchises: " + str(franchise_dict)
 

@@ -67,6 +67,23 @@
         {% endfor %}
         </div>
     {%endif%}
+    {%if other_robots|length > 0%}
+    <h4>{{site_text}}:</h4>
+    <div class="gridview-container">
+        {% for robot in other_robots %}
+            <div class="gridview-square">
+                <div class="gridview-title">
+                    <a href="{{other_url}}{{robot.slug}}">{{ robot|name_from_team:team }}</a>
+                </div>
+                <div class="gridview-image-container">
+                    <img class="fit-image"
+                         src="{{robot|image_from_team:team}}"
+                         alt="{{robot}}">
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {%endif%}
 
     {% if member %}
         <a href="{% url 'main:newRobot' team.id %} ">New Robot</a>
