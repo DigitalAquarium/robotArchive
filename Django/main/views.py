@@ -11,7 +11,7 @@ from django.db import IntegrityError
 from django.db.models import F, When, Case, Value, ExpressionWrapper
 from django.db.models.functions import Lower, Concat
 from django.shortcuts import redirect, render
-from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.sites.shortcuts import get_current_site as dj_get_current_site
 from django.urls import reverse
 from django.http import Http404, HttpResponse
 
@@ -21,8 +21,11 @@ from .forms import *
 ONE_HOUR_TIMER = 3600
 
 
-def get_site(var):
-    return 1
+def get_current_site(request):
+    try:
+        return dj_get_current_site(request)
+    except:
+        return Site.objects.get(pk=1)
 
 
 @permission_required("main.change_event", raise_exception=True)
@@ -469,8 +472,9 @@ def edt_select_version_view(request, robot_id):
     else:
         obj_type = "fight"
         obj_id = request.COOKIES.get("editing_fight")
+    versions = robot.version_set.order_by("number")
     return render(request, "main/editor/select_version.html",
-                  {"robot": robot, "obj_type": obj_type, "obj_id": obj_id, "title": "Select Version", })
+                  {"robot": robot, "versions":versions, "obj_type": obj_type, "obj_id": obj_id, "title": "Select Version", })
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -977,7 +981,8 @@ def leaderboard(request):
         years = [2014, 2016, 2017]
     else:
         years = [x['year'] for x in
-                 Leaderboard.objects.filter(weight=weight,version__site=site).order_by("year").values("year").distinct()]
+                 Leaderboard.objects.filter(weight=weight, version__site=site).order_by("year").values(
+                     "year").distinct()]
         if 2020 in years: years.remove(2020)
         if 2021 in years: years.remove(2021)
         if weight == "H" and 2022 in years:
@@ -1005,8 +1010,9 @@ def leaderboard(request):
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
 
-    chosen_weight_text = {"F": "featherweight", "L": "lightweight", "M": "middleweight", "R":"70kg", "H": "heavyweight",
-                          "S": "super heavyweight"}[weight]
+    chosen_weight_text = \
+    {"F": "featherweight", "L": "lightweight", "M": "middleweight", "R": "70kg", "H": "heavyweight",
+     "S": "super heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
@@ -1019,7 +1025,7 @@ def leaderboard(request):
                    "top_three": top_three,
                    "is_this_year": year == current_year,
                    "low_classes": ["A", "U", "B", "Y", "F"],
-                   #"eliminations": eliminations,
+                   # "eliminations": eliminations,
 
                    "title": "Leaderboard",
                    "description": "Leaderboard of " + chosen_weight_text + " fighting robots in the year " + str(
@@ -1089,13 +1095,14 @@ def robot_detail_view(request, slug):
 
     fights_tuple = [(rowspans[i], fights[i]) for i in range(len(fights))]
 
-    description = "Information about " + str(r) + ", a combat robot that has fought " + str(fights.count()) + \
+    description = "Information about " + (r.latin_name if r.display_latin_name else str(r))   \
+                  + ", a combat robot that has fought " + str(fights.count()) + \
                   " fight" + ("" if fights.count() == 1 else "s") + " " + r.timespan(True) + "."
     if r.wins > 0 or r.losses > 0:
         description += " Winning " + str(r.wins) + " and losing " + str(r.losses) + " in head to head battle."
 
     return render(request, "main/robot_detail.html",
-                  {"robot": r, "rus":rus,
+                  {"robot": r, "rus": rus,
                    "fights_tuple": fights_tuple,
                    "awards": awards,
                    "ver": v,
@@ -1114,7 +1121,7 @@ def robot_detail_view(request, slug):
                    })
 
 
-def random_robot_view(unused):
+def random_robot_view(request):
     site = get_current_site(request).id
     random_robot = Robot.objects.filter(version__site=site).order_by("?")[0]
     flag = True
@@ -1268,8 +1275,8 @@ def team_detail_view(request, slug):
         can_change = team.can_edit(request.user)
     else:
         can_change = False
-    robots = team.owned_robots().filter(version__site=site,version__team=team).order_by("-last_fought")
-    other_robots = team.owned_robots().filter(version__site=notsite,version__team=team).order_by("-last_fought")
+    robots = team.owned_robots().filter(version__site=site, version__team=team).order_by("-last_fought")
+    other_robots = team.owned_robots().filter(version__site=notsite, version__team=team).order_by("-last_fought")
     robots = robots.filter(version__site=site)
     loaners = team.loaners().filter(version__site=site).order_by("-last_fought")
     other_robots = other_robots | team.loaners().filter(version__site=notsite)
@@ -1635,9 +1642,11 @@ def fight_detail_view(request, fight_id):  # TODO: Sort this better
                    "title": fight.non_latin_name,
                    "description": (
                                       "Image of " if fight.media_type == "LI" or fight.media_type == "EI" else (
-                                          "Video of " if fight.media_type != "XX" and fight.media_type != "UN" else "Overview of ")) + str(fight) + ". A " + ("round of " if fight.fight_type == "NC" else "fight at ") + "the " + str(fight.contest) + " contest at " + str(fight.contest.event) + ".",
+                                          "Video of " if fight.media_type != "XX" and fight.media_type != "UN" else "Overview of ")) + str(
+                       fight) + ". A " + ("round of " if fight.fight_type == "NC" else "fight at ") + "the " + str(
+                       fight.contest) + " contest at " + str(fight.contest.event) + ".",
                    "thumbnail": fight.internal_media.url if fight.media_type == "LI" else (
-                      fight.external_media if fight.media_type == "EI" else None),
+                       fight.external_media if fight.media_type == "EI" else None),
                    "url": reverse("main:fightDetail", args=[fight_id]),
                    "type": "video.other" if fight.media_type in ["LV", "IF", "TW", "IG", "TT", "FB"] else None,
                    })
@@ -1809,20 +1818,22 @@ def search_view(request):
     search_term = None
     if request.method == "GET":
         search_term = request.GET.get("q")
-        franchises = Franchise.objects.filter(name__icontains=search_term,event__site=site).distinct()
+        franchises = Franchise.objects.filter(name__icontains=search_term, event__site=site).distinct()
         fran_len = len(franchises)
         franchises = franchises[:10]
-        teams = Team.objects.filter(Q(name__icontains=search_term,version__site=site) | Q(latin_name__icontains=search_term,version__site=site)).distinct()
+        teams = Team.objects.filter(
+            Q(name__icontains=search_term, version__site=site) | Q(latin_name__icontains=search_term,
+                                                                   version__site=site)).distinct()
         team_len = len(teams)
         teams = teams[:10]
-        robots = Robot.objects.filter(name__icontains=search_term,version__site=site).union(
-            Robot.objects.filter(version__robot_name__icontains=search_term,version__site=site)).union(
-            Robot.objects.filter(latin_name__icontains=search_term,version__site=site)).union(
-            Robot.objects.filter(version__latin_robot_name__icontains=search_term,version__site=site))
+        robots = Robot.objects.filter(name__icontains=search_term, version__site=site).union(
+            Robot.objects.filter(version__robot_name__icontains=search_term, version__site=site)).union(
+            Robot.objects.filter(latin_name__icontains=search_term, version__site=site)).union(
+            Robot.objects.filter(version__latin_robot_name__icontains=search_term, version__site=site))
         robot_len = len(robots)
         robots = robots[:10]
-        events = Event.objects.filter(name__icontains=search_term,site=site).union(
-            Event.objects.filter(contest__name__icontains=search_term,site=site))
+        events = Event.objects.filter(name__icontains=search_term, site=site).union(
+            Event.objects.filter(contest__name__icontains=search_term, site=site))
         event_len = len(events)
         events = events[:10]
 
