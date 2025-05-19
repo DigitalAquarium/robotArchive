@@ -8,7 +8,6 @@ from django.utils.html import escape
 from .forms import *
 
 from googleapiclient.discovery import build
-import googleapiclient.errors
 from os import environ
 
 YT_API_KEY = environ["YOUTUBE_API_KEY"]
@@ -18,7 +17,7 @@ def disclaimer(request):
     if get_current_site(request).id == 2:
         return JsonResponse({"txt": "Russia"}, status=200)
     else:
-        return JsonResponse({"txt": "2006"}, status=200)
+        return JsonResponse({"txt": "2007"}, status=200)
 
 
 def get_location(request):
@@ -62,11 +61,6 @@ def get_history(request):
 
 def yt_video_status(request, fight_id):
     Fight.objects.filter(external_media__contains="youtube.com").update(media_type="YT")
-
-    if request.ipinfo.ip == "127.0.0.1":
-        req_country = "GB"
-    else:
-        req_country = request.ipinfo.country
 
     url = Fight.objects.get(pk=fight_id).external_media
     with build("youtube", "v3", developerKey=environ["YOUTUBE_API_KEY"]) as yt_api:

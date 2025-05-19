@@ -1058,14 +1058,21 @@ def robot_detail_view(request, slug):
             version_id = int(version_id)
             v = Version.objects.get(pk=version_id)
         except (ValueError, TypeError, ObjectDoesNotExist):
-            v = None
-    fights = Fight.objects.filter(competitors__robot=r, contest__event__site=site).order_by("contest__start_date",
-                                                                                            "contest__id", "number")
-    awards = Award.objects.filter(version__robot=r, version__site=site)
+            v = r.last_version()
 
-    leaderboard_entries = Leaderboard.objects.filter(robot=r, version__site=site,
-                                                     ranking__gt=Robot.RANKING_DEFAULT).order_by("position",
-                                                                                                 "-year")
+    if can_change:
+        version_set = r.version_set.all().order_by("number")
+        fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date","contest__id", "number")
+        awards = Award.objects.filter(version__robot=r)
+        leaderboard_entries = Leaderboard.objects.filter(robot=r, ranking__gt=Robot.RANKING_DEFAULT).order_by("position", "-year")
+        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date", "id").distinct()
+    else:
+        version_set = r.version_set.filter(site=site).order_by("number")
+        fights = Fight.objects.filter(competitors__robot=r, contest__event__site=site).order_by("contest__start_date","contest__id", "number")
+        awards = Award.objects.filter(version__robot=r, version__site=site)
+        leaderboard_entries = Leaderboard.objects.filter(robot=r, version__site=site,ranking__gt=Robot.RANKING_DEFAULT).order_by("position","-year")
+        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r, event__site=site).order_by("start_date", "id").distinct()
+
     best_lb_entry = leaderboard_entries.first()
     current_lb_entry = leaderboard_entries.order_by(
         "-year").first() if leaderboard_entries.first() and leaderboard_entries.order_by("-year").first().year == \
@@ -1076,9 +1083,6 @@ def robot_detail_view(request, slug):
         leaderboard_entries = None
 
     # Calculate rowspans for fight table
-    contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r, event__site=site).order_by(
-        "start_date",
-        "id").distinct()
     rowspans_unformatted = []
     previous_contest = None
     for c in contests_attended:
@@ -1100,14 +1104,13 @@ def robot_detail_view(request, slug):
                   " fight" + ("" if fights.count() == 1 else "s") + " " + r.timespan(True) + "."
     if r.wins > 0 or r.losses > 0:
         description += " Winning " + str(r.wins) + " and losing " + str(r.losses) + " in head to head battle."
-
     return render(request, "main/robot_detail.html",
                   {"robot": r, "rus": rus,
                    "fights_tuple": fights_tuple,
                    "awards": awards,
                    "ver": v,
                    "can_change": can_change,
-                   "version_set": r.version_set.filter(site=site).order_by("number"),
+                   "version_set": version_set,
                    "best_lb_entry": best_lb_entry,
                    "leaderboard_entries": leaderboard_entries,
                    "current_lb_entry": current_lb_entry,

@@ -86,6 +86,9 @@ class Person(models.Model):
 
 
 class Team(models.Model):
+    redirects = {
+        "piranha-2c55a99f-b91e-49ed-831e-8de457186210": "late-night-racing"
+    }
     name = models.CharField(max_length=255)
     latin_name = models.CharField(max_length=255, blank=True)
     display_latin_name = models.BooleanField(default=False)
@@ -881,7 +884,14 @@ class Fight(models.Model):
                 self.media_type = "LI"
 
         elif self.external_media is not None and self.external_media != "":
-            if "twitter" in self.external_media or "www.x.com" in self.external_media:
+            # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
+            if self.external_media[-4:].lower() in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
+                self.media_type = "EI"
+            elif self.external_media[-5:].lower() in [".jpeg", ".jfif", ".webp"]:
+                self.media_type = "EI"
+            elif self.external_media[-6:].lower() == ".pjpeg":
+                self.media_type = "EI"
+            elif "twitter" in self.external_media or "www.x.com" in self.external_media:
                 self.media_type = "TW"
             elif "tiktok" in self.external_media:
                 self.media_type = "TT"
@@ -893,15 +903,8 @@ class Fight(models.Model):
                 self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "YT"
-            elif "vkvideo.ru" or "vkvideo.com" in self.external_media:
+            elif "vkvideo.ru" in self.external_media or "vkvideo.com" in self.external_media:
                 self.media_type = "IF"
-            # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
-            elif self.external_media[-4:].lower() in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
-                self.media_type = "EI"
-            elif self.external_media[-5:].lower() in [".jpeg", ".jfif", ".webp"]:
-                self.media_type = "EI"
-            elif self.external_media[-6:].lower() == ".pjpeg":
-                self.media_type = "EI"
             else:
                 self.media_type = "UN"
         self.save()

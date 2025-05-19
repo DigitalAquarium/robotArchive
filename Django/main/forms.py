@@ -193,7 +193,7 @@ class FranchiseForm(forms.ModelForm):  # TODO: Add Web Links
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'missing_brackets', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise']
+        fields = ['name', 'slug', 'missing_brackets', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise']
 
 
 class ContestForm(forms.ModelForm):
