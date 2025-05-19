@@ -86,6 +86,9 @@ class Person(models.Model):
 
 
 class Team(models.Model):
+    redirects = {
+        "piranha-2c55a99f-b91e-49ed-831e-8de457186210": "late-night-racing"
+    }
     name = models.CharField(max_length=255)
     latin_name = models.CharField(max_length=255, blank=True)
     display_latin_name = models.BooleanField(default=False)
@@ -218,7 +221,7 @@ class Weight_Class(models.Model):
             return "L"
         elif self.id in [2, 6, 11]:
             return "M"
-        elif self.id in [3, 5, 9]:
+        elif self.id in [3, 5, 9, 14]:
             return "H"
 
         grams = self.weight_grams
@@ -683,11 +686,12 @@ class Fight(models.Model):
         ("LI", "Local Image"),
         ("EI", "External Image"),
         ("LV", "Local Video"),
-        ("IF", "Iframe embed"),  # Such as YouTube or Vimeo
+        ("IF", "Iframe embed"),
         ("IG", "Instagram"),
         ("TW", "Twitter"),
         ("TT", "Tiktok"),
         ("FB", "Facebook"),
+        ("YT", "YouTube"),
         ("UN", "Unknown"),
     ]
 
@@ -879,8 +883,15 @@ class Fight(models.Model):
                 # Local Image
                 self.media_type = "LI"
 
-        elif self.external_media is not None:
-            if "twitter" in self.external_media or "www.x.com" in self.external_media:
+        elif self.external_media is not None and self.external_media != "":
+            # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
+            if self.external_media[-4:].lower() in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
+                self.media_type = "EI"
+            elif self.external_media[-5:].lower() in [".jpeg", ".jfif", ".webp"]:
+                self.media_type = "EI"
+            elif self.external_media[-6:].lower() == ".pjpeg":
+                self.media_type = "EI"
+            elif "twitter" in self.external_media or "www.x.com" in self.external_media:
                 self.media_type = "TW"
             elif "tiktok" in self.external_media:
                 self.media_type = "TT"
@@ -891,22 +902,15 @@ class Fight(models.Model):
             elif "archive.org" in self.external_media and "web.archive.org" not in self.external_media:
                 self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
+                self.media_type = "YT"
+            elif "vkvideo.ru" in self.external_media or "vkvideo.com" in self.external_media:
                 self.media_type = "IF"
-            elif "vkvideo.ru" or "vkvideo.com" in self.external_media:
-                self.media_type = "IF"
-            # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types
-            elif self.external_media[-4:].lower() in [".gif", ".jpg", ".pjp", ".gif", ".png", ".svg"]:
-                self.media_type = "EI"
-            elif self.external_media[-5:].lower() in [".jpeg", ".jfif", ".webp"]:
-                self.media_type = "EI"
-            elif self.external_media[-6:].lower() == ".pjpeg":
-                self.media_type = "EI"
             else:
                 self.media_type = "UN"
         self.save()
 
     def img_gif_vid(self):
-        if self.media_type in ["LV", "IF", "IG", "TW", "TT", "FB"]:
+        if self.media_type in ["LV", "IF", "YT", "IG", "TW", "TT", "FB"]:
             return "video"
         elif self.media_type in ["LI", "EI"]:
             if self.media_type == "LI":
@@ -1561,6 +1565,8 @@ class Web_Link(models.Model):
                 ret = ret[10:]
             if "company/" == ret[:8]:
                 ret = ret[8:]
+            if ret[:3] == "in/":
+                ret = ret[3:]
             return ret
 
         elif self.type == "GH":
@@ -1581,7 +1587,11 @@ class Web_Link(models.Model):
         elif self.type == "TG":
             ret = preprocess(self.link)
             ret = ret[5:]
+            if ret[:2] == "s/":
+                ret = ret[2:]
             return ret
+        elif self.type == "SW":
+            return "Weibo Page"
 
         else:
             return self.link
