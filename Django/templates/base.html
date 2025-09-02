@@ -43,11 +43,6 @@
                         <button class="material-symbols-outlined" type="submit">Search</button>
                     </form>
                 </li>
-                <li>
-                    {% if user.is_authenticated %}
-                        <a class="nav-index-link" href="{% url 'logout' %}">Logout</a>
-                    {% endif %}
-                </li>
             </ul>
         </div>
     {% endblock %}
