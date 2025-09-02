@@ -38,7 +38,7 @@
     {% endfor %}
     {% if pages > 1 %}
         {% url "main:franchiseIndex" as this %}
-        {%include "snippets/page-flipper.html" with link=this %}
+        {%include "snippets/page_flipper.html" with link=this %}
     {% endif %}
 </div>
 {% endblock %}

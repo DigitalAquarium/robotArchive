@@ -29,7 +29,7 @@
                     <tbody>
 
                     {% for fight in fights %}
-                        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                        <tr>
                             <td><a class="fight-link" href="{% url 'main:fightDetail' fight.id %}" >{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %}</a></td>
                             <td class="mobile-hide">{{ fight.get_fight_type_display }}</td>
                             <td>{{fight.winners_string}}</td>

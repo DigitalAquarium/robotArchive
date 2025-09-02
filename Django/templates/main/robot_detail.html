@@ -143,13 +143,13 @@
                     </tr>
                     </thead>
                     {%if robot.hallofame_set.all|length > 0%}
-                    <tr class="table-row-two">
-                    <td><img class="award-icon" src="{%static 'awards/frame2.png'%}" alt="Golden Picture Frame Icon"></td>
-                    <td colspan="2" style="text-align:center"><a href="{%url 'main:hallOfFame' %}">{%if robot.hallofame_set.first.full_member%}Hall of Fame Member{%else%}Hall of Fame Honorable Mention{%endif%}</a></td>
+                    <tr>
+                        <td><img class="award-icon" src="{%static 'awards/frame2.png'%}" alt="Golden Picture Frame Icon"></td>
+                        <td colspan="2" style="text-align:center"><a href="{%url 'main:hallOfFame' %}">{%if robot.hallofame_set.first.full_member%}Hall of Fame Member{%else%}Hall of Fame Honorable Mention{%endif%}</a></td>
                     </tr>
                     {% endif %}
                     {% for award in awards %}
-                        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                        <tr>
                             <td><img class="award-icon" src="{{ award.get_icon }}"
                                      {%if award_type == 0%}
                                         alt="Medal with Red Ribbon"
@@ -173,7 +173,7 @@
                 <table>
                     <thead>
                     <tr>
-                        <th>Event</th>
+                        <th class="border-right">Event</th>
                         <th class="mobile-hide">Type</th>
                         <th>Opponents</th>
                         <th class="mobile-hide">Result</th>
@@ -181,9 +181,9 @@
                     </thead>
                     <tbody>
                     {% for rowspan, fight in fights_tuple %}
-                        <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                        <tr {% if rowspan != 0 %} class="border-top"{%endif%}>
                             {% if rowspan != 0 %}
-                            <td class ="table-no-bg{%if fight.contest.event.missing_brackets %} incomplete_event{%endif%}" rowspan="{{ rowspan }}">
+                            <td class ="table-no-bg border-right {%if fight.contest.event.missing_brackets %} incomplete_event{%endif%}" rowspan="{{ rowspan }}">
                                 <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
                             </td>
                             {% endif %}
@@ -200,5 +200,6 @@
                     </tbody>
                 </table>
             {% endif %}
+
     </div>
 {% endblock %}

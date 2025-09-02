@@ -71,6 +71,7 @@ class NewRobotForm(forms.Form):
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']
         v.number = 1
+        v.site = Site.objects.get(pk=settings.SITE_ID)
         v.owner = owner
         if team != 0:
             v.team = team
@@ -118,6 +119,7 @@ class NewVersionForm(forms.Form):
         v.team = self.cleaned_data['team']
         v.number = v.robot.version_set.all().order_by("number").last().number + 1
         v.owner = owner
+        v.site = Site.objects.get(pk=settings.SITE_ID)
         v.save()
         return v
 
@@ -193,7 +195,7 @@ class FranchiseForm(forms.ModelForm):  # TODO: Add Web Links
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'slug', 'missing_brackets', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise']
+        fields = ['name', 'slug', 'missing_brackets', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise','site']
 
 
 class ContestForm(forms.ModelForm):
@@ -274,6 +276,7 @@ class NewEventFormEDT(forms.Form):
     start_date = forms.DateField(required=True)
     end_date = forms.DateField(required=False)
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=True)
+    site = forms.ModelChoiceField(queryset=Site.objects.all(), required=True,initial=Site.objects.get(pk=settings.SITE_ID))
 
     def save(self, franchise):
         e = Event()
@@ -294,6 +297,8 @@ class NewEventFormEDT(forms.Form):
             save_img(self.cleaned_data['logo_txt'], e.logo, e.name)
         else:
             e.logo = self.cleaned_data['logo_img']
+
+        e.site = self.cleaned_data['site']
 
         e.save()
         return e

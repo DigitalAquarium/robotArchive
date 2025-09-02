@@ -84,3 +84,6 @@ class SourceAdmin(admin.ModelAdmin):
 class LocationAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(HalloFame)
+class HalloFameAdmin(admin.ModelAdmin):
+    pass

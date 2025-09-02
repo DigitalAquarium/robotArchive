@@ -46,7 +46,7 @@
         </thead>
         <tbody>
         {% for event in events %}
-            <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+            <tr>
                 <td><a href="{% url 'main:eventDetail' event.slug %}">{{ event }}</a></td>
                 <td>
                     {{event.timespan}}

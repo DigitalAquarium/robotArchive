@@ -53,7 +53,7 @@
         {% endfor %}
         {% if pages > 1 %}
             {% url "main:teamIndex" as link %}
-            {%include "snippets/page-flipper.html" with link=link %}
+            {%include "snippets/page_flipper.html" with link=link %}
         {% endif %}
     </div>
 {% endblock %}

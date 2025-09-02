@@ -474,7 +474,8 @@ def edt_select_version_view(request, robot_id):
         obj_id = request.COOKIES.get("editing_fight")
     versions = robot.version_set.order_by("number")
     return render(request, "main/editor/select_version.html",
-                  {"robot": robot, "versions":versions, "obj_type": obj_type, "obj_id": obj_id, "title": "Select Version", })
+                  {"robot": robot, "versions": versions, "obj_type": obj_type, "obj_id": obj_id,
+                   "title": "Select Version", })
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -600,7 +601,7 @@ def index_view(request):
                   "bitva-robotov-2024-final"]
     else:
         events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
-                  "mechwars-iii", "robotica-season-1"]
+                  "mechwars-iii", "robotica-season-1", "robogames-2007"]
     robot = Robot.objects.filter(version__site=site)
     if site == 1:
         robot = robot.filter(hallofame__full_member=True)
@@ -697,7 +698,9 @@ def event_detail_view(request, slug):
         event = Event.objects.get(slug=slug)
     except Event.DoesNotExist:
         raise Http404
-
+    site = get_current_site(request)
+    if event.site != site:
+        return redirect("https://www.robotcombatarchive.com/events/"+event.slug if site.id == 2 else "https://ru.robotcombatarchive.com/events/"+event.slug)
     fran = event.franchise
     contests = Contest.objects.filter(event=event).order_by("start_date", "-weight_class__weight_grams")
     num_competitors = Version.objects.filter(registration__contest__in=contests).distinct().count()
@@ -1011,8 +1014,8 @@ def leaderboard(request):
         top_three.append(robot_list[i])
 
     chosen_weight_text = \
-    {"F": "featherweight", "L": "lightweight", "M": "middleweight", "R": "70kg", "H": "heavyweight",
-     "S": "super heavyweight"}[weight]
+        {"F": "featherweight", "L": "lightweight", "M": "middleweight", "R": "70kg", "H": "heavyweight",
+         "S": "super heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
@@ -1043,6 +1046,9 @@ def robot_detail_view(request, slug):
 
     site = get_current_site(request).id
     rus = "Russian " if site == 2 else ""
+    if r.version_set.filter(site=site).count() == 0:
+        return redirect("https://www.robotcombatarchive.com/robot/"+r.slug if site == 2 else "https://ru.robotcombatarchive.com/robot/"+r.slug)
+
     v = None
     is_random = False
 
@@ -1062,16 +1068,22 @@ def robot_detail_view(request, slug):
 
     if can_change:
         version_set = r.version_set.all().order_by("number")
-        fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date","contest__id", "number")
+        fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date", "contest__id", "number")
         awards = Award.objects.filter(version__robot=r)
-        leaderboard_entries = Leaderboard.objects.filter(robot=r, ranking__gt=Robot.RANKING_DEFAULT).order_by("position", "-year")
-        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date", "id").distinct()
+        leaderboard_entries = Leaderboard.objects.filter(robot=r, ranking__gt=Robot.RANKING_DEFAULT).order_by(
+            "position", "-year")
+        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date",
+                                                                                                    "id").distinct()
     else:
         version_set = r.version_set.filter(site=site).order_by("number")
-        fights = Fight.objects.filter(competitors__robot=r, contest__event__site=site).order_by("contest__start_date","contest__id", "number")
+        fights = Fight.objects.filter(competitors__robot=r, contest__event__site=site).order_by("contest__start_date",
+                                                                                                "contest__id", "number")
         awards = Award.objects.filter(version__robot=r, version__site=site)
-        leaderboard_entries = Leaderboard.objects.filter(robot=r, version__site=site,ranking__gt=Robot.RANKING_DEFAULT).order_by("position","-year")
-        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r, event__site=site).order_by("start_date", "id").distinct()
+        leaderboard_entries = Leaderboard.objects.filter(robot=r, version__site=site,
+                                                         ranking__gt=Robot.RANKING_DEFAULT).order_by("position",
+                                                                                                     "-year")
+        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r, event__site=site).order_by(
+            "start_date", "id").distinct()
 
     best_lb_entry = leaderboard_entries.first()
     current_lb_entry = leaderboard_entries.order_by(
@@ -1099,7 +1111,7 @@ def robot_detail_view(request, slug):
 
     fights_tuple = [(rowspans[i], fights[i]) for i in range(len(fights))]
 
-    description = "Information about " + (r.latin_name if r.display_latin_name else str(r))   \
+    description = "Information about " + (r.latin_name if r.display_latin_name else str(r)) \
                   + ", a combat robot that has fought " + str(fights.count()) + \
                   " fight" + ("" if fights.count() == 1 else "s") + " " + r.timespan(True) + "."
     if r.wins > 0 or r.losses > 0:
@@ -1470,11 +1482,11 @@ def franchise_modify_view(request, franchise_id=None):
                 franchise_id = new.id
             else:
                 if old_logo and new.logo != old_logo:
-                    event_logo_dir = "ru/event_logos/" + str(datetime.date.today().year)
+                    event_logo_dir = "/event_logos/" + str(datetime.date.today().year)
                     if not isdir(settings.MEDIA_URL[1:] + event_logo_dir):
                         new.logo = old_logo
                         new.save()
-                        raise Exception
+                        raise Exception(event_logo_dir+ " is not a directory")
                     else:
                         new_events_logo = event_logo_dir + "/" + old_logo.url.split("/")[-1]
                         copy2(old_logo.url[1:], settings.MEDIA_URL[1:] + new_events_logo)
@@ -1534,6 +1546,8 @@ def franchise_detail_view(request, slug):
     except Franchise.DoesNotExist:
         raise Http404
     events = fran.event_set.filter(site=site).order_by("start_date")
+    if events.count() == 0:
+        return redirect("https://www.robotcombatarchive.com/franchise/"+fran.slug if site.id == 2 else "https://ru.robotcombatarchive.com/franchise/"+fran.slug)
     return render(request, "main/franchise_detail.html",
                   {"fran": fran, "events": events, "leave_id": 1,  # TODO: lol
                    "title": fran,
@@ -2322,283 +2336,3 @@ def tournament_tree(request):
     print(out)
 
     return render(request, "main/credits.html", {})
-
-
-def mergeView__SCARY(request):
-    weight_class_dict = {
-        1: 1,
-        2: 46,
-        3: 30,
-        4: 10,
-        5: 51,
-        6: 50,
-        7: 49,
-        8: 48,
-        9: 40,
-        10: 51,
-        11: 47,
-    }
-    robot_slug_dict = {
-        "4x4": "4x4",
-        "stealth-2": "스텔스",
-        "thor": "thor",
-        "kan-opener": "kan-opener",
-        "beast": "beast",
-        "tough-as-nails": "tough-as-nails",
-        "apollo": "apollo",
-        "ripper": "ripper",
-        "merlin": "merlin",
-        "stinger": "stinger",
-        "terror-turtle": "terror-turtle",
-        "big-nipper": "big-nipper",
-        "dantomkia": "dantomkia",
-        "megabyte": "megabyte"
-    }
-    robot_slug_replacement_dict = {
-        "скорпион": "скорпион-2",
-        "sting": "sting-russia",
-        "x7": "x7-russia",
-        "phoenix": "phoenix-russia",
-        "playbot": "playbot-russia",
-        "halo": "halo-heavyweight",
-        "crusher": "crusher-russia",
-        "war-machine": "war-machine-india",
-        "gladiator": "gladiator-india",
-        "cyclone": "cyclone-2017",
-        "bender": "bender-russia",
-        "phoenix-mw": "phoenix-mw-india",
-        "interceptor": "interceptor-russia",
-        "bonesaw": "bonesaw-kob",
-        "atom": "atom-russia",
-        "rhino": "rhino-kob",
-        "brainstorm": "brainstorm-china",
-        "гладиатор": "гладиатор-2",
-    }
-    team_slugs = [
-        "androidoss",
-        "batter",
-        "beast",
-        "danby",
-        "mad",
-        "rubbish",
-        "roaming-robots",
-        "thor",
-        "toad",
-        "trincabotz",
-        "dutch-robot-girls",
-        "rcc",
-        "robotic-death-company",
-        "caustic-creations",
-    ]
-    franchise_dict = {}
-    highest_pk = Franchise.objects.all().using("merge").order_by("-pk")[0].pk
-    highest_web_pk = Web_Link.objects.all().using("merge").order_by("-pk")[0].pk
-    for franchise in Franchise.objects.all():
-        highest_pk += 1
-        old_id = franchise.id
-        franchise.pk = highest_pk
-        franchise_dict[old_id] = highest_pk
-
-        try:
-            franchise.save(using="merge")
-            pass
-        except IntegrityError:
-            if franchise.slug == "battlebots":
-                franchise_dict[old_id] = 8
-                highest_pk -= 1
-                franchise.pk = franchise_dict[old_id]
-            else:
-                franchise.slug = input(
-                    "A Slug conflict has occurred with slug: " + franchise.slug + ". Please enter a new slug\n>>>")
-                franchise.save(using="merge")
-
-        for link in Web_Link.objects.filter(franchise__id=old_id):
-            print(link)
-            highest_web_pk += 1
-            link.franchise_id = franchise.pk
-            link.pk = highest_web_pk
-            link.save(using="merge")
-
-    response = "Franchises: " + str(franchise_dict)
-
-    team_dict = {}
-    highest_pk = Team.objects.all().using("merge").order_by("-pk")[0].pk
-    for team in Team.objects.all():
-        highest_pk += 1
-        old_id = team.id
-        team.pk = highest_pk
-        team_dict[old_id] = highest_pk
-
-        try:
-            team.save(using="merge")
-        except IntegrityError:
-            if team.slug == "sky":
-                team.slug = "sky-2"
-                team.save(using="merge")
-            elif team.slug == "typhoon":
-                team.slug = "typhoon-russia"
-                team.save(using="merge")
-            elif team.slug == "entropy":
-                team.slug = "entropy-russia"
-                team.save(using="merge")
-            elif team.slug in team_slugs:
-                team_dict[old_id] = Team.objects.using("merge").get(slug=team.slug).pk
-                highest_pk -= 1
-                team.pk = team_dict[old_id]
-                print("Slug conflict resolved on " + team.name)
-            else:
-                flag = True
-                while flag:
-                    try:
-                        team.slug = input(
-                            "A Slug conflict has occurred with slug: " + team.slug + ". Please enter a new slug\n>>>")
-                        team.save(using="merge")
-                        flag = False
-                    except IntegrityError:
-                        pass
-
-        for link in Web_Link.objects.filter(team__id=old_id):
-            print(link)
-            highest_web_pk += 1
-            link.team_id = team.pk
-            link.pk = highest_web_pk
-            link.save(using="merge")
-
-    response += "\n\nTeams: " + str(team_dict)
-
-    robot_dict = {}
-    version_dict = {}
-    highest_v_pk = Version.objects.all().using("merge").order_by("-pk")[0].pk
-    highest_pk = Robot.objects.all().using("merge").order_by("-pk")[0].pk
-    for robot in Robot.objects.all():
-        if robot.slug in robot_slug_replacement_dict.keys():
-            robot.slug = robot_slug_replacement_dict[robot.slug]
-        highest_pk += 1
-        old_id = robot.id
-        robot.pk = highest_pk
-        robot_dict[old_id] = highest_pk
-
-        try:
-            robot.save(using="merge")
-            pass
-        except IntegrityError:
-            if robot.slug in robot_slug_dict.keys():
-                robot.slug = robot_slug_dict[robot.slug]
-                robot_dict[old_id] = Robot.objects.using("merge").get(slug=robot.slug).pk
-                highest_pk -= 1
-                robot.pk = robot_dict[old_id]
-                print("Slug conflict resolved on " + robot.name)
-            else:
-                flag = True
-                while flag:
-                    try:
-                        robot.slug = input(
-                            "A Slug conflict has occurred with slug: " + robot.slug + ". Please enter a new slug\n>>>")
-                        robot.save(using="merge")
-                        flag = False
-                    except IntegrityError:
-                        pass
-        for version in Version.objects.filter(robot__id=old_id).order_by("number"):
-            highest_v_pk += 1
-            if version.team_id is not None:
-                version.team_id = team_dict[version.team_id]
-            if robot.slug in robot_slug_dict.keys():
-                try:
-                    vnum = Version.objects.using("merge").filter(robot__id=robot.id).order_by("-number")[0].number
-                    version.number = vnum + 1
-                except:
-                    pass
-            version.weight_class_id = weight_class_dict[version.weight_class_id]
-            version_dict[version.id] = highest_v_pk
-            version.robot_id = robot.pk
-            version.pk = highest_v_pk
-            version.site_id = 2
-            version.save(using="merge")
-
-    response += "\n\nRobots: " + str(robot_dict)
-    response += "\n\nVersions: " + str(version_dict)
-
-    location_dict = {}
-    highest_pk = Location.objects.all().using("merge").order_by("-pk")[0].pk
-    for location in Location.objects.all():
-        highest_pk += 1
-        location_dict[location.pk] = highest_pk
-        location.pk = highest_pk
-        location.save(using="merge")
-
-    response += "\n\nLocations: " + str(location_dict)
-
-    highest_pk = Event.objects.all().using("merge").order_by("-pk")[0].pk
-    highest_source_pk = Source.objects.all().using("merge").order_by("-pk")[0].pk
-    highest_con_pk = Contest.objects.all().using("merge").order_by("-pk")[0].pk
-    highest_reg_pk = Registration.objects.all().using("merge").order_by("-pk")[0].pk
-    highest_award_pk = Award.objects.all().using("merge").order_by("-pk")[0].pk
-    highest_fight_pk = Fight.objects.all().using("merge").order_by("-pk")[0].pk
-    highest_fv_pk = Fight_Version.objects.all().using("merge").order_by("-pk")[0].pk
-    for event in Event.objects.all():
-        print("Saving Event:", event)
-        highest_pk += 1
-        old_id = event.id
-        if event.franchise_id is not None:
-            event.franchise_id = franchise_dict[event.franchise_id]
-        if event.location_id is not None:
-            event.location_id = location_dict[event.location_id]
-        event.pk = highest_pk
-        event.site_id = 2
-        try:
-            event.save(using="merge")
-            pass
-        except IntegrityError:
-            flag = True
-            while flag:
-                try:
-                    event.slug = input(
-                        "A Slug conflict has occurred with slug: " + event.slug + ". Please enter a new slug\n>>>")
-                    event.save(using="merge")
-                    flag = False
-                except IntegrityError:
-                    pass
-
-        for source in Source.objects.filter(event__id=old_id):
-            highest_source_pk += 1
-            source.event_id = event.id
-            source.pk = highest_source_pk
-            source.save(using="merge")
-
-        for contest in Contest.objects.filter(event__id=old_id):
-            highest_con_pk += 1
-            old_con_id = contest.id
-            contest.event_id = event.id
-            contest.pk = highest_con_pk
-            contest.weight_class_id = weight_class_dict[contest.weight_class_id]
-            contest.save(using="merge")
-
-            for reg in Registration.objects.filter(contest__id=old_con_id):
-                highest_reg_pk += 1
-                reg.contest_id = contest.id
-                reg.version_id = version_dict[reg.version_id]
-                reg.pk = highest_reg_pk
-                reg.save(using="merge")
-
-            for award in Award.objects.filter(contest__id=old_con_id):
-                highest_award_pk += 1
-                award.event_id = event.id
-                award.contest_id = contest.id
-                award.version_id = version_dict[award.version_id]
-                award.pk = highest_award_pk
-                award.save(using="merge")
-
-            for fight in Fight.objects.filter(contest__id=old_con_id):
-                highest_fight_pk += 1
-                old_fight_id = fight.id
-                fight.contest_id = contest.id
-                fight.pk = highest_fight_pk
-                fight.save(using="merge")
-                for fv in Fight_Version.objects.filter(fight__id=old_fight_id):
-                    highest_fv_pk += 1
-                    fv.fight_id = fight.id
-                    fv.version_id = version_dict[fv.version_id]
-                    fv.pk = highest_fv_pk
-                    fv.save(using="merge")
-
-    return HttpResponse(response, content_type="text/plain")
