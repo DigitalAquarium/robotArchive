@@ -14,6 +14,12 @@ from .form_fields import ImageAndSvgField as FormSvgField
 from .models import *
 
 
+try:
+    THE_SITE = settings.SITE_ID
+except:
+    THE_SITE = 1
+
+
 class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
@@ -71,7 +77,7 @@ class NewRobotForm(forms.Form):
         v.weapon_type = self.cleaned_data['weapon_type']
         v.weight_class = self.cleaned_data['weight_class']
         v.number = 1
-        v.site = Site.objects.get(pk=settings.SITE_ID)
+        v.site = Site.objects.get(pk=THE_SITE)
         v.owner = owner
         if team != 0:
             v.team = team
@@ -119,7 +125,7 @@ class NewVersionForm(forms.Form):
         v.team = self.cleaned_data['team']
         v.number = v.robot.version_set.all().order_by("number").last().number + 1
         v.owner = owner
-        v.site = Site.objects.get(pk=settings.SITE_ID)
+        v.site = Site.objects.get(pk=THE_SITE)
         v.save()
         return v
 
@@ -276,7 +282,7 @@ class NewEventFormEDT(forms.Form):
     start_date = forms.DateField(required=True)
     end_date = forms.DateField(required=False)
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=True)
-    site = forms.ModelChoiceField(queryset=Site.objects.all(), required=True,initial=Site.objects.get(pk=settings.SITE_ID))
+    site = forms.ModelChoiceField(queryset=Site.objects.all(), required=True,initial=Site.objects.get(pk=THE_SITE))
 
     def save(self, franchise):
         e = Event()
