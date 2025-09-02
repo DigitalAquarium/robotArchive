@@ -15,7 +15,7 @@ import uuid
 FIGHT_TYPE_CHOICES = [
     ('FC', "Full Combat"),
     ('NS', "Non-Spinner"),
-    ('SP', "Sportsman"),
+    ('SP', "Unranked"), # - Formally called sportsman
     ('PL', "Plastic"),
     ('NC', "Other - Not Combat"),
 ]
@@ -336,7 +336,7 @@ class Robot(models.Model):
                         country_slug = "-" + slugify(pycountry.countries.get(alpha_2=self.country).name)
                     desired_slug = desired_slug + country_slug
 
-        if similar_slugs.filter(slug=desired_slug).count() > 0 or desired_slug in robot_slug_blacklist:
+        if similar_slugs.filter(slug=desired_slug).count() > 0:# or desired_slug in robot_slug_blacklist:
             matching_regex = "(" + re.escape(desired_slug) + ")(-[0-9]*)?"
             number_of_matches = similar_slugs.filter(slug__regex=matching_regex).count()
             found_unique_number = False
@@ -859,8 +859,12 @@ class Fight(models.Model):
 
         elif "twitch.tv/" in self.external_media:
             get_data = self.external_media[25:]
+        elif "vk.com/video" in self.external_media:
+            self.external_media = self.external_media.replace("vk.com/video","vkvideo.ru/video")
+        elif "vk.ru/video" in self.external_media:
+            self.external_media = self.external_media.replace("vk.ru/video", "vkvideo.ru/video")
 
-        elif "vkvideo.ru" in self.external_media and "video_ext.php" not in self.external_media:
+        if "vkvideo.ru" in self.external_media and "video_ext.php" not in self.external_media:
             self.external_media = self.external_media[24:]
             sections = self.external_media.split("_")
             self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace("?","&")
@@ -903,7 +907,7 @@ class Fight(models.Model):
                 self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "YT"
-            elif "vkvideo.ru" in self.external_media or "vkvideo.com" in self.external_media:
+            elif any(url in self.external_media for url in ["vkvideo.ru","vkvideo.com","vk.ru/","vk.com/"]):
                 self.media_type = "IF"
             else:
                 self.media_type = "UN"
@@ -917,7 +921,7 @@ class Fight(models.Model):
                 media = self.internal_media.url
             else:
                 media = self.external_media
-            if media[-4:] == ".gif":
+            if media[-4:].lower() == ".gif":
                 return "gif"
             else:
                 return "image"
@@ -1639,7 +1643,7 @@ class HalloFame(models.Model):
     robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
 
     def __str__(self):
-        str(self.robot) + " " + ("hall of fame entry" if self.full_member else "hall of fame honorable mention")
+        return str(self.robot) + " " + ("hall of fame entry" if self.full_member else "hall of fame honorable mention")
 
 
 def asciify(obj, commit=False):

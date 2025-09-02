@@ -34,7 +34,7 @@
 
                 {% csrf_token %}
                 {% for fight in fights %}
-                    <tr {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                    <tr>
                         <td><input id="number-{{fight.id}}" name="number-{{fight.id}}"  style="width:30px" type="text" value="{{fight.number}}"></td>
                         <td><a href="{% url 'main:edtFightOverview' fight.id %}" class="fight-link">{{ fight|truncatechars:55 }}{% include "snippets/fight_icon.html" with fight=fight %} </a></td>
                         <td>{{ fight.get_fight_type_display }}</td>

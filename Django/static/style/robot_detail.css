@@ -136,7 +136,12 @@
 .gold a, .gold:visited, .gold:link, .silver a, .silver:visited, .silver:link, .bronze a, bronze:visited, .bronze:link, .top-hundred a, top-hundred:visited, .top-hundred:link {
     text-decoration:underline;
 }
-
+.border-top{
+    border-top: 1px solid var(--font-colour)
+}
+.border-right{
+    border-right: 1px solid var(--font-colour)
+}
 .random-robot a{
     border: none;
 }

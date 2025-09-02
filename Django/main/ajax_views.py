@@ -17,7 +17,7 @@ def disclaimer(request):
     if get_current_site(request).id == 2:
         return JsonResponse({"txt": "Russia"}, status=200)
     else:
-        return JsonResponse({"txt": "2007"}, status=200)
+        return JsonResponse({"txt": "2008"}, status=200)
 
 
 def get_location(request):

@@ -11,13 +11,13 @@ $(document).ready(function(){
                 $("#back-up-vid-link").append("<img src=" + response['thumb'] + ">")
             };
             if (response['allowed_countries'].length > 0){
-                $(".fight-media").prepend('<div id="yt-error" style="display:flex; justify-content:center">This video is available to view in the following countries: </div>')
+                $(".fight-media").prepend('<div id="yt-error" style="display:flex; justify-content:center">This video is only available in the following countries: </div>')
                 for (let i = 0; i < response["allowed_countries"].length;i++){
                     $("#yt-error").append('<img class="flag-image" src="/static/flags/4x3/' + response["allowed_countries"][i].toLowerCase() + '.svg">')
                 }
             }
             if (response['blocked_countries'].length > 0){
-                $(".fight-media").prepend('<div id="yt-error" style="display:flex; justify-content:center">This video is not available to view in the following countries: </div>')
+                $(".fight-media").prepend('<div id="yt-error" style="display:flex; justify-content:center">This video is not available in the following countries: </div>')
                 for (let i = 0; i < response["blocked_countries"].length;i++){
                     $("#yt-error").append('<img class="flag-image" src="/static/flags/4x3/' + response["blocked_countries"][i].toLowerCase() + '.svg">')
                 }

@@ -38,7 +38,13 @@
             <div class="gridview-square {% if forloop.counter == 1 %} mobile-hide{%endif%}">
 				<div id="row-{{entry.robot.slug}}" class="gridview-title">
                     <img class="big-trophy" {% if forloop.counter == 1 %} src="{% static 'awards/trophy_gold.png' %}" alt="Gold Trophy" {% elif forloop.counter == 2 %} src="{% static 'awards/trophy_silver.png' %}" alt="Silver Trophy"{%else%} src="{% static 'awards/trophy_bronze.png' %}" alt="Bronze Trophy"{%endif%} >
-                    <a href="{% url 'main:versionDetail' entry.version.id %}">{{ entry.version }}</a>{% include "snippets/leaderboard_difference_icon.html" with lb=entry first_year=first_year %}
+                    <a href="{% url 'main:versionDetail' entry.version.id %}">
+                            {{ entry.version }}
+                            {%if entry.version.robot.display_latin_name%}
+                                <span class="alphanum">({%if entry.version.latin_robot_name %}{{entry.version.latin_robot_name}}{%else%}{{entry.version.robot.latin_name}}{%endif%})</span>
+                            {%endif%}
+                    </a>
+                    {% include "snippets/leaderboard_difference_icon.html" with lb=entry first_year=first_year %}
                 </div>
                 <div class="gridview-subtitle">
                     <img class="flag-image" src="{{ entry.version.get_flag }}" alt="{{entry.version.country}} Flag">
@@ -93,7 +99,7 @@
             <tbody>
             {% for lb in robot_list %}
                 {% if forloop.counter > 3 %}
-                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                <tr id="row-{{ lb.robot.slug }}">
                     <td style="text-align: center">{{ forloop.counter }}</td>
                     <td style="text-align: center">{{ lb.ranking|floatformat:1 }}</td>
                     <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="{{lb.robot.country}} Flag"></td>
@@ -129,7 +135,7 @@
                 </tr>
             </thead>
             {% for lb in eliminations %}
-                <tr id="row-{{ lb.robot.slug }}" {% if forloop.counter|divisibleby:2 %} class="table-row-two"{% endif %}>
+                <tr id="row-{{ lb.robot.slug }}">
                     <td style="text-align: center"><img class="flag-image" src="{%if lb.version.loaned%} {{ lb.robot.get_flag }} {% else %} {{ lb.version.get_flag }} {%endif%}" alt="{{lb.robot.country}} Flag"></td>
                     <td>
                         <span class="robot-name-cell">

@@ -1,0 +1,49 @@
+{%load static%}
+{%load bonus_filters%}
+<link rel="stylesheet" href="{%static 'style/robot_preview.css'%}"/>
+<script>
+    $(document).ready(function(){
+    let image = $(".robot_preview_image").get(0);
+    function setWidth(){
+        if (image.naturalHeight == 0) setTimeout(() => { return 0 }, 2000);
+        aspect_ratio = image.naturalWidth / image.naturalHeight
+
+        if (aspect_ratio < 1.5){
+        $(".robot_preview_image_container").width(200*aspect_ratio);
+        }else if(aspect_ratio > 2){
+            $(".robot_preview_image_container").width(500)
+        };
+        rhs_width = $(".robot_preview_title .robot-title").width()
+        if (rhs_width < 250) rhs_width = 250;
+        $(".robot_preview_grid").width($(".robot_preview_image").width() + rhs_width + 30);
+    }
+    if (image.naturalWidth = 0){
+        image.onload = setWidth
+    }
+    else{
+        setWidth()
+    }
+    });
+</script>
+<div class="robot_preview_grid">
+    <data value="0">Not Loaded</data>
+    <div class="robot_preview_image_container"><img class="fit-image robot_preview_image" src="{% if version.image %} {{ version.image.url }} {% else %} {% static 'unknown.png' %} {% endif %}"></div>
+    <div class="robot_preview_text_container">
+        <div class="robot_preview_title">{{version|generate_title}}</div>
+        <div class="robot_preview_data">
+            <div class="preview-category"><span class="material-symbols-outlined preview-icon">Balance</span> <span>{{version.weight_class.weight_string}}</span></div>
+            <div class="preview-category"><span class="material-symbols-outlined preview-icon">Schedule</span> <span>{%if version.robot.first_fought%}
+                    {% if version.robot.first_fought|date:"Y" == version.robot.last_fought|date:"Y" %}
+                        {{ version.robot.first_fought|date:"Y" }}
+                    {%else%}
+                        {{ version.robot.first_fought|date:"Y" }} - {{ version.robot.last_fought|date:"Y" }}
+                    {% endif %}
+                {%else%}
+                    Never
+                {%endif%}</span>
+            </div>
+            <div class="preview-category"><span class="material-symbols-outlined preview-icon">Swords</span> <span>{{version.weapon_type}}</span></div>
+            <div class="preview-category"><span class="material-symbols-outlined preview-icon">Trophy</span>  <span>{{version.robot.ranking|floatformat:0}}</span></div>
+        </div>
+    </div>
+</div>

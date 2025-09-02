@@ -238,7 +238,7 @@ body {
   }
 }
 table, th, td {
-  border: solid 1px var(--font-colour);
+  /*border: solid 1px var(--font-colour);*/
   border-collapse: collapse;
   padding: 0.5em;
 }
@@ -248,7 +248,17 @@ th {
   text-decoration: none;
   font-weight: normal;
 }
-.table-row-two{
+thead th:first-child{
+    border-radius: 5px 0 0 0;
+}
+thead th:last-child{
+    border-radius: 0 5px 0 0;
+}
+tr:nth-child(2n){
+    background-color: var(--table-accent-colour);
+}
+
+.table-row-two{ /*Manually apply 2nd row affect*/
     background-color: var(--table-accent-colour);
 }
 .table-no-bg{

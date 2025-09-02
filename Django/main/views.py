@@ -473,7 +473,8 @@ def edt_select_version_view(request, robot_id):
         obj_id = request.COOKIES.get("editing_fight")
     versions = robot.version_set.order_by("number")
     return render(request, "main/editor/select_version.html",
-                  {"robot": robot, "versions":versions, "obj_type": obj_type, "obj_id": obj_id, "title": "Select Version", })
+                  {"robot": robot, "versions": versions, "obj_type": obj_type, "obj_id": obj_id,
+                   "title": "Select Version", })
 
 
 @permission_required("main.change_fight", raise_exception=True)
@@ -599,7 +600,7 @@ def index_view(request):
                   "bitva-robotov-2024-final"]
     else:
         events = ["steel-conflict-1", "robot-wars-uk-open", "robot-wars-the-first-wars", "battlebots-1-point-0",
-                  "mechwars-iii", "robotica-season-1"]
+                  "mechwars-iii", "robotica-season-1", "robogames-2007"]
     robot = Robot.objects.filter(version__site=site)
     if site == 1:
         robot = robot.filter(hallofame__full_member=True)
@@ -696,7 +697,9 @@ def event_detail_view(request, slug):
         event = Event.objects.get(slug=slug)
     except Event.DoesNotExist:
         raise Http404
-
+    site = get_current_site(request)
+    if event.site != site:
+        return redirect("https://www.robotcombatarchive.com/events/"+event.slug if site.id == 2 else "https://ru.robotcombatarchive.com/events/"+event.slug)
     fran = event.franchise
     contests = Contest.objects.filter(event=event).order_by("start_date", "-weight_class__weight_grams")
     num_competitors = Version.objects.filter(registration__contest__in=contests).distinct().count()
@@ -1010,8 +1013,8 @@ def leaderboard(request):
         top_three.append(robot_list[i])
 
     chosen_weight_text = \
-    {"F": "featherweight", "L": "lightweight", "M": "middleweight", "R": "70kg", "H": "heavyweight",
-     "S": "super heavyweight"}[weight]
+        {"F": "featherweight", "L": "lightweight", "M": "middleweight", "R": "70kg", "H": "heavyweight",
+         "S": "super heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
                   {"robot_list": robot_list,
@@ -1042,6 +1045,9 @@ def robot_detail_view(request, slug):
 
     site = get_current_site(request).id
     rus = "Russian " if site == 2 else ""
+    if r.version_set.filter(site=site).count() == 0:
+        return redirect("https://www.robotcombatarchive.com/robot/"+r.slug if site == 2 else "https://ru.robotcombatarchive.com/robot/"+r.slug)
+
     v = None
     is_random = False
 
@@ -1061,16 +1067,22 @@ def robot_detail_view(request, slug):
 
     if can_change:
         version_set = r.version_set.all().order_by("number")
-        fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date","contest__id", "number")
+        fights = Fight.objects.filter(competitors__robot=r).order_by("contest__start_date", "contest__id", "number")
         awards = Award.objects.filter(version__robot=r)
-        leaderboard_entries = Leaderboard.objects.filter(robot=r, ranking__gt=Robot.RANKING_DEFAULT).order_by("position", "-year")
-        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date", "id").distinct()
+        leaderboard_entries = Leaderboard.objects.filter(robot=r, ranking__gt=Robot.RANKING_DEFAULT).order_by(
+            "position", "-year")
+        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r).order_by("start_date",
+                                                                                                    "id").distinct()
     else:
         version_set = r.version_set.filter(site=site).order_by("number")
-        fights = Fight.objects.filter(competitors__robot=r, contest__event__site=site).order_by("contest__start_date","contest__id", "number")
+        fights = Fight.objects.filter(competitors__robot=r, contest__event__site=site).order_by("contest__start_date",
+                                                                                                "contest__id", "number")
         awards = Award.objects.filter(version__robot=r, version__site=site)
-        leaderboard_entries = Leaderboard.objects.filter(robot=r, version__site=site,ranking__gt=Robot.RANKING_DEFAULT).order_by("position","-year")
-        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r, event__site=site).order_by("start_date", "id").distinct()
+        leaderboard_entries = Leaderboard.objects.filter(robot=r, version__site=site,
+                                                         ranking__gt=Robot.RANKING_DEFAULT).order_by("position",
+                                                                                                     "-year")
+        contests_attended = Contest.objects.filter(fight__fight_version__version__robot=r, event__site=site).order_by(
+            "start_date", "id").distinct()
 
     best_lb_entry = leaderboard_entries.first()
     current_lb_entry = leaderboard_entries.order_by(
@@ -1098,7 +1110,7 @@ def robot_detail_view(request, slug):
 
     fights_tuple = [(rowspans[i], fights[i]) for i in range(len(fights))]
 
-    description = "Information about " + (r.latin_name if r.display_latin_name else str(r))   \
+    description = "Information about " + (r.latin_name if r.display_latin_name else str(r)) \
                   + ", a combat robot that has fought " + str(fights.count()) + \
                   " fight" + ("" if fights.count() == 1 else "s") + " " + r.timespan(True) + "."
     if r.wins > 0 or r.losses > 0:
@@ -1469,11 +1481,11 @@ def franchise_modify_view(request, franchise_id=None):
                 franchise_id = new.id
             else:
                 if old_logo and new.logo != old_logo:
-                    event_logo_dir = "ru/event_logos/" + str(datetime.date.today().year)
+                    event_logo_dir = "/event_logos/" + str(datetime.date.today().year)
                     if not isdir(settings.MEDIA_URL[1:] + event_logo_dir):
                         new.logo = old_logo
                         new.save()
-                        raise Exception
+                        raise Exception(event_logo_dir+ " is not a directory")
                     else:
                         new_events_logo = event_logo_dir + "/" + old_logo.url.split("/")[-1]
                         copy2(old_logo.url[1:], settings.MEDIA_URL[1:] + new_events_logo)
@@ -1533,6 +1545,8 @@ def franchise_detail_view(request, slug):
     except Franchise.DoesNotExist:
         raise Http404
     events = fran.event_set.filter(site=site).order_by("start_date")
+    if events.count() == 0:
+        return redirect("https://www.robotcombatarchive.com/franchise/"+fran.slug if site.id == 2 else "https://ru.robotcombatarchive.com/franchise/"+fran.slug)
     return render(request, "main/franchise_detail.html",
                   {"fran": fran, "events": events, "leave_id": 1,  # TODO: lol
                    "title": fran,
