@@ -15,7 +15,7 @@ import uuid
 FIGHT_TYPE_CHOICES = [
     ('FC', "Full Combat"),
     ('NS', "Non-Spinner"),
-    ('SP', "Unranked"), # - Formally called sportsman
+    ('SP', "Unranked"),  # - Formally called sportsman
     ('PL', "Plastic"),
     ('NC', "Other - Not Combat"),
 ]
@@ -336,7 +336,7 @@ class Robot(models.Model):
                         country_slug = "-" + slugify(pycountry.countries.get(alpha_2=self.country).name)
                     desired_slug = desired_slug + country_slug
 
-        if similar_slugs.filter(slug=desired_slug).count() > 0:# or desired_slug in robot_slug_blacklist:
+        if similar_slugs.filter(slug=desired_slug).count() > 0 or desired_slug in robot_slug_blacklist:
             matching_regex = "(" + re.escape(desired_slug) + ")(-[0-9]*)?"
             number_of_matches = similar_slugs.filter(slug__regex=matching_regex).count()
             found_unique_number = False
@@ -721,7 +721,7 @@ class Fight(models.Model):
         else:
             commit = False
 
-        if len(competitors)< 2:
+        if len(competitors) < 2:
             return [fvs, competitors]
 
         # Skip Rank Calculation (and tag team pre- / post-processing) if it isn't relevant
@@ -860,19 +860,20 @@ class Fight(models.Model):
         elif "twitch.tv/" in self.external_media:
             get_data = self.external_media[25:]
         elif "vk.com/video" in self.external_media:
-            self.external_media = self.external_media.replace("vk.com/video","vkvideo.ru/video")
+            self.external_media = self.external_media.replace("vk.com/video", "vkvideo.ru/video")
         elif "vk.ru/video" in self.external_media:
             self.external_media = self.external_media.replace("vk.ru/video", "vkvideo.ru/video")
 
         if "vkvideo.ru" in self.external_media and "video_ext.php" not in self.external_media:
             self.external_media = self.external_media[24:]
             sections = self.external_media.split("_")
-            self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace("?","&")
+            self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace(
+                "?", "&")
         elif "vkvideo.com" in self.external_media and "video_ext.php" not in self.external_media:
             self.external_media = self.external_media[25:]
             sections = self.external_media.split("_")
-            self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace("?","&")
-
+            self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace(
+                "?", "&")
 
     def set_media_type(self):
         self.media_type = "XX"
@@ -907,7 +908,7 @@ class Fight(models.Model):
                 self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "YT"
-            elif any(url in self.external_media for url in ["vkvideo.ru","vkvideo.com","vk.ru/","vk.com/"]):
+            elif any(url in self.external_media for url in ["vkvideo.ru", "vkvideo.com", "vk.ru/", "vk.com/"]):
                 self.media_type = "IF"
             else:
                 self.media_type = "UN"
@@ -1301,6 +1302,17 @@ class Leaderboard(models.Model):
             if commit: robot.save()
             return robot
         else:
+            # Anti-Tornado rule, prevent robots from clinging on to high places by fighting one exhibition a year
+            if robot.first_fought < date - relativedelta(years=Leaderboard.CUTOFF_YEARS * 2) and robot.ranking > 1050:
+                fights_in_timeperiod = Fight_Version.objects.filter(version__robot=robot,
+                                                                    fight__contest__end_date__gt=date_cutoff,
+                                                                    fight__fight_type__in=["FC", "NS"])
+                if fights_in_timeperiod.count() < Leaderboard.CUTOFF_YEARS * 1.3 or fights_in_timeperiod.filter(
+                        won=True).count == 0:
+                    robot.lb_weight_class = "X"
+                    if commit: robot.save()
+                    return robot
+
             has_competitively_fought = False
             for version in robot.version_set.all():
                 # A robot has not competitively fought if we don't know any of the results.
@@ -1325,7 +1337,8 @@ class Leaderboard(models.Model):
                     wc = version.weight_class.find_lb_class()
                     if wc not in fights.keys():
                         fights[wc] = 0
-                    fights[wc] += version.fight_set.filter(fight_type__in=["NS", "FC"], contest__end_date__lte=date).count()
+                    fights[wc] += version.fight_set.filter(fight_type__in=["NS", "FC"],
+                                                           contest__end_date__lte=date).count()
                 actual_weight_class = "X"
                 for key in fights:
                     if fights[key] >= fights[actual_weight_class]:
@@ -1333,7 +1346,7 @@ class Leaderboard(models.Model):
 
                 robot.lb_weight_class = actual_weight_class
 
-            #RU
+            # RU
             if robot.lb_weight_class == "R" and date.year >= 2017:
                 if robot.last_version().weight_class.find_lb_class() != "R":
                     robot.lb_weight_class = robot.last_version().weight_class.find_lb_class()
@@ -1347,7 +1360,6 @@ class Leaderboard(models.Model):
                                                          contest__registration__version__robot=robot).count() > 0
                     if not fought_in_rus:
                         robot.lb_weight_class = "X"
-
 
             if commit: robot.save()
             return robot
@@ -1369,23 +1381,30 @@ class Leaderboard(models.Model):
 
 class Web_Link(models.Model):
     LINK_CHOICES = [
+        ("AF", "Angelfire"),
+        ("AO", "AOL"),
+        ("BB", "bilibili"),
+        ("BG", "Blogger"),
+        ("BS", "Bluesky"),
+        ("DC", "Discord"),
+        ("FB", "Facebook"),
+        ("GH", "GitHub"),
+        ("GO", "Geocities"),
+        ("IG", "Instagram"),
+        ("LI", "LinkedIn"),
+        ("LT", "Linktree"),
+        ("SW", "Sina Weibo"),
+        ("TG", "Telegram"),
+        ("TP", "Tripod"),
+        ("TT", "TikTok"),
+        ("TV", "Twitch"),
+        ("TW", "Twitter"),
+        ("VK", "VKontakte"),
+        ("WC", "WeChat"),
         ("WW", "Website"),
         ("WA", "Archived Website"),
-        ("FB", "Facebook"),
-        ("TW", "Twitter"),
-        ("IG", "Instagram"),
-        ("TT", "TikTok"),
-        ("DC", "Discord"),
+        ("YK", "YouKu"),
         ("YT", "YouTube"),
-        ("WC", "WeChat"),
-        ("SW", "Sina Weibo"),
-        ("TV", "Twitch"),
-        ("LI", "LinkedIn"),
-        ("GH", "GitHub"),
-        ("LT", "Linktree"),
-        ("VK", "VKontakte"),
-        ("TG", "Telegram")
-
     ]
     type = models.CharField(max_length=2, choices=LINK_CHOICES, default="WW")
     link = models.URLField()
@@ -1424,7 +1443,7 @@ class Web_Link(models.Model):
 
     def alt(self):
         if self.type == "WW":
-            return "Grid Sphere Icon"
+            return "Grid Sphere Web Icon"
         elif self.type == "WA":
             return "Filing Cabinet Icon"
         else:
@@ -1433,38 +1452,56 @@ class Web_Link(models.Model):
     @staticmethod
     def classify(link):
         link = link.lower()
-        if "web.archive.org/" in link:
-            return "WA"
-        if "facebook.com/" in link:
-            return "FB"
-        if "twitter.com/" in link or "/x.com/" in link:
-            return "TW"
-        if "instagram.com/" in link:
-            return "IG"
-        if "tiktok.com/" in link:
-            return "TT"
+        if "angelfire.com" in link:
+            return "AF"
+        if "aol.com/" in link:
+            return "AO"
+        if "bilibili.com" in link:
+            return "BB"
+        if "blogspot.com" in link:
+            return "BG"
+        if "bsky.app" in link:
+            return "BS"
         if "discord.com/" in link or "discord.gg/" in link:
             return "DC"
-        if "youtube.com/" in link or "youtu.be/" in link:
-            return "YT"
-        if "weibo.com/" in link or "weibo.cn/" in link:
-            return "SW"
-        if "wechat.com/" in link or "wechat.cn/" in link:
-            return "WC"
-        if "twitch.tv/" in link:
-            return "TV"
-        if "linkedin.com/" in link or "linked.in/" in link:
-            return "LI"
+        if "facebook.com/" in link:
+            return "FB"
         if "github.com/" in link:
             return "GH"
+        if "geocities.com" in link or "oocities.org" in link:
+            return "GO"
+        if "instagram.com/" in link:
+            return "IG"
+        if "linkedin.com/" in link or "linked.in/" in link:
+            return "LI"
         if "linktr.ee/" in link:
             return "LT"
-        if "vk.com/" in link or "vk.ru/" in link:
-            return "VK"
+        if "weibo.com/" in link or "weibo.cn/" in link:
+            return "SW"
         if "/t.me/" in link:
             return "TG"
+        if "tripod.com/" in link or "tripod.co.uk" in link:
+            return "TP"
+        if "tiktok.com/" in link:
+            return "TT"
+        if "twitch.tv/" in link:
+            return "TV"
+        if "twitter.com/" in link or "/x.com/" in link:
+            return "TW"
+        if "vk.com/" in link or "vk.ru/" in link:
+            return "VK"
+        if "wechat.com/" in link or "wechat.cn/" in link:
+            return "WC"
+        if "youku.com" in link:
+            return "YK"
+        if "youtube.com/" in link or "youtu.be/" in link:
+            return "YT"
 
-        return "WW"
+        # Default Cases
+        if "web.archive.org/" in link:
+            return "WA"
+        else:
+            return "WW"
 
     def get_display(self):
         def preprocess(link):
@@ -1478,8 +1515,11 @@ class Web_Link(models.Model):
                 link = link[7:]
             if link[-1] == "/":
                 link = link[:-1]
+            if self.type != "WA" and "web.archive.org" in link:
+                link = preprocess(link[35:])
             return link
 
+        # Check for normal websites first
         if self.type == "WW":
             ret = re.search("(\/|^)[0-9a-zA-Z-.]+(\/|$)", self.link).group(0)
             ret = ret.replace("/", "")
@@ -1493,29 +1533,49 @@ class Web_Link(models.Model):
                 self.link)
             beginning = beginning.span()[1]
             ret = self.link[beginning:]
-            if "/" in ret:
-                end = re.search("\/.*", ret)
-                ret = ret[:end.span()[0]]
-            if ret[-3:] == ":80":
-                ret = ret[:-3]
-            return ret
-
-        elif self.type == "TW":
-            ret = preprocess(self.link)
-            if "twitter.com/" == ret[:12]:
-                ret = ret[12:]
+            # Check for common old webhosts, to improve formatting
+            if any(domain in self.link for domain in ["ntlworld.com","ukonline.co.uk","freewebs.com","earthlink.net"]):
+                print(ret)
+                ret = ret[ret.index("/") + 1:]
+                return ret
             else:
-                # x.com/
-                ret = ret[6:]
+                if "/" in ret:
+                    end = re.search("\/.*", ret)
+                    ret = ret[:end.span()[0]]
+                if ret[-3:] == ":80":
+                    ret = ret[:-3]
+                return ret
+
+        # Alphabetical
+        elif self.type == "AF":
+            ret = preprocess(self.link)
+            try:
+                ret = ret.split("/")[2]
+            except:
+                pass
+            return ret
+            ret = ret.split
+
+        elif self.type in  ["AO","GO"]:
+            ret = preprocess(self.link)
+            ret = ret.split("/")[1]
             return ret
 
-        elif self.type == "TV":
+        elif self.type == "BB":
+            return "bilibili Channel"
+
+        elif self.type == "BG":
             ret = preprocess(self.link)
-            ret = ret[10:]
-            slashlocation = ret.find("/")
-            if slashlocation != -1:
-                ret = ret[:slashlocation]
+            ret = ret.split(".")[0]
             return ret
+
+        elif self.type == "BS":
+            ret = preprocess(self.link)
+            ret = ret[17:]
+            return ret
+
+        elif self.type == "DC":
+            return "Discord Server"
 
         elif self.type == "FB":
             if "profile.php?id=" in self.link:
@@ -1528,17 +1588,88 @@ class Web_Link(models.Model):
             slashlocation = ret.find("/")
             if slashlocation != -1:
                 ret = ret[:slashlocation]
-
             return ret
+
+        elif self.type == "GH":
+            ret = preprocess(self.link)
+            ret = ret[11:]
+            return ret
+
+        # GO see AO
 
         elif self.type == "IG":
             ret = preprocess(self.link)
             ret = ret[14:]
             return ret
 
+        elif self.type == "LI":
+            ret = preprocess(self.link)
+            if "linkedin.com/" == ret[:13]:
+                ret = ret[13:]
+            elif "linked.in/" == ret[:10]:
+                ret = ret[10:]
+            if "company/" == ret[:8]:
+                ret = ret[8:]
+            if ret[:3] == "in/":
+                ret = ret[3:]
+            return ret
+
+        elif self.type == "LT":
+            ret = preprocess(self.link)
+            ret = ret[10:]
+            return ret
+
+        elif self.type == "SW":
+            return "Weibo Page"
+
+        elif self.type == "TG":
+            ret = preprocess(self.link)
+            ret = ret[5:]
+            if ret[:2] == "s/":
+                ret = ret[2:]
+            return ret
+
+        elif self.type == "TP":
+            ret = preprocess(self.link)
+            if "members.tripod" in ret:
+                ret = ret.split("/")[1]
+            else:
+                ret = ret.split(".")[0]
+            return ret
+
+        elif self.type == "TT":
+            ret = preprocess(self.link)
+            ret = ret[12:]
+            return ret
+
+        elif self.type == "TV":
+            ret = preprocess(self.link)
+            ret = ret[10:]
+            slashlocation = ret.find("/")
+            if slashlocation != -1:
+                ret = ret[:slashlocation]
+            return ret
+
+        elif self.type == "TW":
+            ret = preprocess(self.link)
+            if "twitter.com/" == ret[:12]:
+                ret = ret[12:]
+            else:
+                # x.com/
+                ret = ret[6:]
+            return ret
+
+        elif self.type == "VK":
+            ret = preprocess(self.link)
+            ret = ret[7:]
+            return ret
+
+        elif self.type == "YK":
+            return "YouKu Channel"
+
         elif self.type == "YT":
             if "/channel/" in self.link:
-                return "Youtube Channel"
+                return "YouTube Channel"
             ret = self.link
             if ret[-7:] == "/videos":
                 ret = ret[:-7]
@@ -1555,47 +1686,6 @@ class Web_Link(models.Model):
             if "@" == ret[0]:
                 ret = ret[1:]
             return ret
-
-        elif self.type == "TT":
-            ret = preprocess(self.link)
-            ret = ret[12:]
-            return ret
-
-        elif self.type == "LI":
-            ret = preprocess(self.link)
-            if "linkedin.com/" == ret[:13]:
-                ret = ret[13:]
-            elif "linked.in/" == ret[:10]:
-                ret = ret[10:]
-            if "company/" == ret[:8]:
-                ret = ret[8:]
-            if ret[:3] == "in/":
-                ret = ret[3:]
-            return ret
-
-        elif self.type == "GH":
-            ret = preprocess(self.link)
-            ret = ret[11:]
-            return ret
-
-        elif self.type == "LT":
-            ret = preprocess(self.link)
-            ret = ret[10:]
-            return ret
-
-        elif self.type == "VK":
-            ret = preprocess(self.link)
-            ret = ret[7:]
-            return ret
-
-        elif self.type == "TG":
-            ret = preprocess(self.link)
-            ret = ret[5:]
-            if ret[:2] == "s/":
-                ret = ret[2:]
-            return ret
-        elif self.type == "SW":
-            return "Weibo Page"
 
         else:
             return self.link

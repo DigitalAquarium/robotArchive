@@ -50,7 +50,7 @@ class PersonTeamAdmin(admin.ModelAdmin):
 
 @admin.register(Fight)
 class FightAdmin(admin.ModelAdmin):
-    search_fields = ['contest__event__name','name','id']
+    search_fields = ['contest__event__name','name','id',"fight_version__version__robot__name"]
 
 
 @admin.register(Person_Franchise)

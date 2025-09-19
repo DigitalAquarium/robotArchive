@@ -13,6 +13,10 @@ from .form_fields import ImageAndSvgField as FormSvgField
 
 from .models import *
 
+try:
+    THE_SITE = settings.SITE_ID
+except:
+    THE_SITE = 1
 
 try:
     THE_SITE = settings.SITE_ID
