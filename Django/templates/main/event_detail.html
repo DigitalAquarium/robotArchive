@@ -53,9 +53,11 @@
             <div class="contest-table">
                 <table>
                     <thead>
+                    <tR>
                     <th>Contest Name</th>
                     <th>Weight Class</th>
                     <th>Fight Type</th>
+                    </tR>
                     </thead>
                     {% for contest in contests %}
                         <tr>
@@ -100,7 +102,7 @@
                             <img src="{%if source.archived %}{%static 'web_logos/WA.png'%}{%else%}https://icon.horse/icon/{{source.get_domain}}{%endif%}" alt="{{ source.name }} favicon" width="25px" height="25px" style="padding-inline:1em">
                             <span>{{source.name}}</span>
                         </a>
-                        <span style="padding-inline:1em">{%if source.archived %} archived. {%else%} last accessed {{source.last_accessed}}. {%endif%}</span>
+                        <span style="padding-inline:1em">{%if source.archived %} archived. {%else%} saved at {{source.last_accessed}}. {%endif%}</span>
                     </li>
                 </ul>
         {% endfor %}

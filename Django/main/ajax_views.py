@@ -17,7 +17,7 @@ def disclaimer(request):
     if get_current_site(request).id == 2:
         return JsonResponse({"txt": "Russia"}, status=200)
     else:
-        return JsonResponse({"txt": "2008"}, status=200)
+        return JsonResponse({"txt": "2009"}, status=200)
 
 
 def get_location(request):
@@ -66,7 +66,8 @@ def yt_video_status(request, fight_id):
     with build("youtube", "v3", developerKey=environ["YOUTUBE_API_KEY"]) as yt_api:
         if "?" in url:
             split_media = url[26:].split("?start=")
-            t = int(split_media[1])
+            t = split_media[1].split("&")
+            t = int(t[0])
             vid_id = split_media[0]
         else:
             vid_id = url[26:]
