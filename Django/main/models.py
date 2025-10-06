@@ -1276,7 +1276,7 @@ class Leaderboard(models.Model):
     @staticmethod
     def update_all(current_year=None):
         # TODO: if for whatever reason small weight classes come back change this
-        if current_year > 2013:
+        if current_year >= 2012:
             wcs = ["H", "M", "R"]  # x[0] for x in LEADERBOARD_WEIGHTS]
         else:
             wcs = ["H", "M", "L", "S"]
