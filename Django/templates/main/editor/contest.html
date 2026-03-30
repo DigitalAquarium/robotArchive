@@ -57,6 +57,7 @@
             <button class="editor-link" name="save" value="reorder">Update Fight Order</button>
             <button class="editor-link" name="save" value="move">Move Fights</button>
             </form>
+            <a class="editor-link" href="{% url 'main:newFight' contest.id %}?editor=true">Add Fight</a>
         {% endif %}
 		{%if applications|length > 0 %}
 			<div class="gridview-container">
