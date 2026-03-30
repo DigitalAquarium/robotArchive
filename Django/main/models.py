@@ -1,4 +1,6 @@
 import re
+import urllib
+
 import pycountry
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -40,7 +42,6 @@ LEADERBOARD_WEIGHTS = [
     ("F", "Featherweight"),
     ("L", "Lightweight"),
     ("M", "Middleweight"),
-    ("R", "70kg"),
     ("H", "Heavyweight"),
     ("S", "Super Heavyweight"),
     ("X", "Not Leaderboard Valid"),
@@ -158,7 +159,6 @@ class Weight_Class(models.Model):
                          (13608, "Featherweight"),
                          (28000, "Lightweight"),  # 28000 over 27212 to include korean 33kg lws.
                          (50000, "Middleweight"),
-                         (70000, "Bitva Robotov"),
                          (100000, "Heavyweight"),
                          (154221, "Super Heavyweight"),
                          ]
@@ -838,10 +838,13 @@ class Fight(models.Model):
 
         return [fvs, competitors]
 
-    def format_external_media(self):  # TODO: Youtube Shorts
+    def format_external_media(self):
         if re.match("(https?://)?(www\.)?youtu\.?be",
                     self.external_media) is not None and "/embed/" not in self.external_media:
-            get_info = self.external_media[
+            if "/shorts/" in self.external_media:
+                get_info = self.external_media.split("/shorts/")[1]
+            else:
+                get_info = self.external_media[
                        re.match("(https?://)?(www\.)?youtu((\.be/)|(be\.com/watch))", self.external_media).end():]
             video_id = re.search("((\?v=)|(&v=))[a-zA-Z0-9\-_]*", get_info)
             if video_id is None:
@@ -1167,6 +1170,7 @@ class Leaderboard(models.Model):
 
     # lb.robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")
     CUTOFF_YEARS = 3
+    RU_CUTOFF_DATE = 2013
 
     @staticmethod
     def update_class(wc, current_year=None):
@@ -1276,8 +1280,8 @@ class Leaderboard(models.Model):
     @staticmethod
     def update_all(current_year=None):
         # TODO: if for whatever reason small weight classes come back change this
-        if current_year >= 2012:
-            wcs = ["H", "M", "R"]  # x[0] for x in LEADERBOARD_WEIGHTS]
+        if current_year >= 2011:
+            wcs = ["H", "M", "L"]  # x[0] for x in LEADERBOARD_WEIGHTS]
         else:
             wcs = ["H", "M", "L", "S"]
         # wcs.remove("X")
@@ -1347,19 +1351,16 @@ class Leaderboard(models.Model):
                 robot.lb_weight_class = actual_weight_class
 
             # RU
-            if robot.lb_weight_class == "R" and date.year >= 2017:
-                if robot.last_version().weight_class.find_lb_class() != "R":
-                    robot.lb_weight_class = robot.last_version().weight_class.find_lb_class()
-                else:
-                    robot.lb_weight_class = "M"
-            if date.year > 2013:
-                if robot.first_fought.year < 2013:
-                    robot.lb_weight_class = "X"
-                else:
-                    fought_in_rus = Event.objects.filter(start_date__lt=date, country="RU",
+            if date.year == 2014:
+                robot.lb_weight_class = "X"
+
+
+            if date.year >= Leaderboard.RU_CUTOFF_DATE:
+                fought_in_rus = Event.objects.filter(start_date__lt=date, country="RU",
                                                          contest__registration__version__robot=robot).count() > 0
-                    if not fought_in_rus:
-                        robot.lb_weight_class = "X"
+                #print(robot.name,fought_in_rus, Leaderboard.RU_CUTOFF_DATE > robot.first_fought.year)
+                if not fought_in_rus or  Leaderboard.RU_CUTOFF_DATE > robot.first_fought.year:
+                    robot.lb_weight_class = "X"
 
             if commit: robot.save()
             return robot
@@ -1537,6 +1538,7 @@ class Web_Link(models.Model):
             if any(domain in self.link for domain in ["ntlworld.com","ukonline.co.uk","freewebs.com","earthlink.net"]):
                 print(ret)
                 ret = ret[ret.index("/") + 1:]
+                print(ret)
                 return ret
             else:
                 if "/" in ret:
@@ -1554,7 +1556,6 @@ class Web_Link(models.Model):
             except:
                 pass
             return ret
-            ret = ret.split
 
         elif self.type in  ["AO","GO"]:
             ret = preprocess(self.link)
@@ -1620,7 +1621,12 @@ class Web_Link(models.Model):
             return ret
 
         elif self.type == "SW":
-            return "Weibo Page"
+            if "weibo.com/n/" in self.link:
+                ret = preprocess(urllib.parse.unquote(self.link))
+                ret = ret[12:]
+                return ret
+            else:
+                return "Weibo Page"
 
         elif self.type == "TG":
             ret = preprocess(self.link)
@@ -1661,7 +1667,10 @@ class Web_Link(models.Model):
 
         elif self.type == "VK":
             ret = preprocess(self.link)
-            ret = ret[7:]
+            if "vk.ru" in ret:
+                ret = ret[6:]
+            else:
+                ret = ret[7:]
             return ret
 
         elif self.type == "YK":

@@ -700,7 +700,8 @@ def event_detail_view(request, slug):
         raise Http404
     site = get_current_site(request)
     if event.site != site:
-        return redirect("https://www.robotcombatarchive.com/events/"+event.slug if site.id == 2 else "https://ru.robotcombatarchive.com/events/"+event.slug)
+        return redirect(
+            "https://www.robotcombatarchive.com/events/" + event.slug if site.id == 2 else "https://ru.robotcombatarchive.com/events/" + event.slug)
     fran = event.franchise
     contests = Contest.objects.filter(event=event).order_by("start_date", "-weight_class__weight_grams")
     num_competitors = Version.objects.filter(registration__contest__in=contests).distinct().count()
@@ -954,6 +955,26 @@ def robot_index_view(request):
 
 def leaderboard(request):
     site = get_current_site(request).id
+    year = request.GET.get("year")
+    weight = request.GET.get("weight")
+
+    if site == 2:
+        if year is None:
+            year = 2025
+        if weight is None:
+            weight = "H"
+        try:
+            year = int(year)
+        except:
+            pass
+        return render(request, "main/ru_robot_leaderboard.html",
+                      {"weight": weight,
+                       "year": year,
+                       "title": "Leaderboard",
+                       "description": "Archived Russian Robot Combat Leaderboard.",
+                       "url": reverse("main:leaderboard") + "?weight=" + weight + "&year=" + str(year),
+                       })
+
     if site == 1:
         visible_weights = [
             ("F", "Featherweight"),
@@ -965,23 +986,20 @@ def leaderboard(request):
     else:
         visible_weights = [
             ("M", "Middleweight"),
-            ("R", "70kg"),
             ("H", "Heavyweight"),
         ]
 
     # CSS Notes: row height up to 20em
-    weight = request.GET.get("weight")
+
     # Decision made to hide the basically
     if not weight or weight not in [x[0] for x in visible_weights]:  # LEADERBOARD_WEIGHTS]:
         weight = "H"
-    year = request.GET.get("year")
+
     current_year = Event.objects.filter(site=site).order_by("-end_date")[0].end_date.year
     if weight == "F":
         years = [1996, 1997]
     elif weight == "R":
-        years = [2014, 2015, 2016]
-    elif weight == "M" and site == 2:
-        years = [2014, 2016, 2017]
+        years = [2012]
     else:
         years = [x['year'] for x in
                  Leaderboard.objects.filter(weight=weight, version__site=site).order_by("year").values(
@@ -990,6 +1008,13 @@ def leaderboard(request):
         if 2021 in years: years.remove(2021)
         if weight == "H" and 2022 in years:
             years.remove(2022)
+    if site == 1:
+        years = [x for x in years if x < Leaderboard.RU_CUTOFF_DATE]
+    else:
+        years = [x for x in years if x >= Leaderboard.RU_CUTOFF_DATE]
+        if weight == "H":
+            years.remove(2014)
+
     # years = [x for x in range(1994, current_year + 1)]
     try:
         year = int(year)
@@ -1001,7 +1026,6 @@ def leaderboard(request):
         year = current_year
 
     robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
-
     if year == current_year and robot_list.count() == 0:
         # Catch to stop the superheavyweight list (or any others that go out of use) from being unreachable in the menu
         year = years[-1]
@@ -1014,7 +1038,7 @@ def leaderboard(request):
         top_three.append(robot_list[i])
 
     chosen_weight_text = \
-        {"F": "featherweight", "L": "lightweight", "M": "middleweight", "R": "70kg", "H": "heavyweight",
+        {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight",
          "S": "super heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
@@ -1047,7 +1071,8 @@ def robot_detail_view(request, slug):
     site = get_current_site(request).id
     rus = "Russian " if site == 2 else ""
     if r.version_set.filter(site=site).count() == 0:
-        return redirect("https://www.robotcombatarchive.com/robot/"+r.slug if site == 2 else "https://ru.robotcombatarchive.com/robot/"+r.slug)
+        return redirect(
+            "https://www.robotcombatarchive.com/robot/" + r.slug if site == 2 else "https://ru.robotcombatarchive.com/robot/" + r.slug)
 
     v = None
     is_random = False
@@ -1486,10 +1511,11 @@ def franchise_modify_view(request, franchise_id=None):
                     if not isdir(settings.MEDIA_URL[1:] + event_logo_dir):
                         new.logo = old_logo
                         new.save()
-                        raise Exception(event_logo_dir+ " is not a directory")
+                        raise Exception(event_logo_dir + " is not a directory")
                     else:
                         new_events_logo = event_logo_dir + "/" + old_logo.url.split("/")[-1]
                         copy2(old_logo.url[1:], settings.MEDIA_URL[1:] + new_events_logo)
+                        new_events_logo = new_events_logo[1:]
                         Event.objects.filter(franchise__id=franchise.id, logo="").update(logo=new_events_logo)
 
             franchise = new
@@ -1547,7 +1573,8 @@ def franchise_detail_view(request, slug):
         raise Http404
     events = fran.event_set.filter(site=site).order_by("start_date")
     if events.count() == 0:
-        return redirect("https://www.robotcombatarchive.com/franchise/"+fran.slug if site.id == 2 else "https://ru.robotcombatarchive.com/franchise/"+fran.slug)
+        return redirect(
+            "https://www.robotcombatarchive.com/franchise/" + fran.slug if site.id == 2 else "https://ru.robotcombatarchive.com/franchise/" + fran.slug)
     return render(request, "main/franchise_detail.html",
                   {"fran": fran, "events": events, "leave_id": 1,  # TODO: lol
                    "title": fran,

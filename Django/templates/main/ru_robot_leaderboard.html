@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load bonus_filters %}
+{% load static %}
+
+{% block head %}
+    <link rel="canonical" href="https://www.robotcombatarchive.com{{url}}">
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+    <link rel="stylesheet" href="{% static 'style/index_view.css' %}"/>
+	<link rel="stylesheet" href="{% static 'style/leaderboard.css' %}"/>
+    <link rel="stylesheet" href="{% static 'style/tooltip.css' %}"/>
+    <script src="{%static 'scripts/leaderboard.js' %}"></script>
+    <script src="{%static 'scripts/tooltip.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <h2>This is an archived Russia only leaderboard from the pre-merge* Russian site. For global leaderboards click <a href="https://www.robotcombatarchive.com/leaderboard">here.</a></h2>
+    {%if year == 2012%}
+        {%include "ru_old_leaderboards/2012_70kg.html" %}
+    {%elif year == 2014%}
+        {%if weight == "M" %}
+            {%include "ru_old_leaderboards/2014_mw.html" %}
+        {%else%}
+            {%include "ru_old_leaderboards/2014_70kg.html" %}
+        {%endif%}
+    {%elif year == 2015%}
+        {%include "ru_old_leaderboards/2015_70kg.html" %}
+    {%elif year == 2016%}
+        {%if weight == "M" %}
+            {%include "ru_old_leaderboards/2016_mw.html" %}
+        {%elif weight == "R" %}
+            {%include "ru_old_leaderboards/2016_70kg.html" %}
+        {%else%}
+            {%include "ru_old_leaderboards/2016_hw.html" %}
+        {%endif%}
+    {%elif year == 2017%}
+        {%include "ru_old_leaderboards/2017_hw.html" %}
+    {%elif year == 2018%}
+        {%include "ru_old_leaderboards/2018_hw.html" %}
+    {%elif year == 2019%}
+        {%include "ru_old_leaderboards/2019_hw.html" %}
+    {%elif year == 2023%}
+        {%include "ru_old_leaderboards/2023_hw.html" %}
+    {%elif year == 2024%}
+        {%include "ru_old_leaderboards/2024_hw.html" %}
+    {% else %}
+        {%include "ru_old_leaderboards/2025_hw.html" %}
+    {%endif%}
+    <p style="font-size:0.8em">*In order to document Bitva Robotov events, a Russian fork of the site was created covering Russian events. It also included major Chinese events, GoTF and some background fights for robots like Black Dragon that fought outside Russia. Only robots that have fought in Russia are valid for this leaderboard however. The modern Russian scene started in 2012, so as the main site reached 2012 these events were merged into the global site year by year.<br> The old Russian leaderboards are preserved here, and you can now see where Russian robots place on the global stage on the main site. (Up to the completion year of the main site.)</p>
+</div>
+
+{% endblock %}
