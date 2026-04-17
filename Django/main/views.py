@@ -628,9 +628,9 @@ def delete_view(request, model, instance_id=None, next_id=None):
 
 def index_view(request):
     site = get_current_site(request).id
-    editor_stay = request.GET.get("edt") or ""
-    if request.user.is_authenticated and request.user.is_superuser and editor_stay != "stay":
-        return redirect("main:edtHome")
+    #editor_stay = request.GET.get("edt") or ""
+    #if request.user.is_authenticated and request.user.is_superuser and editor_stay != "stay":
+    #    return redirect("main:edtHome")
 
     if site == 2:
         events = ["bitva-robotov-perm-2015", "bronebot-autumn-warmup", "bitva-robotov-perm-2016",
