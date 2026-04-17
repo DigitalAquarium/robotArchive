@@ -15,7 +15,6 @@ from django.shortcuts import redirect, render
 from django.contrib.sites.shortcuts import get_current_site as dj_get_current_site
 from django.urls import reverse
 from django.http import Http404, HttpResponse
-from pywin.mfc.object import Object
 
 from main import subdivisions
 from .forms import *
