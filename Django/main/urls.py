@@ -62,7 +62,6 @@ urlpatterns = [
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
     path('credits', views.credits_view, name='credits'),
-
     path('ajax/get_location', ajax_views.get_location, name='ajax_getLocation'),
     path('ajax/get_history', ajax_views.get_history, name='ajax_getHistory'),
     path('ajax/disclaimer', ajax_views.disclaimer, name='ajax_disclaimer'),

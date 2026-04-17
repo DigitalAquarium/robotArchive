@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django.utils.text import slugify
 from .model_fields import ImageAndSvgField
@@ -845,7 +845,7 @@ class Fight(models.Model):
                 get_info = self.external_media.split("/shorts/")[1]
             else:
                 get_info = self.external_media[
-                       re.match("(https?://)?(www\.)?youtu((\.be/)|(be\.com/watch))", self.external_media).end():]
+                           re.match("(https?://)?(www\.)?youtu((\.be/)|(be\.com/watch))", self.external_media).end():]
             video_id = re.search("((\?v=)|(&v=))[a-zA-Z0-9\-_]*", get_info)
             if video_id is None:
                 video_id = get_info[:11]
@@ -1170,7 +1170,7 @@ class Leaderboard(models.Model):
 
     # lb.robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")
     CUTOFF_YEARS = 3
-    RU_CUTOFF_DATE = 2013
+    RU_CUTOFF_DATE = 2014
 
     @staticmethod
     def update_class(wc, current_year=None):
@@ -1354,12 +1354,11 @@ class Leaderboard(models.Model):
             if date.year == 2014:
                 robot.lb_weight_class = "X"
 
-
             if date.year >= Leaderboard.RU_CUTOFF_DATE:
                 fought_in_rus = Event.objects.filter(start_date__lt=date, country="RU",
-                                                         contest__registration__version__robot=robot).count() > 0
-                #print(robot.name,fought_in_rus, Leaderboard.RU_CUTOFF_DATE > robot.first_fought.year)
-                if not fought_in_rus or  Leaderboard.RU_CUTOFF_DATE > robot.first_fought.year:
+                                                     contest__registration__version__robot=robot).count() > 0
+                # print(robot.name,fought_in_rus, Leaderboard.RU_CUTOFF_DATE > robot.first_fought.year)
+                if not fought_in_rus or Leaderboard.RU_CUTOFF_DATE > robot.first_fought.year:
                     robot.lb_weight_class = "X"
 
             if commit: robot.save()
@@ -1407,6 +1406,11 @@ class Web_Link(models.Model):
         ("YK", "YouKu"),
         ("YT", "YouTube"),
     ]
+    # Linktree > Website > Archived Sites > Video Based Social Media (YT), Text Based Social Media, Short text based
+    # (twitter + clones), Misc/Shortform Socials, Discord
+    LINK_ORDER = {"AF": 3, "AO": 4, "BB": 11, "BG": 7, "BS": 18, "DC": 22, "FB": 12, "GH": 21, "GO": 5, "IG": 19,
+                  "LI": 13, "LT": 0, "SW": 17, "TG": 14, "TP": 6, "TT": 20, "TW": 17, "TV": 10, "VK": 15, "WC": 16,
+                  "WW": 1, "WA": 2, "YK": 9, "YT": 8}
     type = models.CharField(max_length=2, choices=LINK_CHOICES, default="WW")
     link = models.URLField()
     franchise = models.ForeignKey(Franchise, on_delete=models.CASCADE, blank=True, null=True)
@@ -1535,10 +1539,9 @@ class Web_Link(models.Model):
             beginning = beginning.span()[1]
             ret = self.link[beginning:]
             # Check for common old webhosts, to improve formatting
-            if any(domain in self.link for domain in ["ntlworld.com","ukonline.co.uk","freewebs.com","earthlink.net"]):
-                print(ret)
+            if any(domain in self.link for domain in
+                   ["ntlworld.com", "ukonline.co.uk", "freewebs.com", "earthlink.net"]):
                 ret = ret[ret.index("/") + 1:]
-                print(ret)
                 return ret
             else:
                 if "/" in ret:
@@ -1557,7 +1560,7 @@ class Web_Link(models.Model):
                 pass
             return ret
 
-        elif self.type in  ["AO","GO"]:
+        elif self.type in ["AO", "GO"]:
             ret = preprocess(self.link)
             ret = ret.split("/")[1]
             return ret
