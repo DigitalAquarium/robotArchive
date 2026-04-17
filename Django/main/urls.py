@@ -66,6 +66,7 @@ urlpatterns = [
     path('credits', views.credits_view, name='credits'),
 
     path('editor/home', views.edt_home_view, name='edtHome'),
+    path('editor/console', views.edt_control_panel_view, name='edtConsole'),
     path('editor/newEvent', views.edt_new_event_view, name='edtNewEvent'),
     path('editor/event/<int:event_id>', views.edt_event_view, name='edtEvent'),
     path('editor/contest/<int:contest_id>', views.edt_contest_view, name='edtContest'),
@@ -77,7 +78,6 @@ urlpatterns = [
     path('editor/fight/<int:fight_id>/selectTeam', views.edt_select_team_view, name='edtSelectTeam'),
     path('editor/team/<int:team_id>', views.edt_team_view, name='edtTeam'),
     path('editor/link/<str:obj_type>/<int:obj_id>', views.edt_team_view, name='edtLink'),
-    path('editor/pruneMedia', views.prune_media, name='edtPrune'),
     path('editor/calculate_test',views.calc_test, name='calcTest'),
     # path('test/tourny', views.tournament_tree, name='tournament_test'),
     # path('import', views.importView, name='import'),

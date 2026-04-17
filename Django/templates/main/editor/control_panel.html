@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="main-content">
+    <h1>Editor Dashboard</h1>
+    <h2>{{results|linebreaks}}</h2>
+    <form method="get">
+        <button class="editor-link" name="action" value="recalculate">> RECALCULATE ALL FIGHTS <</button>
+        <a class="editor-link" href="{%url 'main:calcTest' %}"> Rank Calculation Page </a>
+        <button class="editor-link" name="action" value="prune">Prune Media</button>
+        <button class="editor-link" name="action" value="rus">Russian cutoff idk</button>
+    </form>
+
+</div>
+{%endblock%}

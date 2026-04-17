@@ -219,6 +219,27 @@ class RobotFightForm(forms.ModelForm):
         model = Fight_Version
         fields = ["version", "won", "tag_team"]
 
+    def save(self, commit=True):
+        new_fv = super().save(commit=False)
+        try:
+            old_fv = Fight_Version.objects.get(pk=new_fv.id)
+        except ObjectDoesNotExist:
+            old_fv = None
+        if old_fv is not None and new_fv.tag_team != 0 and new_fv.won != old_fv.won:
+            fvs = [new_fv]
+            other_robots: QuerySet[Fight_Version]
+            other_robots = Fight_Version.objects.filter(fight=new_fv.fight,tag_team=new_fv.tag_team)
+            for rob in other_robots:
+                if rob == old_fv:
+                    continue
+                rob.won = new_fv.won
+                fvs.append(rob)
+            if commit:
+                Fight_Version.objects.bulk_update(fvs,["won"])
+        elif commit:
+            new_fv.save()
+
+
 
 class AwardForm(forms.ModelForm):
     class Meta:

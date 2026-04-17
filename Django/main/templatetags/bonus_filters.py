@@ -41,6 +41,13 @@ def name_from_team(robot, team):
 
 
 @register.filter
+def order_web_links(qs: QuerySet[Web_Link]):
+    qs = sorted(qs, key=lambda x: x.get_display())
+    qs = sorted(qs, key=lambda x: Web_Link.LINK_ORDER[x.type])
+    return qs
+
+
+@register.filter
 def generate_title(rob_or_ver, display_latin=True):
     flag = rob_or_ver.get_flag()
     country = rob_or_ver.country
@@ -48,7 +55,8 @@ def generate_title(rob_or_ver, display_latin=True):
     html_to_return = format_html('<div class="robot-title"> <img class="flag-image" src="{}" alt="{} Flag"> '
                                  '<span class="robot-title-text">{}', flag, country, name)
 
-    if display_latin and (rob_or_ver.display_latin_name or (isinstance(rob_or_ver,Version) and rob_or_ver.robot_name == "" and rob_or_ver.robot.display_latin_name)):
+    if display_latin and (rob_or_ver.display_latin_name or (
+            isinstance(rob_or_ver, Version) and rob_or_ver.robot_name == "" and rob_or_ver.robot.display_latin_name)):
         if isinstance(rob_or_ver, Robot):
             latin = rob_or_ver.latin_name
         else:

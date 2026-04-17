@@ -1,5 +1,7 @@
 import datetime
 import random
+from math import log
+from numbers import Number
 from os.path import isdir
 from shutil import copy2
 
@@ -8,12 +10,13 @@ from os import listdir, replace, makedirs
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.validators import URLValidator
 from django.db import IntegrityError
-from django.db.models import F, When, Case, Value, ExpressionWrapper
+from django.db.models import F, When, Case, Value, ExpressionWrapper, Count
 from django.db.models.functions import Lower, Concat
 from django.shortcuts import redirect, render
 from django.contrib.sites.shortcuts import get_current_site as dj_get_current_site
 from django.urls import reverse
 from django.http import Http404, HttpResponse
+from pywin.mfc.object import Object
 
 from main import subdivisions
 from .forms import *
@@ -47,6 +50,35 @@ def edt_home_view(request):
                    "name": name,
                    "title": "Editor Home",
                    })
+
+
+# TODO: Check perms
+@permission_required("main.change_robot", raise_exception=True)
+@permission_required("main.change_team", raise_exception=True)
+@permission_required("main.change_event", raise_exception=True)
+@permission_required("main.change_franchise", raise_exception=True)
+@permission_required("main.change_fight", raise_exception=True)
+def edt_control_panel_view(request):
+    action = request.GET.get("action") or ""
+    if action == "recalculate":
+        recalc_all()
+        return render(request, "main/editor/control_panel.html", {"results": "Recalculated Ranks!"})
+    elif action == "prune":
+        t = prune_media()
+        return render(request, "main/editor/control_panel.html", {"results": "Media Pruned" + "\n" + t})
+    elif action == "rus":
+        cutoff = Leaderboard.RU_CUTOFF_DATE
+        v = Version.objects.filter(site="2", first_fought__lt=str(cutoff) + "-01-01")
+        for x in v:
+            x.site_id = 1
+        v.bulk_update(v, ["site"])
+        e = Event.objects.filter(site="2", start_date__lt=str(cutoff) + "-01-01")
+        for x in e:
+            x.site_id = 1
+        e.bulk_update(e, ["site"])
+        return render(request, "main/editor/control_panel.html",
+                      {"results": "Updated Cutoff, moved " + str(list(v)) + " " + str(list(e))})
+    return render(request, "main/editor/control_panel.html", {"results": "..."})
 
 
 @permission_required("main.add_event", raise_exception=True)
@@ -231,22 +263,27 @@ def edt_contest_view(request, contest_id):
                 f.number = i
                 i += 1
             Fight.objects.bulk_update(fights, ["number"])
-        elif request.POST["save"] == "reorder":
-            fight_update_list = []
-            for value in request.POST:
-                if value[0] == "n":
-                    fight = Fight.objects.get(id=value[7:])
-                    new_fight_number = int(request.POST[value])
-                    if fight.number != new_fight_number:
-                        if Fight.objects.filter(contest=fight.contest, number=new_fight_number).count() > 0:
-                            higher_fights = Fight.objects.filter(contest=fight.contest, number__gte=new_fight_number)
-                            for f in higher_fights:
-                                f.number += 1
-                            Fight.objects.bulk_update(higher_fights, ['number'])
-                        fight.number = new_fight_number
-                        fight_update_list.append(fight)
 
-            Fight.objects.bulk_update(fight_update_list, ['number'])
+        elif request.POST["save"] == "reorder":
+            reordered = []
+            fights_queue = []
+            for fight in fights:
+                desired_number = int(request.POST["number-" + str(fight.id)])
+                if fight.number != desired_number:
+                    reordered.append(desired_number)
+                    fight.number = desired_number
+                else:
+                    fights_queue.append(fight)
+            for i in range(1, len(fights) + 1):
+                if i in reordered:
+                    pass
+                else:
+                    to_change = fights_queue.pop(0)
+                    to_change.number = i
+
+            Fight.objects.bulk_update(fights, ['number'])
+            fights = Fight.objects.filter(contest=contest).order_by("number")
+
     return render(request, "main/editor/contest.html",
                   {"contest": contest, "other_contests": other_contests, "fights": fights,
                    "applications": registrations, "title": "edt" + str(contest)})
@@ -2146,6 +2183,125 @@ def ranking_system_view(request):
     pass
 
 
+def six_degrees(slug1, slug2):
+    class Node:
+        def __init__(self, prio, item, previous):
+            self.prio = prio
+            self.item = item
+            self.previous = previous
+
+        def __eq__(self, other):
+            return self.item == other.item
+
+        def __str__(self):
+            return str((self.prio,self.item,self.previous.item))
+
+        def __repr__(self):
+            return self.__str__()
+
+        def __len__(self):
+            num = 0
+            check = self
+            while check is not None:
+                check = check.previous
+                num += 1
+            return num
+
+    class pq:
+        nodes = []
+        min = 5 * 10 ^ 10
+        max = -5 * 10 ^ 10
+
+        def push(self, node):
+            if node in self.nodes:
+                return
+            if node.prio >= self.max:
+                self.max = node.prio
+                self.nodes = [node] + self.nodes
+
+            elif node.prio <= self.min:
+                self.min = node.prio
+                self.nodes.append(node)
+            else:
+                for i in range(len(self.nodes)):
+                    if node.prio > self.nodes[i].prio:
+                        self.nodes = self.nodes[:i] + [node] + self.nodes[i:]
+                        break
+
+        def pop(self):
+            return self.nodes.pop(0)
+
+        def __len__(self):
+            return len(self.nodes)
+
+        def __str__(self):
+            return str(self.nodes)
+
+    start_rob = Robot.objects.get(slug=slug1)
+    end_rob = Robot.objects.get(slug=slug2)
+    searched = {start_rob}
+    thequeue = pq()
+
+    def makequeue(test_node: Node):
+        test_rob: Robot
+        test_rob = test_node.item
+        opponents = set()
+        for fight in Fight.objects.filter(fight_version__version__robot=test_rob).distinct():
+            robots_from_fight = Robot.objects.filter(version__fight_version__fight=fight).distinct().exclude(
+                slug=test_rob.slug)
+            opponents = opponents.union(list(robots_from_fight))
+            new = opponents.difference(searched)
+            if end_rob in new:
+                thequeue.push(Node(5 * 10 ^ 11,end_rob,test_node))
+                return
+
+        new_robot: Robot
+        for new_robot in new:
+            num = 0
+            new_rob_weight = Weight_Class.objects.get(
+                id=new_robot.version_set.all().values("weight_class_id").annotate(count=Count('weight_class_id'))[0][
+                    'weight_class_id']).weight_grams
+            end_rob_weight = Weight_Class.objects.get(
+                id=end_rob.version_set.all().values("weight_class_id").annotate(count=Count('weight_class_id'))[0][
+                    'weight_class_id']).weight_grams
+            if new_rob_weight == end_rob_weight:
+                num += 10
+            elif new_rob_weight != 0:
+                num += ((5.5 - abs(log(new_rob_weight) - log(end_rob_weight))) / 5.5) * 8
+            if new_robot.country == end_rob.country:
+                num += 10
+            if new_robot.first_fought.year == end_rob.first_fought.year and new_robot.last_fought.year == end_rob.last_fought.year:
+                num += 10
+            elif new_robot.first_fought.year == end_rob.first_fought.year or new_robot.last_fought.year == end_rob.last_fought.year:
+                num += 7
+            elif new_robot.first_fought.year <= end_rob.last_fought.year and end_rob.first_fought.year <= new_robot.last_fought.year:
+                num += 5
+            if Event.objects.filter(contest__fight__fight_version__version__robot=new_robot).union(
+                    Event.objects.filter(contest__fight__fight_version__version__robot=end_rob)).count() > 1:
+                num += 20
+            num -= len(test_node)*7.5
+            thequeue.push(Node(num, new_robot, test_node))
+            searched.add(new_robot)
+        print(thequeue)
+
+    thequeue.push(Node(0, start_rob, None))
+    test = None
+    while len(thequeue) != 0:
+        test = thequeue.pop()
+        if test.item == end_rob:
+            break
+        else:
+            makequeue(test)
+    while test is not None:
+        print(str(test.item) + " > ",end="")
+        test = test.previous
+    print()
+
+
+
+#six_degrees("behemoth", "k2")
+
+
 def calc_test(request):
     test_type = request.GET.get("test") or ""
     results_text = "Before: \n"
@@ -2265,14 +2421,24 @@ def recalc_all():
     print("Took: " + str(time.time() - start_time) + " seconds.")
 
 
-# This shouldn't delete any data that is in use but just in case here's some permissions.
-@permission_required("main.change_robot", raise_exception=True)
-@permission_required("main.change_team", raise_exception=True)
-@permission_required("main.change_event", raise_exception=True)
-@permission_required("main.change_franchise", raise_exception=True)
-@permission_required("main.change_fight", raise_exception=True)
-def prune_media(request):
+def prune_media():
     bad_images = []
+    blacklist = ['robot_images/2025/honey_badger_ru_25.jpg', 'robot_images/2025/Iron_Scrap_2025_closeup.png',
+                 'robot_images/2025/gpdseed2-2-5.png', 'robot_images/2025/Putevoy_24_02.jpg',
+                 'robot_images/2025/jy_1R2jdBkc.jpg', 'robot_images/2025/Iron_Scrap_In_arena.png',
+                 'robot_images/2025/archy_solarbot_2017.jpg', 'robot_images/2025/2MnWnv9lpoY.jpg',
+                 'robot_images/2025/Iron_Scrap_2023_Crop.jpg', 'robot_images/2025/Yesaji1.png',
+                 'robot_images/2025/Weber1.png', 'robot_images/2025/barracuda_2018.png',
+                 'robot_images/2025/DHANAJI-5-1024x6461.jpg', 'robot_images/2025/Prostofilya1.png',
+                 'robot_images/2025/AP_WB5qlP7w.jpg', 'robot_images/2025/weber_reinforced_painted.jpg',
+                 'robot_images/2025/zmQr1JvwRk4.jpg', 'robot_images/2025/Monte_Bitva.jpg',
+                 'robot_images/2025/rake_geek_picknic.jpg', 'robot_images/2025/barracuda_kazakhstan__visit_crop.jpg',
+                 'robot_images/2025/Shelby_Bitva_2016.jpg', 'robot_images/2025/dr_perm.png',
+                 'robot_images/2025/anarchist.jpg', 'robot_images/2025/TJnUek0.jpeg',
+                 'robot_images/2025/Iron_Bucket_alt.webp', 'robot_images/2025/insidecheops.webp',
+                 'robot_images/2025/vZ1qxjbs8qM.jpg', 'robot_images/2025/spike_rw2.png',
+                 'robot_images/2025/x_063f3fb6.jpg', 'robot_images/2025/russian_overhead.webp',
+                 'robot_images/2025/Rescuer.webp', 'robot_images/2025/G7BkRjHo7jg1.jpg', ]
 
     def check_media(used_files, dir):
         cyear = datetime.date.today().year
@@ -2280,7 +2446,7 @@ def prune_media(request):
             filenames = listdir(settings.MEDIA_ROOT + "/" + dir + str(year))
             for filename in filenames:
                 f = dir + str(year) + "/" + filename
-                if f not in used_files:
+                if f not in used_files and f not in blacklist:
                     bad_images.append(f)
 
     robot_images = Version.objects.all().values("image").distinct()
@@ -2303,7 +2469,6 @@ def prune_media(request):
     fight_media = [i['internal_media'] for i in fight_media]
     check_media(fight_media, "fight_media/")
 
-    print("deleting", bad_images)
     for i in bad_images:
         try:
             replace(settings.MEDIA_ROOT + "/" + i, settings.MEDIA_ROOT + "/deleted/" + i)
@@ -2311,6 +2476,7 @@ def prune_media(request):
             dir = settings.MEDIA_ROOT + "/deleted/" + i.split("/")[0] + "/" + i.split("/")[1]
             makedirs(dir)
             replace(settings.MEDIA_ROOT + "/" + i, settings.MEDIA_ROOT + "/deleted/" + i)
+    return "Deleted: " + str(bad_images)
 
 
 def tournament_tree(request):
