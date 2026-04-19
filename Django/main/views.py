@@ -16,7 +16,6 @@ from django.shortcuts import redirect, render
 from django.contrib.sites.shortcuts import get_current_site as dj_get_current_site
 from django.urls import reverse
 from django.http import Http404, HttpResponse
-from pywin.mfc.object import Object
 
 from main import subdivisions
 from .forms import *
@@ -2347,6 +2346,8 @@ def recalc_all():
     start_time = time.time()
 
     def save_year(year, version_dictionary, robot_dictionary, fvs):
+        if year >= Leaderboard.RU_CUTOFF_DATE:
+            return
         print("Saving data for year: " + str(year))
         vers = [v for v in version_dictionary.values()]
         robs = [r for r in robot_dictionary.values()]
