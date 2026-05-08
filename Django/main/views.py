@@ -18,6 +18,7 @@ from django.urls import reverse
 from django.http import Http404, HttpResponse
 
 from main import subdivisions
+from main import six_degrees
 from .forms import *
 
 ONE_HOUR_TIMER = 3600
@@ -2180,126 +2181,6 @@ def futures_features_view(request):
 
 def ranking_system_view(request):
     pass
-
-
-def six_degrees(slug1, slug2):
-    class Node:
-        def __init__(self, prio, item, previous):
-            self.prio = prio
-            self.item = item
-            self.previous = previous
-
-        def __eq__(self, other):
-            return self.item == other.item
-
-        def __str__(self):
-            return str((self.prio,self.item,self.previous.item))
-
-        def __repr__(self):
-            return self.__str__()
-
-        def __len__(self):
-            num = 0
-            check = self
-            while check is not None:
-                check = check.previous
-                num += 1
-            return num
-
-    class pq:
-        nodes = []
-        min = 5 * 10 ^ 10
-        max = -5 * 10 ^ 10
-
-        def push(self, node):
-            if node in self.nodes:
-                return
-            if node.prio >= self.max:
-                self.max = node.prio
-                self.nodes = [node] + self.nodes
-
-            elif node.prio <= self.min:
-                self.min = node.prio
-                self.nodes.append(node)
-            else:
-                for i in range(len(self.nodes)):
-                    if node.prio > self.nodes[i].prio:
-                        self.nodes = self.nodes[:i] + [node] + self.nodes[i:]
-                        break
-
-        def pop(self):
-            return self.nodes.pop(0)
-
-        def __len__(self):
-            return len(self.nodes)
-
-        def __str__(self):
-            return str(self.nodes)
-
-    start_rob = Robot.objects.get(slug=slug1)
-    end_rob = Robot.objects.get(slug=slug2)
-    searched = {start_rob}
-    thequeue = pq()
-
-    def makequeue(test_node: Node):
-        test_rob: Robot
-        test_rob = test_node.item
-        opponents = set()
-        for fight in Fight.objects.filter(fight_version__version__robot=test_rob).distinct():
-            robots_from_fight = Robot.objects.filter(version__fight_version__fight=fight).distinct().exclude(
-                slug=test_rob.slug)
-            opponents = opponents.union(list(robots_from_fight))
-            new = opponents.difference(searched)
-            if end_rob in new:
-                thequeue.push(Node(5 * 10 ^ 11,end_rob,test_node))
-                return
-
-        new_robot: Robot
-        for new_robot in new:
-            num = 0
-            new_rob_weight = Weight_Class.objects.get(
-                id=new_robot.version_set.all().values("weight_class_id").annotate(count=Count('weight_class_id'))[0][
-                    'weight_class_id']).weight_grams
-            end_rob_weight = Weight_Class.objects.get(
-                id=end_rob.version_set.all().values("weight_class_id").annotate(count=Count('weight_class_id'))[0][
-                    'weight_class_id']).weight_grams
-            if new_rob_weight == end_rob_weight:
-                num += 10
-            elif new_rob_weight != 0:
-                num += ((5.5 - abs(log(new_rob_weight) - log(end_rob_weight))) / 5.5) * 8
-            if new_robot.country == end_rob.country:
-                num += 10
-            if new_robot.first_fought.year == end_rob.first_fought.year and new_robot.last_fought.year == end_rob.last_fought.year:
-                num += 10
-            elif new_robot.first_fought.year == end_rob.first_fought.year or new_robot.last_fought.year == end_rob.last_fought.year:
-                num += 7
-            elif new_robot.first_fought.year <= end_rob.last_fought.year and end_rob.first_fought.year <= new_robot.last_fought.year:
-                num += 5
-            if Event.objects.filter(contest__fight__fight_version__version__robot=new_robot).union(
-                    Event.objects.filter(contest__fight__fight_version__version__robot=end_rob)).count() > 1:
-                num += 20
-            num -= len(test_node)*7.5
-            thequeue.push(Node(num, new_robot, test_node))
-            searched.add(new_robot)
-        print(thequeue)
-
-    thequeue.push(Node(0, start_rob, None))
-    test = None
-    while len(thequeue) != 0:
-        test = thequeue.pop()
-        if test.item == end_rob:
-            break
-        else:
-            makequeue(test)
-    while test is not None:
-        print(str(test.item) + " > ",end="")
-        test = test.previous
-    print()
-
-
-
-#six_degrees("behemoth", "k2")
-
 
 def calc_test(request):
     test_type = request.GET.get("test") or ""
