@@ -18,10 +18,6 @@ try:
 except:
     THE_SITE = 1
 
-try:
-    THE_SITE = settings.SITE_ID
-except:
-    THE_SITE = 1
 
 
 class RegistrationForm(UserCreationForm):
@@ -41,7 +37,7 @@ class RegistrationForm(UserCreationForm):
 
 class NewRobotForm(forms.Form):
     name = forms.CharField(max_length=255, required=True)
-    latin_name = forms.CharField(max_length=255, required=False,show_hidden_initial="hidden")
+    latin_name = forms.CharField(max_length=255, required=False, show_hidden_initial="hidden")
     slug = forms.CharField(max_length=100, required=False)
     vname = forms.CharField(max_length=255, required=False, label="Name of first version if different from main name")
     country = forms.ChoiceField(choices=COUNTRY_CHOICES, required=False)
@@ -160,7 +156,7 @@ class RobotForm(forms.ModelForm):
 class VersionForm(forms.ModelForm):
     class Meta:
         model = Version
-        fields = ["robot_name", "latin_robot_name","display_latin_name",
+        fields = ["robot_name", "latin_robot_name", "display_latin_name",
                   "name", "loaned", "number", "country", "description", "image", "weapon_type", "team", "weight_class"]
 
     def save(self, commit=True):
@@ -173,9 +169,8 @@ class VersionForm(forms.ModelForm):
         return ver
 
 
-
 class TeamForm(forms.ModelForm):
-    #slug = forms.CharField(max_length=100, required=False)
+    # slug = forms.CharField(max_length=100, required=False)
     class Meta:
         model = Team
         fields = ['name', 'latin_name', 'display_latin_name', 'logo', 'country']
@@ -205,7 +200,8 @@ class FranchiseForm(forms.ModelForm):  # TODO: Add Web Links
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'slug', 'missing_brackets', 'description', 'logo', 'country', 'start_date', 'end_date', 'franchise','site']
+        fields = ['name', 'slug', 'missing_brackets', 'description', 'logo', 'country', 'start_date', 'end_date',
+                  'franchise', 'site']
 
 
 class ContestForm(forms.ModelForm):
@@ -231,20 +227,21 @@ class RobotFightForm(forms.ModelForm):
             old_fv = Fight_Version.objects.get(pk=new_fv.id)
         except ObjectDoesNotExist:
             old_fv = None
-        if old_fv is not None and new_fv.tag_team != 0 and new_fv.won != old_fv.won:
+        if new_fv.tag_team != 0:
+            if commit and old_fv is None:
+                new_fv.save()
             fvs = [new_fv]
             other_robots: QuerySet[Fight_Version]
-            other_robots = Fight_Version.objects.filter(fight=new_fv.fight,tag_team=new_fv.tag_team)
+            other_robots = Fight_Version.objects.filter(fight=new_fv.fight, tag_team=new_fv.tag_team)
             for rob in other_robots:
-                if rob == old_fv:
+                if old_fv is not None and rob == old_fv:
                     continue
                 rob.won = new_fv.won
                 fvs.append(rob)
             if commit:
-                Fight_Version.objects.bulk_update(fvs,["won"])
+                Fight_Version.objects.bulk_update(fvs, ["won", "version", "tag_team"])
         elif commit:
             new_fv.save()
-
 
 
 class AwardForm(forms.ModelForm):

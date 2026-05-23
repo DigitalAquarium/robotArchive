@@ -704,6 +704,8 @@ class Fight(models.Model):
     media_type = models.CharField(max_length=2, choices=MEDIA_CHOICES, default="UN")
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
+    yt_data = models.JSONField(null=True,default=None)
+    yt_data_last_polled = models.DateField(null=True,default=None)
 
     def calculate(self, competitors=[], commit=True):
         # Preprocessing
@@ -860,8 +862,9 @@ class Fight(models.Model):
 
             self.external_media = "https://youtube.com/embed/" + video_id + start_time
 
-        elif "twitch.tv/" in self.external_media:
-            get_data = self.external_media[25:]
+        elif "twitch.tv/" in self.external_media and "player.twitch.tv" not in self.external_media:
+            data = self.external_media.split("/")[-1].replace("?t=", "&time=")
+            self.external_media = "https://player.twitch.tv/?video=" + data + "&autoplay=false&parent=robotcombatarchive.com&parent=www.robotcombatarchive.com&parent=ru.robotcombatarchive.com"
         elif "vk.com/video" in self.external_media:
             self.external_media = self.external_media.replace("vk.com/video", "vkvideo.ru/video")
         elif "vk.ru/video" in self.external_media:
@@ -911,7 +914,7 @@ class Fight(models.Model):
                 self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "YT"
-            elif any(url in self.external_media for url in ["vkvideo.ru", "vkvideo.com", "vk.ru/", "vk.com/"]):
+            elif any(url in self.external_media for url in ["vkvideo.ru", "vkvideo.com", "vk.ru/", "vk.com/","twitch.tv/"]):
                 self.media_type = "IF"
             else:
                 self.media_type = "UN"
@@ -1170,7 +1173,7 @@ class Leaderboard(models.Model):
 
     # lb.robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")
     CUTOFF_YEARS = 3
-    RU_CUTOFF_DATE = 2014
+    RU_CUTOFF_DATE = 2015
 
     @staticmethod
     def update_class(wc, current_year=None):
@@ -1316,6 +1319,10 @@ class Leaderboard(models.Model):
                     robot.lb_weight_class = "X"
                     if commit: robot.save()
                     return robot
+            if robot.slug == "tornado" and year > 2006:
+                robot.lb_weight_class = "X"
+                if commit: robot.save()
+                return robot
 
             has_competitively_fought = False
             for version in robot.version_set.all():
@@ -1349,10 +1356,6 @@ class Leaderboard(models.Model):
                         actual_weight_class = key
 
                 robot.lb_weight_class = actual_weight_class
-
-            # RU
-            if date.year == 2014:
-                robot.lb_weight_class = "X"
 
             if date.year >= Leaderboard.RU_CUTOFF_DATE:
                 fought_in_rus = Event.objects.filter(start_date__lt=date, country="RU",
