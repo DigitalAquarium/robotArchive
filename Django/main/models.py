@@ -704,6 +704,8 @@ class Fight(models.Model):
     media_type = models.CharField(max_length=2, choices=MEDIA_CHOICES, default="UN")
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
+    yt_data = models.JSONField(null=True,default=None)
+    yt_data_last_polled = models.DateField(null=True,default=None)
 
     def calculate(self, competitors=[], commit=True):
         # Preprocessing
@@ -1317,6 +1319,10 @@ class Leaderboard(models.Model):
                     robot.lb_weight_class = "X"
                     if commit: robot.save()
                     return robot
+            if robot.slug == "tornado" and year > 2006:
+                robot.lb_weight_class = "X"
+                if commit: robot.save()
+                return robot
 
             has_competitively_fought = False
             for version in robot.version_set.all():

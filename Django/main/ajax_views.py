@@ -17,7 +17,7 @@ def disclaimer(request):
     if get_current_site(request).id == 2:
         return JsonResponse({"txt": "Russia"}, status=200)
     else:
-        return JsonResponse({"txt": "2013"}, status=200)
+        return JsonResponse({"txt": "2014"}, status=200)
 
 
 def get_location(request):
@@ -61,8 +61,13 @@ def get_history(request):
 
 def yt_video_status(request, fight_id):
     Fight.objects.filter(external_media__contains="youtube.com").update(media_type="YT")
-
-    url = Fight.objects.get(pk=fight_id).external_media
+    fight = Fight.objects.get(pk=fight_id)
+    if fight.yt_data is not None and (fight.yt_data_last_polled - datetime.date.today()).days < 150:
+        json = fight.yt_data
+        json["url"] = fight.external_media
+        return JsonResponse(fight.yt_data, status=200)
+    # else then
+    url = fight.external_media
     with build("youtube", "v3", developerKey=environ["YOUTUBE_API_KEY"]) as yt_api:
         if "?" in url:
             split_media = url[26:].split("?start=")
@@ -105,10 +110,14 @@ def yt_video_status(request, fight_id):
     if start != "":
         title = title + " @ " + start
     title = escape(title)
-    return JsonResponse({"allowed_countries": allowed_countries,
-                         "blocked_countries": blocked_countries,
-                         "embeddable": embeddable,
-                         "title": title,
-                         "thumb": thumb,
-                         "url": "https://youtube.com/watch/" + vid_id + ("?t=" + str(t) if t else ""),
-                         }, status=200)
+    yt_data_json = {"allowed_countries": allowed_countries,
+                    "blocked_countries": blocked_countries,
+                    "embeddable": embeddable,
+                    "title": title,
+                    "thumb": thumb,
+                    }
+    fight.yt_data = yt_data_json
+    fight.yt_data_last_polled = datetime.datetime.today()
+    fight.save()
+    yt_data_json["url"] = fight.external_media
+    return JsonResponse(yt_data_json, status=200)

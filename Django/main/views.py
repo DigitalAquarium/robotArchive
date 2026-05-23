@@ -738,7 +738,7 @@ def event_detail_view(request, slug):
     site = get_current_site(request)
     if event.site != site:
         return redirect(
-            "https://www.robotcombatarchive.com/events/" + event.slug if site.id == 2 else "https://ru.robotcombatarchive.com/events/" + event.slug)
+            "https://www.robotcombatarchive.com/event/" + event.slug if site.id == 2 else "https://ru.robotcombatarchive.com/event/" + event.slug)
     fran = event.franchise
     contests = Contest.objects.filter(event=event).order_by("start_date", "-weight_class__weight_grams")
     num_competitors = Version.objects.filter(registration__contest__in=contests).distinct().count()
@@ -2228,7 +2228,8 @@ def recalc_all():
 
     def save_year(year, version_dictionary, robot_dictionary, fvs):
         if year >= Leaderboard.RU_CUTOFF_DATE:
-            return
+            #return
+            pass
         print("Saving data for year: " + str(year))
         vers = [v for v in version_dictionary.values()]
         robs = [r for r in robot_dictionary.values()]
