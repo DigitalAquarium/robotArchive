@@ -265,16 +265,24 @@ def edt_contest_view(request, contest_id):
             Fight.objects.bulk_update(fights, ["number"])
 
         elif request.POST["save"] == "reorder":
-            reordered = []
+            num_fights = len(fights)
+            reordered = {}
             fights_queue = []
             for fight in fights:
                 desired_number = int(request.POST["number-" + str(fight.id)])
                 if fight.number != desired_number:
-                    reordered.append(desired_number)
+                    reordered[desired_number] = fight
                     fight.number = desired_number
                 else:
                     fights_queue.append(fight)
-            for i in range(1, len(fights) + 1):
+
+            if max(reordered) > num_fights:
+                reordered = {k: v for k, v in sorted(reordered.items(), key=lambda item: item[0])}
+                for k, v in reordered.items():
+                    if k > num_fights:
+                        fights_queue.append(v)
+
+            for i in range(1, num_fights + 1):
                 if i in reordered:
                     pass
                 else:
@@ -292,7 +300,8 @@ def edt_contest_view(request, contest_id):
 @permission_required("main.change_fight", raise_exception=True)
 def edt_fight_view(request, fight_id):
     try:
-        fight = Fight.objects.get(pk=fight_id)
+        fight: Fight = Fight.objects.get(pk=fight_id)
+        old_media = fight.external_media
     except Fight.DoesNotExist:
         raise Http404
     has_winner = False
@@ -307,13 +316,14 @@ def edt_fight_view(request, fight_id):
     if request.method == "POST":
         form = FightForm(request.POST, request.FILES, instance=fight)
         if form.is_valid():
-            f = form.save()
+            f: Fight = form.save()
             f.format_external_media()
             f.set_media_type()
+            if old_media != "" and f.media_type == "YT" and f.external_media != old_media:
+                f.set_youtube_data()
             if "save" in request.POST:
                 for fv in fight.fight_version_set.all():
                     fv.version.update_fought_range(fight.contest)
-                    Leaderboard.update_robot_weight_class(fv.version.robot)  # TODO: See if we need to do this
                 fight.calculate(commit=True)
                 response = redirect("main:edtContest", fight.contest.id)
                 response.delete_cookie("editing_fight")
@@ -1178,6 +1188,26 @@ def robot_detail_view(request, slug):
                   " fight" + ("" if fights.count() == 1 else "s") + " " + r.timespan(True) + "."
     if r.wins > 0 or r.losses > 0:
         description += " Winning " + str(r.wins) + " and losing " + str(r.losses) + " in head to head battle."
+
+    no_wins = 0
+    no_losses = 0
+    f: Fight
+    for _, f in fights_tuple:
+        if f.fight_type in ["NS", "FC"] and f.method not in ["DR", "WU", "NW", "NM"]:
+            fvs = f.fight_version_set.all()
+            winners = f.winners()
+            if len(fvs) == 2:
+                if r in f.winners():
+                    no_wins += 1
+                else:
+                    no_losses += 1
+            elif len(winners) == 1:
+                no_wins += 1
+    if no_wins + no_losses < 2 or (no_wins < 2 and no_losses < 2):
+        display_methods = False
+    else:
+        display_methods = True
+
     return render(request, "main/robot_detail.html",
                   {"robot": r, "rus": rus,
                    "fights_tuple": fights_tuple,
@@ -1195,6 +1225,7 @@ def robot_detail_view(request, slug):
                    "description": description,
                    "thumbnail": v.image.url if v and v.image else None if v else r.get_image() if r.get_image != settings.STATIC_URL + "unknown.png" else None,
                    "url": reverse("main:robotDetail", args=[r.slug]),
+                   "display_methods": display_methods
                    })
 
 
@@ -2182,6 +2213,7 @@ def futures_features_view(request):
 def ranking_system_view(request):
     pass
 
+
 def calc_test(request):
     test_type = request.GET.get("test") or ""
     results_text = "Before: \n"
@@ -2228,8 +2260,7 @@ def recalc_all():
 
     def save_year(year, version_dictionary, robot_dictionary, fvs):
         if year >= Leaderboard.RU_CUTOFF_DATE:
-            #return
-            pass
+            return
         print("Saving data for year: " + str(year))
         vers = [v for v in version_dictionary.values()]
         robs = [r for r in robot_dictionary.values()]

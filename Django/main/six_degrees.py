@@ -54,7 +54,11 @@ for wc in Weight_Class.objects.all():
 
 robot_to_wc = defaultdict(set)
 for robot_id, wc in robot_wc_pairs:
-    robot_to_wc[robot_id].add(lb_classes[wc])
+    try:
+        robot_to_wc[robot_id].add(lb_classes[wc])
+    except:
+        print("fuck")
+        print(robot_id,wc)
 
 ordered_weights = {"F": 0, "L": 1, "M": 2, "H": 3, "S": 4}
 

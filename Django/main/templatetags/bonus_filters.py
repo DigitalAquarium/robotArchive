@@ -1,4 +1,5 @@
 from django import template
+from django.db.models import QuerySet
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
 

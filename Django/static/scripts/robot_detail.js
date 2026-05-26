@@ -1,3 +1,19 @@
+$(document).ready(function(){ if ($("#method-charts").css("display") === "flex"){
+    method_pie(
+        {"robot": $("#robot-slug").attr("robot-slug"),"won":"True"},
+        "win-chart",
+        "Win Methods",
+        'In fights where' + $("h1").text() + "is the sole winner."
+        );
+    method_pie(
+        {"robot": $("#robot-slug").attr("robot-slug"),"won":"False"},
+        "loss-chart",
+        "Loss Methods",
+        "In 1 vs 1 fights."
+    );}
+});
+
+
 var leftMovement = 0;
 var lefts = [];
 var containerRHS;

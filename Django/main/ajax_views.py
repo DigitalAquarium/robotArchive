@@ -1,13 +1,13 @@
-import time
+from collections import defaultdict
+
+from django.db.models import QuerySet, Count, F
 
 from .views import get_current_site
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
-from django.utils.html import escape
 
 from .forms import *
 
-from googleapiclient.discovery import build
 from os import environ
 
 YT_API_KEY = environ["YOUTUBE_API_KEY"]
@@ -59,65 +59,92 @@ def get_history(request):
         return JsonResponse({"robot_slug": robot_slug}, status=400)
 
 
-def yt_video_status(request, fight_id):
-    Fight.objects.filter(external_media__contains="youtube.com").update(media_type="YT")
+def yt_video_status(_, fight_id):
     fight = Fight.objects.get(pk=fight_id)
-    if fight.yt_data is not None and (fight.yt_data_last_polled - datetime.date.today()).days < 150:
-        json = fight.yt_data
-        json["url"] = fight.external_media
-        return JsonResponse(fight.yt_data, status=200)
-    # else then
-    url = fight.external_media
-    with build("youtube", "v3", developerKey=environ["YOUTUBE_API_KEY"]) as yt_api:
-        if "?" in url:
-            split_media = url[26:].split("?start=")
-            t = split_media[1].split("&")
-            t = int(t[0])
-            vid_id = split_media[0]
-        else:
-            vid_id = url[26:]
-            t = 0
-        response = yt_api.videos().list(
-            part="snippet,status,contentDetails",
-            fields="items(snippet(title,thumbnails),status(embeddable),contentDetails(regionRestriction))",
-            id=vid_id
-        ).execute()
+    return JsonResponse(fight.get_youtube_data(), status=200)
 
-    allowed_countries = []
-    blocked_countries = []
-    embeddable = response['items'][0]["status"]["embeddable"]
-    if len(response['items'][0]["contentDetails"]) > 0:
-        if "allowed" in response['items'][0]["contentDetails"]["regionRestriction"]:
-            allowed_countries = response['items'][0]["contentDetails"]["regionRestriction"]["allowed"]
+
+def win_method_statistics(request):
+    robot = request.GET.get("robot") or None
+    contest = request.GET.get("contest") or None
+    event = request.GET.get("event") or None
+    franchise = request.GET.get("franchise") or None
+    fights = Fight.objects.filter(fight_type__in=["FC", "NS"])
+
+    if robot is not None:
+        won = request.GET.get("won") or None
+        if won is None:
+            return HttpResponse("Malformed Request, won parameter required if robot selected", status=400)
+        won = True if won == "True" or won == "1" or won == "true" else False
+        fights_query = fights.filter(fight_version__version__robot__slug=robot, fight_version__won=won)
+        fights = []
+        if won:
+            for fight in fights_query:
+                if fight.fight_version_set.filter(won=True).count() < 2:
+                    fights.append(fight)
         else:
-            blocked_countries = response['items'][0]["contentDetails"]["regionRestriction"]["blocked"]
-    thumb = list(response['items'][0]["snippet"]["thumbnails"].items())[-1][1]["url"]
-    if t == 0:
-        start = ""
-    elif t < 60:
-        start = str(t) + " seconds"
-    elif t < 3600:
-        start = str(t // 60) + "m"
-        if t % 60 != 0:
-            start += str(t % 60) + "s"
+            for fight in fights_query:
+                if fight.fight_version_set.all().count() == 2:
+                    fights.append(fight)
+
+    elif contest is not None:
+        try:
+            contest = Contest.objects.get(pk=contest)
+        except:
+            return HttpResponse("Specified Contest not found", status=404)
+        fights = fights.filter(contest=contest)
+
+    elif event is not None:
+        try:
+            event = Event.objects.get(pk=event)
+        except:
+            return HttpResponse("Specified Event not found", status=404)
+        fights = fights.filter(contest__event=event)
+
+    elif franchise is not None:
+        try:
+            franchise = Franchise.objects.get(pk=franchise)
+        except:
+            return HttpResponse("Specified Franchise not found", status=404)
+        fights = fights.filter(contest__event__franchise=franchise)
+
     else:
-        start = str(t // 3600) + "h"
-        if t % 3600 != 0:
-            start += str(t % 3600) + "m"
-        if t % 60 != 0:
-            start += str(t % 60) + "s"
-    title = response['items'][0]["snippet"]["title"]
-    if start != "":
-        title = title + " @ " + start
-    title = escape(title)
-    yt_data_json = {"allowed_countries": allowed_countries,
-                    "blocked_countries": blocked_countries,
-                    "embeddable": embeddable,
-                    "title": title,
-                    "thumb": thumb,
-                    }
-    fight.yt_data = yt_data_json
-    fight.yt_data_last_polled = datetime.datetime.today()
-    fight.save()
-    yt_data_json["url"] = fight.external_media
-    return JsonResponse(yt_data_json, status=200)
+        pass
+        # fights already set up above
+
+    if len(fights) == 0:
+        return HttpResponse("No fights exist for specified query", status=404)
+
+    raw_data = [f.method for f in fights]
+    json_data = defaultdict(int)
+    for item in raw_data:
+        json_data[item] += 1
+
+    cluster_map = {
+        "KO": "KO",
+        "PN": "KO",
+        "DK": "KO",
+        "JD": "JD",
+        "CV": "JD",
+        "TO": "KO",
+        "OA": "OA",
+        "PT": "PT",
+        "DR": "_",
+        "WU": "_",
+        "NW": "_",
+        "NM": "_",
+        "OT": "OT"
+    }
+
+    clusters = defaultdict(int)
+    for k, v in json_data.items():
+        clusters[cluster_map[k]] += v
+    json_data = {k: v for k, v in sorted(json_data.items(), key=lambda x: -x[1])}
+    json_data = {k: v for k, v in sorted(json_data.items(), key=lambda x: -clusters[cluster_map[x[0]]])}
+    total = sum(json_data.values())
+    for k in ["DR", "WU", "NW", "NM"]:
+        if k in json_data:
+            total -= json_data[k]
+    json_data["pie_total"] = total
+    return JsonResponse(json_data, status=200)
+

@@ -1,5 +1,6 @@
 import re
 import urllib
+from os import environ
 
 import pycountry
 import datetime
@@ -8,10 +9,12 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q, QuerySet
+from django.db.models import Q
 from django.utils import timezone
+from django.utils.html import escape
 from django.utils.text import slugify
 from .model_fields import ImageAndSvgField
+from googleapiclient.discovery import build
 import uuid
 
 FIGHT_TYPE_CHOICES = [
@@ -46,12 +49,6 @@ LEADERBOARD_WEIGHTS = [
     ("S", "Super Heavyweight"),
     ("X", "Not Leaderboard Valid"),
 ]
-
-robot_slug_blacklist_file = open(settings.STATIC_URL[1:] + "slug_blacklist.txt", "r")
-robot_slug_blacklist = []
-for line in robot_slug_blacklist_file:
-    robot_slug_blacklist.append(line.replace("\n", ""))
-robot_slug_blacklist_file.close()
 
 
 def get_flag(code):
@@ -336,7 +333,7 @@ class Robot(models.Model):
                         country_slug = "-" + slugify(pycountry.countries.get(alpha_2=self.country).name)
                     desired_slug = desired_slug + country_slug
 
-        if similar_slugs.filter(slug=desired_slug).count() > 0 or desired_slug in robot_slug_blacklist:
+        if similar_slugs.filter(slug=desired_slug).count() > 0:
             matching_regex = "(" + re.escape(desired_slug) + ")(-[0-9]*)?"
             number_of_matches = similar_slugs.filter(slug__regex=matching_regex).count()
             found_unique_number = False
@@ -679,6 +676,7 @@ class Fight(models.Model):
         ("WU", "Winner Unknown"),
         ("NW", "No Winner Declared"),
         ("NM", "Method not Declared"),
+        ("PN", "Pin"),
         ("OT", "Other Win Method")
     ]
     MEDIA_CHOICES = [
@@ -704,8 +702,8 @@ class Fight(models.Model):
     media_type = models.CharField(max_length=2, choices=MEDIA_CHOICES, default="UN")
     internal_media = models.FileField(upload_to='fight_media/%Y/', blank=True)
     external_media = models.URLField(blank=True)
-    yt_data = models.JSONField(null=True,default=None)
-    yt_data_last_polled = models.DateField(null=True,default=None)
+    yt_data = models.JSONField(null=True, default=None)
+    yt_data_last_polled = models.DateField(null=True, default=None)
 
     def calculate(self, competitors=[], commit=True):
         # Preprocessing
@@ -841,6 +839,8 @@ class Fight(models.Model):
         return [fvs, competitors]
 
     def format_external_media(self):
+        if "/revision/latest" in self.external_media:
+            self.external_media = self.external_media.split("/revision/latest")[0]
         if re.match("(https?://)?(www\.)?youtu\.?be",
                     self.external_media) is not None and "/embed/" not in self.external_media:
             if "/shorts/" in self.external_media:
@@ -863,7 +863,16 @@ class Fight(models.Model):
             self.external_media = "https://youtube.com/embed/" + video_id + start_time
 
         elif "twitch.tv/" in self.external_media and "player.twitch.tv" not in self.external_media:
-            data = self.external_media.split("/")[-1].replace("?t=", "&time=")
+            data = self.external_media.split("/")[-1].split("?")
+            args = data[1]
+            data = data[0]
+            if "&" in args:
+                args = args.split("&")
+            else:
+                args = [args]
+            for a in args:
+                if a[:2] == "t=":
+                    data += "&time=" + a[2:]
             self.external_media = "https://player.twitch.tv/?video=" + data + "&autoplay=false&parent=robotcombatarchive.com&parent=www.robotcombatarchive.com&parent=ru.robotcombatarchive.com"
         elif "vk.com/video" in self.external_media:
             self.external_media = self.external_media.replace("vk.com/video", "vkvideo.ru/video")
@@ -914,7 +923,8 @@ class Fight(models.Model):
                 self.media_type = "IF"
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "YT"
-            elif any(url in self.external_media for url in ["vkvideo.ru", "vkvideo.com", "vk.ru/", "vk.com/","twitch.tv/"]):
+            elif any(url in self.external_media for url in
+                     ["vkvideo.ru", "vkvideo.com", "vk.ru/", "vk.com/", "twitch.tv/"]):
                 self.media_type = "IF"
             else:
                 self.media_type = "UN"
@@ -1000,7 +1010,7 @@ class Fight(models.Model):
             else:
                 return "Qualified"
         else:
-            if self.method in ["KO", "JD", "TO", "OA", "PT", "OT", "CV", "DK"]:
+            if self.method in ["KO", "JD", "TO", "OA", "PT", "OT", "CV", "DK", "PN"]:
                 return "Lost"
             if self.method == "NM":
                 if len(self.competitors.filter(fight_version__won=1)) == 0:
@@ -1082,6 +1092,69 @@ class Fight(models.Model):
         except Exception as e:
             print(e)
             return "Trying to name this fight is causing errors (Oh no!)"
+
+    def set_youtube_data(self,commit=True):
+        url = self.external_media
+        with build("youtube", "v3", developerKey=environ["YOUTUBE_API_KEY"]) as yt_api:
+            if "?" in url:
+                split_media = url[26:].split("?start=")
+                t = split_media[1].split("&")
+                t = int(t[0])
+                vid_id = split_media[0]
+            else:
+                vid_id = url[26:]
+                t = 0
+            response = yt_api.videos().list(
+                part="snippet,status,contentDetails",
+                fields="items(snippet(title,thumbnails),status(embeddable),contentDetails(regionRestriction))",
+                id=vid_id
+            ).execute()
+
+        allowed_countries = []
+        blocked_countries = []
+        embeddable = response['items'][0]["status"]["embeddable"]
+        if len(response['items'][0]["contentDetails"]) > 0:
+            if "allowed" in response['items'][0]["contentDetails"]["regionRestriction"]:
+                allowed_countries = response['items'][0]["contentDetails"]["regionRestriction"]["allowed"]
+            else:
+                blocked_countries = response['items'][0]["contentDetails"]["regionRestriction"]["blocked"]
+        thumb = list(response['items'][0]["snippet"]["thumbnails"].items())[-1][1]["url"]
+        if t == 0:
+            start = ""
+        elif t < 60:
+            start = str(t) + " seconds"
+        elif t < 3600:
+            start = str(t // 60) + "m"
+            if t % 60 != 0:
+                start += str(t % 60) + "s"
+        else:
+            start = str(t // 3600) + "h"
+            if t % 3600 != 0:
+                start += str(t % 3600) + "m"
+            if t % 60 != 0:
+                start += str(t % 60) + "s"
+        title = response['items'][0]["snippet"]["title"]
+        if start != "":
+            title = title + " @ " + start
+        title = escape(title)
+        yt_data_json = {"allowed_countries": allowed_countries,
+                        "blocked_countries": blocked_countries,
+                        "embeddable": embeddable,
+                        "title": title,
+                        "thumb": thumb,
+                        }
+        self.yt_data = yt_data_json
+        self.yt_data_last_polled = datetime.datetime.today()
+        if commit:
+            self.save()
+
+
+    def get_youtube_data(self):
+        if self.yt_data is None or (self.yt_data_last_polled - datetime.date.today()).days > 150:
+            self.set_youtube_data()
+        yt_data_json = self.yt_data
+        yt_data_json["url"] = self.external_media
+        return yt_data_json
 
     def non_latin_name(self):
         return self.string_name(False)
@@ -1173,7 +1246,7 @@ class Leaderboard(models.Model):
 
     # lb.robot.version_set.filter(first_fought__year__lte=year).order_by("-last_fought")
     CUTOFF_YEARS = 3
-    RU_CUTOFF_DATE = 2015
+    RU_CUTOFF_DATE = 2016
 
     @staticmethod
     def update_class(wc, current_year=None):
@@ -1295,6 +1368,10 @@ class Leaderboard(models.Model):
 
     @staticmethod
     def update_robot_weight_class(robot, commit=True, year=None):
+        if robot.slug == "witch-doctor" and year > 2014:
+            robot.lb_weight_class = "H"
+            if commit: robot.save()
+            return robot
         currentYear = year is None
         if currentYear:
             latest_event = Event.objects.all().order_by("-end_date")[0]

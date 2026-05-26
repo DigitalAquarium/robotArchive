@@ -221,9 +221,6 @@
 
 @media (prefers-color-scheme: dark) {
 
-    #history-chart{
-        filter: hue-rotate(147deg) invert(1);
-    }
     .tab-button, .scroll-button {
         background-color: var(--background-colour);
     }

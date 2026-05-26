@@ -6,7 +6,9 @@
     <script src="{% static 'scripts/robot_detail.js' %}"></script>
     <script src="{% static 'scripts/showhide.js' %}"></script>
     <script src="{% static 'highcharts/highcharts.js' %}"></script>
+    <script src="{% static 'highcharts/themes/adaptive.js' %}"></script>
     <script src="{%static 'scripts/history_chart.js' %}"></script>
+    <script src="{%static 'scripts/method_pie.js' %}"></script>
     <link rel="stylesheet" href="{% static 'style/robot_detail.css' %}">
     <link rel="stylesheet" href="{% static 'style/fight_icon.css' %}">
 {% endblock %}
@@ -126,7 +128,7 @@
             </div>
         <span id="robot-slug" robot-slug="{{robot.slug}}" hidden="hidden"></span>
         <br>
-        <div id="history-chart" style="width:100%; height:400px;"></div>
+        <div id="history-chart" class="charts" style="width:100%; height:400px;"></div>
 
             {% if awards|length > 0 or robot.hallofame_set.all|length > 0 %}
                 {%if robot.hallofame_set.all|length > 0%}
@@ -200,6 +202,7 @@
                     </tbody>
                 </table>
             {% endif %}
+        <div style= "display:{% if display_methods %}flex{%else%}none{%endif%};" id="method-charts"><span id="win-chart" class="charts" style="width:50%; height:400px;"></span><span id="loss-chart" class="charts" style="width:50%; height:400px;"></span></div>
 
     </div>
 {% endblock %}
