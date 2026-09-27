@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import slugify
@@ -48,6 +48,7 @@ LEADERBOARD_WEIGHTS = [
     ("H", "Heavyweight"),
     ("S", "Super Heavyweight"),
     ("X", "Not Leaderboard Valid"),
+    ("N", "Non-Spinner Heavyweight"),
 ]
 
 
@@ -422,6 +423,15 @@ class Robot(models.Model):
 
 
 class Version(models.Model):
+    WEAPON_CHOICES = ['Angled Spinner', 'Articulated Spinner', 'Axe', 'Cannon', 'Chainsaw', 'Crusher', 'Drill',
+                      'Drum Spinner', 'Eggbeater', 'Entanglement', 'Flipper', 'Front-Hinged Flipper', 'Grabber',
+                      'Grabber-Lifter', 'Halon Gas', 'Hammersaw', 'Horizontal Axe', 'Horizontal Crusher',
+                      'Horizontal Grabber', 'Horizontal Spinner', 'Interchangeable', 'Lifter', 'Meltybrain', 'Multibot',
+                      'Overhead Spinner', 'Propeller Spinner', 'Rammer', 'Ring Spinner', 'Saw', 'Shell Spinner',
+                      'Side-Hinged Flipper', 'Spear', 'Thwackbot', 'Undercutter', 'Unknown', 'Vertical Spinner',
+                      'Wedge']
+    WEAPON_CHOICES = [(w, w) for w in WEAPON_CHOICES]
+
     robot_name = models.CharField(max_length=255, blank=True)
     latin_robot_name = models.CharField(max_length=255, blank=True)
     name = models.CharField(max_length=255, blank=True)
@@ -431,7 +441,7 @@ class Version(models.Model):
     country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, blank=False, default="XX")
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='robot_images/%Y/', blank=True)
-    weapon_type = models.CharField(max_length=20)
+    weapon_type = models.CharField(max_length=20, choices=WEAPON_CHOICES, blank=False, default="Unknown")
     first_fought = models.DateField(blank=True, null=True)
     last_fought = models.DateField(blank=True, null=True)
 
@@ -841,8 +851,8 @@ class Fight(models.Model):
     def format_external_media(self):
         if "/revision/latest" in self.external_media:
             self.external_media = self.external_media.split("/revision/latest")[0]
-        if re.match("(https?://)?(www\.)?youtu\.?be",
-                    self.external_media) is not None and "/embed/" not in self.external_media:
+        elif re.match("(https?://)?(www\.)?youtu\.?be",
+                      self.external_media) is not None and "/embed/" not in self.external_media:
             if "/shorts/" in self.external_media:
                 get_info = self.external_media.split("/shorts/")[1]
             else:
@@ -874,6 +884,15 @@ class Fight(models.Model):
                 if a[:2] == "t=":
                     data += "&time=" + a[2:]
             self.external_media = "https://player.twitch.tv/?video=" + data + "&autoplay=false&parent=robotcombatarchive.com&parent=www.robotcombatarchive.com&parent=ru.robotcombatarchive.com"
+        elif "www.bilibili.com/" in self.external_media:
+            end = self.external_media[31:]
+            end = end.split("?")
+            bvid = end[0]
+            data = "&autoplay=0&danmaku=0&muted=0"
+            if len(end) == 2:
+                data = data + "&" + end[1]
+            self.external_media = "https://player.bilibili.com/player.html?bvid=" + bvid + data
+
         elif "vk.com/video" in self.external_media:
             self.external_media = self.external_media.replace("vk.com/video", "vkvideo.ru/video")
         elif "vk.ru/video" in self.external_media:
@@ -924,7 +943,7 @@ class Fight(models.Model):
             elif re.search("youtu\.?be", self.external_media) is not None:
                 self.media_type = "YT"
             elif any(url in self.external_media for url in
-                     ["vkvideo.ru", "vkvideo.com", "vk.ru/", "vk.com/", "twitch.tv/"]):
+                     ["vkvideo.ru", "vkvideo.com", "vk.ru/", "vk.com/", "twitch.tv/", "bilibili.com/"]):
                 self.media_type = "IF"
             else:
                 self.media_type = "UN"
@@ -1093,10 +1112,10 @@ class Fight(models.Model):
             print(e)
             return "Trying to name this fight is causing errors (Oh no!)"
 
-    def set_youtube_data(self,commit=True):
+    def set_youtube_data(self, commit=True):
         url = self.external_media
         with build("youtube", "v3", developerKey=environ["YOUTUBE_API_KEY"]) as yt_api:
-            if "?" in url:
+            if "?start=" in url:
                 split_media = url[26:].split("?start=")
                 t = split_media[1].split("&")
                 t = int(t[0])
@@ -1147,7 +1166,6 @@ class Fight(models.Model):
         self.yt_data_last_polled = datetime.datetime.today()
         if commit:
             self.save()
-
 
     def get_youtube_data(self):
         if self.yt_data is None or (self.yt_data_last_polled - datetime.date.today()).days > 150:
@@ -1349,7 +1367,8 @@ class Leaderboard(models.Model):
             if entry.robot in lb.filter(position__lte=100):
                 entry.delete()
 
-        Leaderboard.objects.bulk_update(update_list, ["robot", "ranking", "position", "version", "difference"])
+        Leaderboard.objects.bulk_update(update_list,
+                                        ["robot", "ranking", "position", "version", "difference"])
         # if leaderboard shrinks for some reason, delete garbage data at the end
         lb.filter(position__gt=top_100.count(), position__lt=101).delete()
 
@@ -1363,6 +1382,8 @@ class Leaderboard(models.Model):
         # wcs.remove("X")
         if current_year in [1995, 1996, 1997]:
             wcs.append("F")
+        if current_year > 2015:
+            wcs.append("N")
         for wc in wcs:
             Leaderboard.update_class(wc, current_year)
 
@@ -1414,7 +1435,7 @@ class Leaderboard(models.Model):
             # Checks to see if there are less computationally heavy ways to test weight class
             elif robot.version_set.count() == 1:
                 robot.lb_weight_class = robot.last_version().weight_class.find_lb_class()
-            elif currentYear and robot.last_version().weight_class.find_lb_class() == robot.lb_weight_class:
+            elif currentYear and robot.last_version().weight_class.find_lb_class() == robot.lb_weight_class and (date.year < 2016 or robot.lb_weight_class != "H"):
                 return robot
             else:
                 # Count number of fights each weight class has to determine which it should be a part of. not perfect if the same version goes to events more than 5 years ago
@@ -1433,13 +1454,20 @@ class Leaderboard(models.Model):
                         actual_weight_class = key
 
                 robot.lb_weight_class = actual_weight_class
+            #Check for non-spinner
+            if robot.lb_weight_class == "H" and date.year > 2015:
+                full_combat_fights = Fight.objects.filter(fight_version__version__robot=robot,contest__start_date__gte=date_cutoff,contest__end_date__lte=date,fight_type="FC")
+                #Fight.objects.filter(version__robot=robot,contest__start_date__gte=date_cutoff,contest__end_date__lte=date,fight_type_in="FC").count()
+                if full_combat_fights.count() == 0:
+                    robot.lb_weight_class = "N"
 
-            if date.year >= Leaderboard.RU_CUTOFF_DATE:
+
+            '''if date.year >= Leaderboard.RU_CUTOFF_DATE:
                 fought_in_rus = Event.objects.filter(start_date__lt=date, country="RU",
                                                      contest__registration__version__robot=robot).count() > 0
                 # print(robot.name,fought_in_rus, Leaderboard.RU_CUTOFF_DATE > robot.first_fought.year)
                 if not fought_in_rus or Leaderboard.RU_CUTOFF_DATE > robot.first_fought.year:
-                    robot.lb_weight_class = "X"
+                    robot.lb_weight_class = "X"'''
 
             if commit: robot.save()
             return robot
@@ -1665,6 +1693,8 @@ class Web_Link(models.Model):
             if "profile.php?id=" in self.link:
                 return "Facebook Profile"
             ret = preprocess(self.link)
+            if ".com/p/" in ret:
+                ret = ret.replace("/p/", "/")
             if "facebook.com/" == ret[:13]:
                 ret = ret[13:]
             if "people/" == ret[:7] or "groups/" == ret[:7]:

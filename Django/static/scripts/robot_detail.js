@@ -1,16 +1,58 @@
-$(document).ready(function(){ if ($("#method-charts").css("display") === "flex"){
-    method_pie(
-        {"robot": $("#robot-slug").attr("robot-slug"),"won":"True"},
-        "win-chart",
-        "Win Methods",
-        'In fights where' + $("h1").text() + "is the sole winner."
+$(document).ready(function(){
+    let active = {"Won":null,"Lost":null}
+    function colourFights(point,won){
+        let frs = $(".fight-row")
+        frs.each(function(i, tr) {
+            data_cell = $(this).children().last()
+            if (won === "True"){
+                correct_method = method_name_lookup[data_cell.data("fight-method")] === point.name
+                correct_won = "Won"
+            }
+            else{
+                correct_method = method_name_lookup_loss[data_cell.data("fight-method")] === point.name
+                correct_won = "Lost"
+            }
+            if (data_cell.prev().text() === correct_won) {
+                if (data_cell.data("pie-valid") === "True" && correct_method) {
+                    if (active[correct_won] === point.color) {
+                        console.log("A")
+                        $(this).css("background-color", "");
+                    }
+                    else{
+                        $(this).css("background-color", point.color);
+                        console.log("B")
+                    }
+                }
+                else{
+                    console.log("C")
+                    $(this).css("background-color", "");
+                }
+            }
+        });
+        if (active[correct_won] === point.color) {
+            active[correct_won] = null
+        }
+        else{
+            active[correct_won] = point.color
+        }
+    }
+
+    if ($("#method-charts").css("display") === "flex"){
+        method_pie(
+            {"robot": $("#robot-slug").attr("robot-slug"),"won":"True"},
+            "win-chart",
+            "Win Methods",
+            'In fights where' + $("h1").text() + "is the sole winner.",
+            colourFights
+            );
+        method_pie(
+            {"robot": $("#robot-slug").attr("robot-slug"),"won":"False"},
+            "loss-chart",
+            "Loss Methods",
+            "In 1 vs 1 fights.",
+            colourFights
         );
-    method_pie(
-        {"robot": $("#robot-slug").attr("robot-slug"),"won":"False"},
-        "loss-chart",
-        "Loss Methods",
-        "In 1 vs 1 fights."
-    );}
+    }
 });
 
 

@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-from django.db.models import QuerySet, Count, F
-
 from .views import get_current_site
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
@@ -35,10 +33,12 @@ def get_history(request):
     try:
         robot = Robot.objects.get(slug=robot_slug)
         fight_versions = Fight_Version.objects.filter(version__robot=robot,
-                                                      fight__contest__event__site=get_current_site(request).id,
                                                       fight__fight_type__in=["FC", "NS"]).order_by(
             "fight__contest__start_date", "fight__contest__end_date", "fight__contest__id", "fight__number").exclude(
             fight__method__in=["NW", "WU"])
+        site = get_current_site(request).id
+        if site == 2:
+            fight_versions.filter(fight__contest__event__site = get_current_site(request).id)
         rank = 1000
         fights = [{"name": "Initial Rank", "rank": 1000, "year": None, "event_name": None, "href": None}]
         history = [1000]
@@ -121,25 +121,41 @@ def win_method_statistics(request):
         json_data[item] += 1
 
     cluster_map = {
-        "KO": "KO",
-        "PN": "KO",
-        "DK": "KO",
-        "JD": "JD",
-        "CV": "JD",
-        "TO": "KO",
-        "OA": "OA",
-        "PT": "PT",
+        "DK": "Knockout",
+        "KO": "Knockout",
+        "TO": "Knockout",
+        "PN": "Control",
+        "JD": "Decision",
+        "CV": "Decision",
+        "OA": "Control",
+        "PT": "Control",
         "DR": "_",
         "WU": "_",
         "NW": "_",
         "NM": "_",
         "OT": "OT"
     }
+    order = {
+        "DK": 1,
+        "KO": 2,
+        "TO": 3,
+        "PN": 10,
+        "JD": 20,
+        "CV": 21,
+        "OA": 11,
+        "PT": 12,
+        "DR": 40,
+        "WU": 41,
+        "NW": 42,
+        "NM": 43,
+        "OT": 50
+    }
 
     clusters = defaultdict(int)
     for k, v in json_data.items():
         clusters[cluster_map[k]] += v
-    json_data = {k: v for k, v in sorted(json_data.items(), key=lambda x: -x[1])}
+
+    json_data = {k: v for k, v in sorted(json_data.items(), key=lambda x: order[x[0]])}
     json_data = {k: v for k, v in sorted(json_data.items(), key=lambda x: -clusters[cluster_map[x[0]]])}
     total = sum(json_data.values())
     for k in ["DR", "WU", "NW", "NM"]:
@@ -147,4 +163,3 @@ def win_method_statistics(request):
             total -= json_data[k]
     json_data["pie_total"] = total
     return JsonResponse(json_data, status=200)
-

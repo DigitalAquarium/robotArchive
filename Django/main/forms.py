@@ -172,7 +172,7 @@ class TeamForm(forms.ModelForm):
     # slug = forms.CharField(max_length=100, required=False)
     class Meta:
         model = Team
-        fields = ['name', 'latin_name', 'display_latin_name', 'logo', 'country']
+        fields = ['name', 'latin_name',"slug", 'display_latin_name', 'logo', 'country']
 
     '''def clean_slug(self):
         slug = self.cleaned_data['slug']

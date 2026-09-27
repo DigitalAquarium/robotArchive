@@ -28,19 +28,23 @@ const method_name_lookup_loss = {
 	"NM": "Method not Declared",
 	"OT": "Other Win Method"
 }
+
 const colour_map = {
-	"KO": "#FE6A35",
-	"DK": "#FE0000",
-	"TO": "#CC0000",
-	"PN": "#FE6088",
-	"JD": "#2CAFFE",
-	"CV": "#1364CC",
-	"OA": "#00E272",
-	"PT": "#CC00FF",
-	"OT": "#AAAAAA"
+  "KO": "#fe6a35",
+  "TO": "#c94e24",
+  "DK": "#ff9a73",
+
+  "JD": "#6ec6ff",
+  "CV": "#1f8fd1",
+
+  "OA": "#00e272",
+  "PT": "#00a65a",
+  "PN": "#7ff0b3",
+
+  "OT": "#AAAAAA"
 }
 
-function method_pie(data,div_id,title,subtitle) {
+function method_pie(data,div_id,title,subtitle,click_function) {
 	$.ajax({
 		type: 'GET',
 		url: "/ajax/win_method_statistics",
@@ -69,7 +73,7 @@ function method_pie(data,div_id,title,subtitle) {
 						});
 					}
 				})
-				Highcharts.chart(div_id, {
+				return Highcharts.chart(div_id, {
 					chart: {
 						type: 'pie',
 						backgroundColor:null
@@ -78,7 +82,10 @@ function method_pie(data,div_id,title,subtitle) {
 						text: title
 					},
 					subtitle: {
-						text: subtitle + "<br>Totalling " +response["pie_total"]
+						text: subtitle// + "<br>Totalling " +response["pie_total"]
+					},
+					tooltip:{
+						valueSuffix: ' of ' + response["pie_total"]
 					},
 					plotOptions: {
 						pie: {
@@ -108,7 +115,14 @@ function method_pie(data,div_id,title,subtitle) {
 						{
 							name: 'Fights',
 							colorByPoint: true,
-							data: chart_data
+							data: chart_data,
+							point: {
+								events: {
+									click(e) {
+										click_function(e.point,data["won"]);
+									}
+								}
+							}
 						}
 					]
 				});

@@ -1,3 +1,13 @@
+let flag_blacklist =["YT","RE","BL","MF","PM","UM","WF","CP","HM","GP","GF","BQ","SJ"] //Flags that look identical to others
+function render_flags(flags){
+    for (let i = 0; i < flags.length;i++){
+        if (!flag_blacklist.includes(flags[i])){
+            $("#yt-error").append('<img class="flag-image" src="/static/flags/4x3/' + flags[i].toLowerCase() + '.svg">')
+        }
+    }
+    $(".fight-media").css("max-height","none")
+}
+
 $(document).ready(function(){
      $.ajax({
          type: 'GET',
@@ -12,17 +22,11 @@ $(document).ready(function(){
             };
             if (response['allowed_countries'].length > 0){
                 $(".fight-media").prepend('<div id="yt-error" style="display:flex; flex-wrap:wrap; justify-content:center"><span>This video is <u>only</u> available in the following countries: </span></div>')
-                for (let i = 0; i < response["allowed_countries"].length;i++){
-                    $("#yt-error").append('<img class="flag-image" src="/static/flags/4x3/' + response["allowed_countries"][i].toLowerCase() + '.svg">')
-                }
-                $(".fight-media").css("max-height","none")
+                render_flags(response['allowed_countries'])
             }
             if (response['blocked_countries'].length > 0){
                 $(".fight-media").prepend('<div id="yt-error" style="display:flex; flex-wrap:wrap; justify-content:center"><span>This video is <u>not</u> available in the following countries: </span></div>')
-                for (let i = 0; i < response["blocked_countries"].length;i++){
-                    $("#yt-error").append('<img class="flag-image" src="/static/flags/4x3/' + response["blocked_countries"][i].toLowerCase() + '.svg">')
-                }
-                $(".fight-media").css("max-height","none")
+                render_flags(response['blocked_countries'])
             }
          },
          error: function (response) {

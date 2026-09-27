@@ -64,6 +64,7 @@ urlpatterns = [
     path('search', views.search_view, name="search"),
     path('message', views.message_view, name='message'),
     path('credits', views.credits_view, name='credits'),
+    path('connections',views.six_degrees_view, name='sixDegrees'),
 
     path('editor/home', views.edt_home_view, name='edtHome'),
     path('editor/console', views.edt_control_panel_view, name='edtConsole'),

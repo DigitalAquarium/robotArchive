@@ -183,7 +183,7 @@
                     </thead>
                     <tbody>
                     {% for rowspan, fight in fights_tuple %}
-                        <tr {% if rowspan != 0 %} class="border-top"{%endif%}>
+                        <tr id="fight-row-{{fight.id}}" class="fight-row{% if rowspan != 0 %} border-top{%endif%}">
                             {% if rowspan != 0 %}
                             <td class ="table-no-bg border-right {%if fight.contest.event.missing_brackets %} incomplete_event{%endif%}" rowspan="{{ rowspan }}">
                                 <a href="{% url 'main:eventDetail' fight.contest.event.slug %}">{{ fight.contest.event }}</a>
@@ -197,6 +197,7 @@
                                 {% include "snippets/fight_icon.html" with fight=fight %}
                             </a></td>
                             <td class="mobile-hide">{{ fight|fight_result:robot }}</td>
+                            <td class="super-invisible-data-cell" data-fight-method="{{fight.method}}" data-pie-valid="{{fight.pie_valid}}"></td>
                         </tr>
                     {% endfor %}
                     </tbody>

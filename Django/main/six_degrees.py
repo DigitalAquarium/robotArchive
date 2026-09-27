@@ -4,13 +4,12 @@ import dateutil.utils
 
 from main.models import *
 
-
 from collections import defaultdict
 
 adjacency = defaultdict(set)
 # id would be more efficient than slug but we're using slug for visability for now
 pairs = (
-    Fight_Version.objects
+    Fight_Version.objects.filter(fight__fight_type__in=["FC", "NS"])
     .select_related("version__robot", "fight")
     .values_list("fight_id", "version__robot__slug")
 )
@@ -58,7 +57,7 @@ for robot_id, wc in robot_wc_pairs:
         robot_to_wc[robot_id].add(lb_classes[wc])
     except:
         print("fuck")
-        print(robot_id,wc)
+        print(robot_id, wc)
 
 ordered_weights = {"F": 0, "L": 1, "M": 2, "H": 3, "S": 4}
 
@@ -78,7 +77,7 @@ for robot in Robot.objects.all():
         "adjacency": adjacency[robot.slug].copy()
     }
 
-#print(robot_data["razer"])
+# print(robot_data["razer"])
 
 country_graph = defaultdict(int)
 outgoing_connections = defaultdict(int)
@@ -131,8 +130,8 @@ def distance(slug_a, slug_b):
     contest_distance = 20
     if any(x == y for x, y in itertools.product(a["contests"], b["contests"])):
         contest_distance = 0
-    #print(slug_a + " -> " + slug_b)
-    #print(country_distance + weight_distance + year_distance + contest_distance, "|", country_distance, weight_distance,
+    # print(slug_a + " -> " + slug_b)
+    # print(country_distance + weight_distance + year_distance + contest_distance, "|", country_distance, weight_distance,
     #      year_distance, contest_distance)
     return country_distance + weight_distance + year_distance + contest_distance
 
@@ -148,7 +147,7 @@ class Node:
         self.heuristic = thumb
         self.item = item
         self.previous = previous
-        self.prio = self.heuristic + len(self)*Node.distance_factor
+        self.prio = self.heuristic + len(self) * Node.distance_factor
 
     def __eq__(self, other):
         if other is Node:
@@ -250,7 +249,7 @@ def six_degrees(slug1, slug2):
             if s in searched:
                 continue
             new = Node(distance(s, slug2), s, node)
-            #print("Testing",new)
+            # print("Testing",new)
             if new in [n.item for n in thequeue.nodes]:
                 old_node = thequeue.nodes.pop(thequeue.nodes.index(new))
                 if new <= old_node:
@@ -260,70 +259,35 @@ def six_degrees(slug1, slug2):
             else:
                 thequeue.push(new)
             searched.append(new)
-        #print(thequeue)
-    print(thequeue)
+    if node.item != slug2:
+        return []
+    out = []
     while node is not None:
-        print(node)
-        node = node.previous
+        x = Robot.objects.get(slug=node.item)
+        if len(out) > 0:
+            other = out[-1][0]
+            this_fight = Fight.objects.filter(fight_type__in=["FC", "NS"], fight_version__version__robot=x)
+            other_fight = Fight.objects.filter(fight_type__in=["FC", "NS"], fight_version__version__robot=other)
+            fights = this_fight.intersection(other_fight)
+            val: float
 
+            def val(f: Fight):
+                # Heuristic so the fight that is shown should be a pair's "most recognisable" if multiple are available
+                v = 0
+                v += Fight.objects.filter(contest=f.contest).count()
+                v += f.contest.start_date.year - 1994
+                if f.fight_version_set.count() == 2:
+                    v += 1000
+                if f.fight_type == "FC":
+                    v += 500
+                return -v
 
-def six_degrees_old(slug1, slug2):
-    start_rob = Robot.objects.get(slug=slug1)
-    end_rob = Robot.objects.get(slug=slug2)
-    searched = {start_rob}
-    thequeue = pq()
-
-    def makequeue(test_node: Node):
-        test_rob: Robot
-        test_rob = test_node.item
-        opponents = set()
-        for fight in Fight.objects.filter(fight_version__version__robot=test_rob).distinct():
-            robots_from_fight = Robot.objects.filter(version__fight_version__fight=fight).distinct().exclude(
-                slug=test_rob.slug)
-            opponents = opponents.union(list(robots_from_fight))
-            new = opponents.difference(searched)
-            if end_rob in new:
-                thequeue.push(Node(5 * 10 ** 11, end_rob, test_node))
-                return
-
-        new_robot: Robot
-        for new_robot in new:
-            num = 0
-            new_rob_weight = Weight_Class.objects.get(
-                id=new_robot.version_set.all().values("weight_class_id").annotate(count=Count('weight_class_id'))[0][
-                    'weight_class_id']).weight_grams
-            end_rob_weight = Weight_Class.objects.get(
-                id=end_rob.version_set.all().values("weight_class_id").annotate(count=Count('weight_class_id'))[0][
-                    'weight_class_id']).weight_grams
-            if new_rob_weight == end_rob_weight:
-                num += 10
-            elif new_rob_weight != 0:
-                num += ((5.5 - abs(log(new_rob_weight) - log(end_rob_weight))) / 5.5) * 8
-            if new_robot.country == end_rob.country:
-                num += 10
-            if new_robot.first_fought.year == end_rob.first_fought.year and new_robot.last_fought.year == end_rob.last_fought.year:
-                num += 10
-            elif new_robot.first_fought.year == end_rob.first_fought.year or new_robot.last_fought.year == end_rob.last_fought.year:
-                num += 7
-            elif new_robot.first_fought.year <= end_rob.last_fought.year and end_rob.first_fought.year <= new_robot.last_fought.year:
-                num += 5
-            if Event.objects.filter(contest__fight__fight_version__version__robot=new_robot).union(
-                    Event.objects.filter(contest__fight__fight_version__version__robot=end_rob)).count() > 1:
-                num += 20
-            num -= len(test_node) * 7.5
-            thequeue.push(Node(num, new_robot, test_node))
-            searched.add(new_robot)
-        print(thequeue)
-
-    thequeue.push(Node(0, start_rob, None))
-    test = None
-    while len(thequeue) != 0:
-        test = thequeue.pop()
-        if test.item == end_rob:
-            break
+            fights = list(fights)
+            fights.sort(key=val)
+            fight = fights[0]
+            out.append([x, fight])
         else:
-            makequeue(test)
-    while test is not None:
-        print(str(test.item) + " > ", end="")
-        test = test.previous
-    print()
+            out.append([x, None])
+        node = node.previous
+    out.reverse()
+    return out

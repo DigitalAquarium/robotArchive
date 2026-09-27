@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+{% block head %}
+    <link rel="stylesheet" href="{% static 'style/gridview.css' %}" />
+    <link rel="stylesheet" href="{% static 'style/fight_detail.css' %}">
+    <script src="{%static 'scripts/six_degrees.js' %}"></script>
+    <style> h4 {border-bottom: white 1px solid;    margin: 0;
+    padding-bottom: 20px;} </style>
+{% endblock %}
+{% block content %}
+<div class="main-content">
+    <h1>Six Degrees of Separation</h1>
+        <div class="search-box-container">
+                <input class="search-box" name="to" type="text" value="{{ name }}"/>
+                <input class="search-box" name="from" type="text" value="{{ name }}"/>
+        </div>
+    <input class="search-button material-symbols-outlined" type="submit" value="Search" onsubmit=""/>
+
+<h2 style="text-align:center">{{start.english_readable_name}} connects to {{target.english_readable_name}} in {{links|length}} steps.</h2>
+        {% for entry in links %}
+    <div class="gridview-container">
+            <div class="gridview-square competitor-square">
+                <div class="gridview-title">
+                    <img class="flag-image" src="{{ entry.0.get_flag }}" alt="{{entry.0.country}} Flag">
+                    <a href="{% url 'main:versionDetail' entry.0.id %}">{{ entry.0.english_readable_name }}</a>
+                </div>
+                <div class="gridview-image-container">
+                    <img class="fit-image" src="{% if entry.0.image %}{{ entry.0.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
+                         alt="{%if entry.0.image %}Robot {{entry.0}}{%else%}Unknown Robot Placeholder Image{%endif%}">
+                </div>
+            </div>
+            <div class="competitor-vs">
+            <p>-</p>
+                </div>
+         <div class="gridview-square competitor-square">
+                <div class="gridview-title">
+                    <img class="flag-image" src="{{ entry.1.get_flag }}" alt="{{entry.1.country}} Flag">
+                    <a href="{% url 'main:versionDetail' entry.1.id %}">{{ entry.1.english_readable_name }}</a>
+                </div>
+                <div class="gridview-image-container">
+                    <img class="fit-image" src="{% if entry.1.image %}{{ entry.1.image.url }} {% else %}{% static 'unknown.png' %}{% endif %}"
+                         alt="{%if entry.1.image %}Robot {{entry.1}}{%else%}Unknown Robot Placeholder Image{%endif%}">
+                </div>
+            </div>
+        </div>
+     <h4 style="text-align:center">
+        <a href="{% url 'main:fightDetail' entry.2.id %}"> {{entry.2|truncatechars:55}} </a> at
+        <a href="{% url 'main:eventDetail' entry.2.contest.event.slug %}"> {{entry.2.contest.event}}</a>, {{entry.2.contest.event.start_date.year}}
+    </h4>
+        {% endfor %}
+
+</div>
+{% endblock %}

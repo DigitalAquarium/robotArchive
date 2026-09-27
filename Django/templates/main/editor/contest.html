@@ -56,6 +56,7 @@
             </table>
             <button class="editor-link" name="save" value="reorder">Update Fight Order</button>
             <button class="editor-link" name="save" value="move">Move Fights</button>
+                <button class="editor-link" name="save" value="prune">Auto-Update Registrations</button>
             </form>
             <a class="editor-link" href="{% url 'main:newFight' contest.id %}?editor=true">Add Fight</a>
         {% endif %}
@@ -76,7 +77,6 @@
                     </div>
                 {% endfor %}
                 </div>
-			<form method="post">{%csrf_token%}<button class="editor-link" name="save" value="prune">Prune Entries & Clean Contest</button></form>
 		{% endif %}
     {% endif %}
 </div>

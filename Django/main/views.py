@@ -1,5 +1,6 @@
 import datetime
 import random
+from collections import defaultdict
 from math import log
 from numbers import Number
 from os.path import isdir
@@ -18,7 +19,7 @@ from django.urls import reverse
 from django.http import Http404, HttpResponse
 
 from main import subdivisions
-from main import six_degrees
+from main.six_degrees import six_degrees
 from .forms import *
 
 ONE_HOUR_TIMER = 3600
@@ -43,7 +44,9 @@ def edt_home_view(request):
             event_list.filter(contest__name__icontains=name)).union(
             event_list.filter(franchise__name__icontains=name))
 
-    event_list = event_list.order_by("name").order_by("-site", "-start_date")
+    event_list = event_list.annotate(
+        ru=~Q(contest__start_date__gt=str(Leaderboard.RU_CUTOFF_DATE) + "-01-01")).distinct()
+    event_list = event_list.order_by("name").order_by("-ru", "-start_date")
 
     return render(request, "main/editor/home.html",
                   {"event_list": event_list,
@@ -69,15 +72,26 @@ def edt_control_panel_view(request):
     elif action == "rus":
         cutoff = Leaderboard.RU_CUTOFF_DATE
         v = Version.objects.filter(site="2", first_fought__lt=str(cutoff) + "-01-01")
+        y = Version.objects.filter(site="2",
+                                   country__in=["XE", "XS", "XW", "IE", "BR", "US", "CA", "AU", "NZ", "NL", "GB"])
         for x in v:
             x.site_id = 1
+        for x in y:
+            x.site_id = 1
         v.bulk_update(v, ["site"])
+        y.bulk_update(y, ["site"])
         e = Event.objects.filter(site="2", start_date__lt=str(cutoff) + "-01-01")
+        f = Event.objects.filter(site="2",
+                                 country__in=["XE", "XS", "XW", "IE", "BR", "US", "CA", "AU", "NZ", "NL", "GB"])
         for x in e:
             x.site_id = 1
+        for x in f:
+            x.site_id = 1
         e.bulk_update(e, ["site"])
+        f.bulk_update(f, ["site"])
         return render(request, "main/editor/control_panel.html",
-                      {"results": "Updated Cutoff, moved " + str(list(v)) + " " + str(list(e))})
+                      {"results": "Updated Cutoff, moved " + str(list(v)) + " " + str(list(e)) + " " + str(
+                          list(y)) + " " + str(list(f))})
     return render(request, "main/editor/control_panel.html", {"results": "..."})
 
 
@@ -255,14 +269,32 @@ def edt_contest_view(request, contest_id):
 
                     else:
                         move_to_contest(fight_dict[i], Contest.objects.get(pk=request.POST["fight-" + str(i)]))
+
         elif request.POST["save"] == "prune":
             versions = Version.objects.filter(fight_version__fight__contest=contest).distinct()
-            Registration.objects.filter(contest=contest).exclude(version__in=versions).delete()
-            i = 1
-            for f in fights:
-                f.number = i
-                i += 1
-            Fight.objects.bulk_update(fights, ["number"])
+            rgs = Registration.objects.filter(contest=contest)
+
+            rgs.exclude(version__in=versions).delete()
+
+            uh_oh = set()
+            for version in versions:
+                temp_regs = rgs.filter(version=version)
+                temp_regs_count = temp_regs.count()
+                if temp_regs_count > 1:
+                    for i in range(temp_regs_count):
+                        if i > 0:
+                            uh_oh.add(temp_regs[i].id)
+            if len(uh_oh) > 0:
+                uh_oh = rgs.filter(id__in=uh_oh)
+                uh_oh.delete()
+
+            if len(versions) > len(rgs):
+                rgs = {x['version'] for x in rgs.values("version")}
+                versions = {v.id for v in versions}
+                new_rgs = []
+                for pk in versions.difference(rgs):
+                    new_rgs.append(Registration(version_id=pk, contest=contest, signee_id=1))
+                Registration.objects.bulk_create(new_rgs)
 
         elif request.POST["save"] == "reorder":
             num_fights = len(fights)
@@ -917,9 +949,11 @@ def robot_index_view(request):
         page = 1
 
     if weight != 0:
-        robot_list = Robot.get_by_rough_weight(weight).filter(version__site=site).distinct()
+        robot_list = Robot.get_by_rough_weight(weight).distinct()
     else:
-        robot_list = Robot.objects.filter(version__site=site).distinct()
+        robot_list = Robot.objects.distinct()
+    if site == 2:
+        robot_list = robot_list.filter(site=2)
 
     if country_code != "" and country_code is not None:
         country_code = country_code.upper()
@@ -999,7 +1033,7 @@ def robot_index_view(request):
                    "url": reverse("main:robotIndex"),
                    })
 
-
+compiled_number_regex = re.compile("[0-9]+")
 def leaderboard(request):
     site = get_current_site(request).id
     year = request.GET.get("year")
@@ -1023,13 +1057,23 @@ def leaderboard(request):
                        })
 
     if site == 1:
-        visible_weights = [
-            ("F", "Featherweight"),
-            ("L", "Lightweight"),
-            ("M", "Middleweight"),
-            ("H", "Heavyweight"),
-            ("S", "Super Heavyweight"),
-        ]
+        if year is None or not re.fullmatch(compiled_number_regex,year) is not None or (re.fullmatch(compiled_number_regex,year)is not None and int(year) > 2015):
+            visible_weights = [
+                ("F", "Featherweight"),
+                ("L", "Lightweight"),
+                ("M", "Middleweight"),
+                ("H", "Heavyweight"),
+                ("N", "Non-Spinner Heavyweight"),
+                ("S", "Super Heavyweight")
+            ]
+        else:
+            visible_weights = [
+                ("F", "Featherweight"),
+                ("L", "Lightweight"),
+                ("M", "Middleweight"),
+                ("H", "Heavyweight"),
+                ("S", "Super Heavyweight"),
+            ]
     else:
         visible_weights = [
             ("M", "Middleweight"),
@@ -1051,16 +1095,7 @@ def leaderboard(request):
         years = [x['year'] for x in
                  Leaderboard.objects.filter(weight=weight, version__site=site).order_by("year").values(
                      "year").distinct()]
-        if 2020 in years: years.remove(2020)
-        if 2021 in years: years.remove(2021)
-        if weight == "H" and 2022 in years:
-            years.remove(2022)
-    if site == 1:
-        years = [x for x in years if x < Leaderboard.RU_CUTOFF_DATE]
-    else:
-        years = [x for x in years if x >= Leaderboard.RU_CUTOFF_DATE]
-        if weight == "H":
-            years.remove(2014)
+    years = [x for x in years]
 
     # years = [x for x in range(1994, current_year + 1)]
     try:
@@ -1072,20 +1107,19 @@ def leaderboard(request):
     if year not in years:
         year = current_year
 
-    robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
+    robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("position")
     if year == current_year and robot_list.count() == 0:
         # Catch to stop the superheavyweight list (or any others that go out of use) from being unreachable in the menu
         year = years[-1]
-        robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("-ranking")
+        robot_list = Leaderboard.objects.filter(weight=weight, year=year, position__lte=100).order_by("position")
 
     # eliminations = Leaderboard.objects.filter(weight=weight, year=year, position=101).order_by("difference")
-
     top_three = []
     for i in range(robot_list.count() if robot_list.count() < 3 else 3):
         top_three.append(robot_list[i])
 
     chosen_weight_text = \
-        {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight",
+        {"F": "featherweight", "L": "lightweight", "M": "middleweight", "H": "heavyweight","N": "heavyweight non-spinner",
          "S": "super heavyweight"}[weight]
 
     return render(request, "main/robot_leaderboard.html",
@@ -1197,12 +1231,18 @@ def robot_detail_view(request, slug):
             fvs = f.fight_version_set.all()
             winners = f.winners()
             if len(fvs) == 2:
-                if r in f.winners():
+                f.pie_valid = True
+                if r in winners:
                     no_wins += 1
                 else:
                     no_losses += 1
-            elif len(winners) == 1:
+            elif len(winners) == 1 and winners[0].robot == r:
                 no_wins += 1
+                f.pie_valid = True
+            else:
+                f.pie_valid = False
+        else:
+            f.pie_valid = False
     if no_wins + no_losses < 2 or (no_wins < 2 and no_losses < 2):
         display_methods = False
     else:
@@ -1349,6 +1389,11 @@ def new_version_view(request, robot_id):  # TODO: FORM
     else:
         form = NewVersionForm()
         form.fields['team'].queryset = valid_teams
+        most_common_weapon_type = \
+            robot.version_set.values("weapon_type").annotate(Count("weapon_type")).order_by("-weapon_type__count")[0][
+                "weapon_type"]
+        form.fields['weapon_type'].initial = most_common_weapon_type
+
         if fight_id != 0:
             form.fields["weight_class"].initial = Fight.objects.get(id=fight_id).contest.weight_class
             selected_team = None
@@ -2259,12 +2304,14 @@ def recalc_all():
     start_time = time.time()
 
     def save_year(year, version_dictionary, robot_dictionary, fvs):
-        if year >= Leaderboard.RU_CUTOFF_DATE:
-            return
+        # if year >= Leaderboard.RU_CUTOFF_DATE:
+        #    return
         print("Saving data for year: " + str(year))
         vers = [v for v in version_dictionary.values()]
         robs = [r for r in robot_dictionary.values()]
         Version.objects.bulk_update(vers, ["first_fought", "last_fought"])
+        if year == 2016:
+            robs = robs + list(Robot.objects.filter(last_fought__gt="2013-12-31",first_fought__lt="2016-12-31"))
         for r in robs:
             Leaderboard.update_robot_weight_class(r, commit=False, year=year)
         Robot.objects.bulk_update(robs, ["ranking", "wins", "losses", "first_fought", "last_fought", "lb_weight_class"])
@@ -2443,3 +2490,16 @@ def tournament_tree(request):
     print(out)
 
     return render(request, "main/credits.html", {})
+
+
+def six_degrees_view(request):
+    the_list = six_degrees("папочка", "tracer")
+    robots_and_such = []
+    for i in range(len(the_list)):
+        if the_list[i][1]:
+            fv_set = set(Version.objects.filter(fight_version__in=the_list[i][1].fight_version_set.all()))
+            version_set = set(the_list[i][0].version_set.all())
+            next_version_set = set(the_list[i + 1][0].version_set.all())
+            robots_and_such.append(
+                [fv_set.intersection(version_set).pop(), fv_set.intersection(next_version_set).pop(), the_list[i][1]])
+    return render(request, "main/six_degrees.html", {"links": robots_and_such,"start":robots_and_such[0][0],"target":robots_and_such[-1][1]})
