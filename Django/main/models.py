@@ -901,6 +901,8 @@ class Fight(models.Model):
         if "vkvideo.ru" in self.external_media and "video_ext.php" not in self.external_media:
             self.external_media = self.external_media[24:]
             sections = self.external_media.split("_")
+            if sections[0][0] != "-":
+                sections[0] = "-"+sections[0]
             self.external_media = "https://vkvideo.ru/video_ext.php?oid=" + sections[0] + "&id=" + sections[1].replace(
                 "?", "&")
         elif "vkvideo.com" in self.external_media and "video_ext.php" not in self.external_media:
